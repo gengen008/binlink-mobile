@@ -19,10 +19,10 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="false">
 
-        <!-- Google Maps API key — injected via MAPS_API_KEY CI secret or local.properties -->
+        <!-- Google Maps API key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="MAPS_API_KEY_PLACEHOLDER" />
+            android:value="AIzaSyDcWdZ1Uoz8Zda1cG_fofOwyqcQ3U0lQpA" />
 
         <activity
             android:name=".MainActivity"
