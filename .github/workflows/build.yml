@@ -46,12 +46,14 @@ jobs:
 
       - name: Inject household google-services.json
         run: |
+          mkdir -p android/app/src/household
           echo "${{ secrets.GOOGLE_SERVICES_JSON_HOUSEHOLD }}" | base64 -d \
             > android/app/src/household/google-services.json
           echo "[CI] household google-services.json injected ($(wc -c < android/app/src/household/google-services.json) bytes)"
 
       - name: Inject collector google-services.json
         run: |
+          mkdir -p android/app/src/collector
           echo "${{ secrets.GOOGLE_SERVICES_JSON_COLLECTOR }}" | base64 -d \
             > android/app/src/collector/google-services.json
           echo "[CI] collector google-services.json injected ($(wc -c < android/app/src/collector/google-services.json) bytes)"
