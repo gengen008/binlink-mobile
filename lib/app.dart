@@ -8,6 +8,7 @@ import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
+import 'features/auth/screens/onboarding_screen.dart';
 import 'features/household/providers/household_provider.dart';
 import 'features/household/screens/home_screen.dart';
 import 'features/collector/providers/collector_provider.dart';
@@ -31,6 +32,7 @@ class BinLinkApp extends StatelessWidget {
         initialRoute: '/splash',
         routes: {
           '/splash':          (_) => const SplashScreen(),
+          '/onboarding':      (_) => const OnboardingScreen(),
           '/login':           (_) => const LoginScreen(),
           '/register':        (_) => const RegisterScreen(),
           '/forgot-password': (_) => const ForgotPasswordScreen(),

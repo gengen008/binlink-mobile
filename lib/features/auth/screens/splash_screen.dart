@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import 'onboarding_screen.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -57,7 +58,13 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacementNamed(context, '/household');
       }
     } else {
-      Navigator.pushReplacementNamed(context, '/login');
+      // Household: show onboarding on first ever launch
+      final showOnboarding = await shouldShowOnboarding();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(
+        context,
+        showOnboarding ? '/onboarding' : '/login',
+      );
     }
   }
 
