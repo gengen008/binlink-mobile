@@ -20,7 +20,6 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final _momoCtrl = TextEditingController();
   bool _paying = false;
-  bool _paid = false;
 
   String get _paymentMethod => widget.booking['paymentMethod'] as String? ?? 'CASH';
   bool get _isMoMo => _paymentMethod != 'CASH';
@@ -48,7 +47,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
 
     if (!mounted) return;
-    setState(() { _paying = false; _paid = ok; });
+    setState(() { _paying = false; });
 
     if (ok) {
       await Future.delayed(const Duration(milliseconds: 500));

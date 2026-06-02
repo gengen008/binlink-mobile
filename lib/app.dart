@@ -12,7 +12,6 @@ import 'features/household/providers/household_provider.dart';
 import 'features/household/screens/home_screen.dart';
 import 'features/collector/providers/collector_provider.dart';
 import 'features/collector/screens/map_screen.dart';
-import 'shared/models/user_model.dart';
 
 class BinLinkApp extends StatelessWidget {
   const BinLinkApp({super.key});

@@ -25,7 +25,6 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
 
   void _onMapCreated(GoogleMapController ctrl) {
     if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
-    ctrl.setMapStyle(kDarkMapStyle);
   }
 
   LatLng get _pickupPos => LatLng(
@@ -81,6 +80,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                   target: _pickupPos,
                   zoom: 15,
                 ),
+                style: kDarkMapStyle,
                 markers: markers,
                 mapType: MapType.normal,
                 zoomControlsEnabled: false,

@@ -30,8 +30,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
   void _onMapCreated(GoogleMapController ctrl) {
     if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
-    ctrl.setMapStyle(kDarkMapStyle);
-    // Animate to pickup location once map is ready
     if (_booking != null) {
       ctrl.animateCamera(CameraUpdate.newLatLngZoom(_pickupLatLng, 15));
     }
@@ -139,6 +137,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                         target: _pickupLatLng,
                         zoom: 15,
                       ),
+                      style: kDarkMapStyle,
                       markers: markers,
                       mapType: MapType.normal,
                       zoomControlsEnabled: false,

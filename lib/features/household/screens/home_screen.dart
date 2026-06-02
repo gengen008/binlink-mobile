@@ -36,10 +36,11 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     if (pos != null && mounted) {
       setState(() => _myPos = LatLng(pos.latitude, pos.longitude));
     }
-    if (mounted) {
-      await context.read<HouseholdProvider>().loadBookings();
-      await context.read<HouseholdProvider>().loadOnlineCollectors();
-    }
+    if (!mounted) return;
+    final prov = context.read<HouseholdProvider>();
+    await prov.loadBookings();
+    if (!mounted) return;
+    await prov.loadOnlineCollectors();
   }
 
   @override
@@ -75,7 +76,6 @@ class _HomeTabState extends State<_HomeTab> {
 
   void _onMapCreated(GoogleMapController ctrl) {
     if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
-    ctrl.setMapStyle(kDarkMapStyle);
   }
 
   @override
@@ -178,6 +178,7 @@ class _HomeTabState extends State<_HomeTab> {
                     target: widget.myPos,
                     zoom: 14,
                   ),
+                  style: kDarkMapStyle,
                   markers: markers,
                   mapType: MapType.normal,
                   zoomControlsEnabled: false,

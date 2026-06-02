@@ -81,7 +81,6 @@ class _MapTabState extends State<_MapTab> {
 
   void _onMapCreated(GoogleMapController ctrl) {
     if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
-    ctrl.setMapStyle(kDarkMapStyle);
   }
 
   @override
@@ -122,6 +121,7 @@ class _MapTabState extends State<_MapTab> {
               target: widget.pos,
               zoom: 14,
             ),
+            style: kDarkMapStyle,
             markers: markers,
             mapType: MapType.normal,
             zoomControlsEnabled: false,
