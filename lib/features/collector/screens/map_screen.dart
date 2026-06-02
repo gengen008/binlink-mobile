@@ -5,7 +5,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/models/user_model.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
@@ -357,10 +359,87 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends StatefulWidget {
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  Future<void> _editPhone(BuildContext context, AuthProvider auth) async {
+    final ctrl = TextEditingController(text: auth.user?.phone ?? '');
+    final formKey = GlobalKey<FormState>();
+    bool saving = false;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            auth.user?.phone == null ? 'Add Phone Number' : 'Edit Phone Number',
+            style: AppTextStyles.h3,
+          ),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: ctrl,
+              keyboardType: TextInputType.phone,
+              style: AppTextStyles.body.copyWith(color: AppColors.white),
+              decoration: InputDecoration(
+                hintText: '+233 XX XXX XXXX',
+                hintStyle: AppTextStyles.body.copyWith(color: AppColors.muted),
+                prefixIcon: const Icon(PhosphorIconsRegular.phone, color: AppColors.muted, size: 20),
+                filled: true,
+                fillColor: AppColors.deepOcean,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Phone number required';
+                final cleaned = v.replaceAll(RegExp(r'[\s\-()]'), '');
+                if (!RegExp(r'^\+?[0-9]{9,15}$').hasMatch(cleaned)) return 'Enter a valid phone number';
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.muted)),
+            ),
+            TextButton(
+              onPressed: saving ? null : () async {
+                if (!formKey.currentState!.validate()) return;
+                setS(() => saving = true);
+                try {
+                  final res = await ApiClient.put('/api/profile', {'phone': ctrl.text.trim()});
+                  final updated = UserModel.fromJson(res.data['data']);
+                  auth.updateUser(updated);
+                } catch (_) {} finally {
+                  if (ctx.mounted) Navigator.pop(ctx);
+                }
+              },
+              child: Text('Save', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.steelBlue)),
+            ),
+          ],
+        ),
+      ),
+    );
+    ctrl.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().user;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
+
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
       child: SafeArea(
@@ -385,8 +464,10 @@ class _ProfileTab extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(user?.fullName ?? 'Collector', style: AppTextStyles.h3),
-              const SizedBox(height: 4),
-              Text(user?.phone ?? '', style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+              if (user?.email != null) ...[
+                const SizedBox(height: 4),
+                Text(user!.email!, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+              ],
 
               if (user?.vehicleType != null) ...[
                 const SizedBox(height: 8),
@@ -408,7 +489,44 @@ class _ProfileTab extends StatelessWidget {
                 ),
               ],
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // Phone row — tappable edit
+              GestureDetector(
+                onTap: () => _editPhone(context, auth),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(PhosphorIconsRegular.phone, color: AppColors.skyBlue, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Phone Number', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
+                            const SizedBox(height: 2),
+                            Text(
+                              user?.phone ?? 'Tap to add',
+                              style: AppTextStyles.body.copyWith(
+                                color: user?.phone != null ? AppColors.white : AppColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(PhosphorIconsRegular.pencilSimple, color: AppColors.muted, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               GestureDetector(
                 onTap: () async {

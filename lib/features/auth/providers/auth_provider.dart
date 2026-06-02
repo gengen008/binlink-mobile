@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -19,6 +21,9 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
 
+  final _firebaseAuth = FirebaseAuth.instance;
+  final _googleSignIn = GoogleSignIn();
+
   Future<void> initialize() async {
     try {
       final userData = await SecureStorage.getUser();
@@ -31,18 +36,24 @@ class AuthProvider extends ChangeNotifier {
         _status = AuthStatus.unauthenticated;
       }
     } catch (_) {
-      // Storage failure on first install — treat as unauthenticated
       _status = AuthStatus.unauthenticated;
     }
     notifyListeners();
   }
 
-  Future<bool> sendOtp(String phone, {String purpose = 'REGISTRATION'}) async {
+  // ── Email + Password ─────────────────────────────────────────
+
+  Future<bool> loginWithEmail({required String email, required String password}) async {
     _setLoading(true);
     try {
-      await ApiClient.post('/api/auth/send-otp', {'phone': phone, 'purpose': purpose});
-      _error = null;
-      return true;
+      final cred = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email, password: password,
+      );
+      final idToken = await cred.user!.getIdToken();
+      return await _firebaseExchange(idToken!);
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseError(e);
+      return false;
     } on DioException catch (e) {
       _error = _extractError(e);
       return false;
@@ -51,21 +62,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register({
-    required String phone,
-    required String otp,
+  Future<bool> registerWithEmail({
+    required String email,
     required String password,
     required String fullName,
     required String role,
   }) async {
     _setLoading(true);
     try {
-      final res = await ApiClient.post('/api/auth/register', {
-        'phone': phone, 'otp': otp, 'password': password,
-        'fullName': fullName, 'role': role,
-      });
-      await _handleAuthResponse(res.data['data']);
-      return true;
+      final cred = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email, password: password,
+      );
+      await cred.user!.updateDisplayName(fullName);
+      final idToken = await cred.user!.getIdToken();
+      return await _firebaseExchange(idToken!, fullName: fullName, role: role);
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseError(e);
+      return false;
     } on DioException catch (e) {
       _error = _extractError(e);
       return false;
@@ -74,14 +87,28 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login({required String phone, required String password}) async {
+  // ── Google Sign-In ───────────────────────────────────────────
+
+  Future<bool> loginWithGoogle({String role = 'HOUSEHOLD'}) async {
     _setLoading(true);
     try {
-      final res = await ApiClient.post('/api/auth/login', {
-        'phone': phone, 'password': password,
-      });
-      await _handleAuthResponse(res.data['data']);
-      return true;
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return false; // user cancelled
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final cred = await _firebaseAuth.signInWithCredential(credential);
+      final idToken = await cred.user!.getIdToken();
+      return await _firebaseExchange(
+        idToken!,
+        fullName: cred.user!.displayName,
+        role: role,
+      );
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseError(e);
+      return false;
     } on DioException catch (e) {
       _error = _extractError(e);
       return false;
@@ -90,39 +117,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> forgotPassword(String phone) async {
+  // ── Password reset ───────────────────────────────────────────
+
+  Future<bool> sendPasswordReset(String email) async {
     _setLoading(true);
     try {
-      await ApiClient.post('/api/auth/forgot-password', {'phone': phone});
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
       _error = null;
       return true;
-    } on DioException catch (e) {
-      _error = _extractError(e);
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseError(e);
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<bool> resetPassword({
-    required String phone,
-    required String otp,
-    required String newPassword,
-  }) async {
-    _setLoading(true);
-    try {
-      await ApiClient.post('/api/auth/reset-password', {
-        'phone': phone, 'otp': otp, 'newPassword': newPassword,
-      });
-      _error = null;
-      return true;
-    } on DioException catch (e) {
-      _error = _extractError(e);
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
+  // ── Sign out ─────────────────────────────────────────────────
 
   Future<void> signOut() async {
     final refreshToken = await SecureStorage.getRefreshToken();
@@ -131,12 +142,18 @@ class AuthProvider extends ChangeNotifier {
         await ApiClient.post('/api/auth/logout', {'refreshToken': refreshToken});
       } catch (_) {}
     }
+    await _firebaseAuth.signOut();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
     SocketService.disconnect();
     await SecureStorage.clearAll();
     _user = null;
     _status = AuthStatus.unauthenticated;
     notifyListeners();
   }
+
+  // ── Profile helpers ──────────────────────────────────────────
 
   Future<void> refreshProfile() async {
     try {
@@ -158,6 +175,20 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Private helpers ──────────────────────────────────────────
+
+  Future<bool> _firebaseExchange(
+    String idToken, {
+    String? fullName,
+    String role = 'HOUSEHOLD',
+  }) async {
+    final body = <String, dynamic>{'firebaseToken': idToken, 'role': role};
+    if (fullName != null) body['fullName'] = fullName;
+    final res = await ApiClient.post('/api/auth/firebase', body);
+    await _handleAuthResponse(res.data['data']);
+    return true;
+  }
+
   Future<void> _handleAuthResponse(Map<String, dynamic> data) async {
     await SecureStorage.saveTokens(
       accessToken:  data['accessToken'],
@@ -175,6 +206,23 @@ class AuthProvider extends ChangeNotifier {
   void _setLoading(bool val) {
     _loading = val;
     notifyListeners();
+  }
+
+  String _firebaseError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':       return 'No account found with this email.';
+      case 'wrong-password':       return 'Incorrect password.';
+      case 'invalid-credential':   return 'Invalid email or password.';
+      case 'email-already-in-use': return 'An account already exists for this email.';
+      case 'invalid-email':        return 'Invalid email address.';
+      case 'weak-password':        return 'Password must be at least 6 characters.';
+      case 'user-disabled':        return 'This account has been disabled.';
+      case 'too-many-requests':    return 'Too many attempts. Please try again later.';
+      case 'network-request-failed': return 'Network error. Check your connection.';
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with a different sign-in method.';
+      default: return e.message ?? 'Authentication failed.';
+    }
   }
 
   String _extractError(DioException e) {

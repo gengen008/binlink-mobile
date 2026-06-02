@@ -8,7 +8,6 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import 'otp_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,42 +17,64 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameCtrl     = TextEditingController();
-  final _phoneCtrl    = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  late String _role = FlavorConfig.defaultRole;
-  bool _showPassword = false;
+  final _formKey   = GlobalKey<FormState>();
+  final _nameCtrl  = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl  = TextEditingController();
+  bool _showPass   = false;
+
+  final String _role = FlavorConfig.defaultRole;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _phoneCtrl.dispose();
-    _passwordCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final ok = await auth.sendOtp(_phoneCtrl.text.trim());
+    final ok = await auth.registerWithEmail(
+      email:    _emailCtrl.text.trim(),
+      password: _passCtrl.text,
+      fullName: _nameCtrl.text.trim(),
+      role:     _role,
+    );
     if (!mounted) return;
     if (ok) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            phone:    _phoneCtrl.text.trim(),
-            purpose:  'REGISTRATION',
-            fullName: _nameCtrl.text.trim(),
-            password: _passwordCtrl.text,
-            role:     _role,
-          ),
-        ),
-      );
+      final user = auth.user!;
+      if (user.isPending) {
+        Navigator.pushReplacementNamed(context, '/pending');
+      } else if (user.isCollector) {
+        Navigator.pushReplacementNamed(context, '/collector');
+      } else {
+        Navigator.pushReplacementNamed(context, '/household');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Failed to send OTP'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text(auth.error ?? 'Registration failed'), backgroundColor: AppColors.danger),
+      );
+    }
+  }
+
+  Future<void> _registerGoogle() async {
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.loginWithGoogle(role: _role);
+    if (!mounted) return;
+    if (ok) {
+      final user = auth.user!;
+      if (user.isPending) {
+        Navigator.pushReplacementNamed(context, '/pending');
+      } else if (user.isCollector) {
+        Navigator.pushReplacementNamed(context, '/collector');
+      } else {
+        Navigator.pushReplacementNamed(context, '/household');
+      }
+    } else if (auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -88,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         Text('Create account', style: AppTextStyles.h1),
                         const SizedBox(height: 8),
                         Text(
@@ -102,43 +123,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _nameCtrl,
                           label: 'Full Name',
                           hint: 'Your full name',
+                          autofillHints: const [AutofillHints.name],
                           prefixIcon: const Icon(PhosphorIconsRegular.user, color: AppColors.muted, size: 20),
                           validator: (v) => Validators.required(v, 'Full name'),
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
-                        // Phone
+                        // Email
                         AppTextField(
-                          controller: _phoneCtrl,
-                          label: 'Phone Number',
-                          hint: '+233 XX XXX XXXX',
-                          keyboardType: TextInputType.phone,
-                          prefixIcon: const Icon(PhosphorIconsRegular.phone, color: AppColors.muted, size: 20),
-                          validator: Validators.phone,
+                          controller: _emailCtrl,
+                          label: 'Email',
+                          hint: 'you@example.com',
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
+                          validator: Validators.email,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
 
                         // Password
                         AppTextField(
-                          controller: _passwordCtrl,
+                          controller: _passCtrl,
                           label: 'Password',
                           hint: 'At least 8 characters',
-                          obscureText: !_showPassword,
+                          obscureText: !_showPass,
+                          autofillHints: const [AutofillHints.newPassword],
                           prefixIcon: const Icon(PhosphorIconsRegular.lock, color: AppColors.muted, size: 20),
                           suffixIcon: GestureDetector(
-                            onTap: () => setState(() => _showPassword = !_showPassword),
+                            onTap: () => setState(() => _showPass = !_showPass),
                             child: Icon(
-                              _showPassword ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
+                              _showPass ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
                               color: AppColors.muted, size: 20,
                             ),
                           ),
                           validator: Validators.password,
                           textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _sendOtp(),
+                          onFieldSubmitted: (_) => _register(),
                         ),
 
+                        // Collector notice
                         if (_role == 'COLLECTOR') ...[
                           const SizedBox(height: 16),
                           Container(
@@ -163,13 +188,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
 
                         AppButton(
-                          label: 'Continue',
+                          label: 'Create Account',
                           loading: auth.loading,
-                          onPressed: _sendOtp,
+                          onPressed: _register,
                           icon: const Icon(PhosphorIconsRegular.arrowRight, color: AppColors.white, size: 20),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // OR divider
+                        Row(
+                          children: [
+                            const Expanded(child: Divider(color: AppColors.border)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('or', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
+                            ),
+                            const Expanded(child: Divider(color: AppColors.border)),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Google Sign-Up
+                        GestureDetector(
+                          onTap: auth.loading ? null : _registerGoogle,
+                          child: Container(
+                            height: 54,
+                            decoration: BoxDecoration(
+                              color: AppColors.card,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(PhosphorIconsRegular.googleLogo, color: AppColors.white, size: 22),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Sign up with Google',
+                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: 24),
@@ -189,77 +254,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoleSelector extends StatelessWidget {
-  const _RoleSelector({required this.value, required this.onChange});
-  final String value;
-  final ValueChanged<String> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _RoleOption(
-          label: 'Household',
-          icon: PhosphorIconsRegular.house,
-          selected: value == 'HOUSEHOLD',
-          onTap: () => onChange('HOUSEHOLD'),
-        ),
-        const SizedBox(width: 12),
-        _RoleOption(
-          label: 'Collector',
-          icon: PhosphorIconsRegular.truck,
-          selected: value == 'COLLECTOR',
-          onTap: () => onChange('COLLECTOR'),
-        ),
-      ],
-    );
-  }
-}
-
-class _RoleOption extends StatelessWidget {
-  const _RoleOption({
-    required this.label, required this.icon,
-    required this.selected, required this.onTap,
-  });
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 72,
-          decoration: BoxDecoration(
-            gradient: selected ? AppColors.primaryGradient : null,
-            color: selected ? null : AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? AppColors.steelBlue : AppColors.border,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                color: selected ? AppColors.white : AppColors.muted, size: 22),
-              const SizedBox(width: 10),
-              Text(label, style: AppTextStyles.bodyMedium.copyWith(
-                color: selected ? AppColors.white : AppColors.muted,
-              )),
             ],
           ),
         ),

@@ -46,5 +46,9 @@ app.*.map.json
 
 # Secrets — never commit these
 .env
-google-services.json
 local.properties
+
+# Real Firebase configs (injected via CI secrets) — only ignore flavor-specific ones
+# The placeholder at android/app/google-services.json CAN be committed
+android/app/src/household/google-services.json
+android/app/src/collector/google-services.json

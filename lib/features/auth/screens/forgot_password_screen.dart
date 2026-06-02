@@ -16,52 +16,23 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _formKey      = GlobalKey<FormState>();
-  final _phoneCtrl    = TextEditingController();
-  final _otpCtrl      = TextEditingController();
-  final _passCtrl     = TextEditingController();
-  final _confirmCtrl  = TextEditingController();
-
-  // Steps: 0=phone, 1=otp, 2=new password
-  int _step = 0;
-  bool _showPassword = false;
+  final _formKey   = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  bool _sent       = false;
 
   @override
   void dispose() {
-    _phoneCtrl.dispose();
-    _otpCtrl.dispose();
-    _passCtrl.dispose();
-    _confirmCtrl.dispose();
+    _emailCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _sendReset() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final ok = await auth.forgotPassword(_phoneCtrl.text.trim());
-    if (!mounted) return;
-    if (ok) setState(() => _step = 1);
-    else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Error'), backgroundColor: AppColors.danger),
-      );
-    }
-  }
-
-  Future<void> _reset() async {
-    if (!_formKey.currentState!.validate()) return;
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.resetPassword(
-      phone:       _phoneCtrl.text.trim(),
-      otp:         _otpCtrl.text.trim(),
-      newPassword: _passCtrl.text,
-    );
+    final ok = await auth.sendPasswordReset(_emailCtrl.text.trim());
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset! Please sign in.'), backgroundColor: AppColors.success),
-      );
-      Navigator.pushReplacementNamed(context, '/login');
+      setState(() => _sent = true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Error'), backgroundColor: AppColors.danger),
@@ -84,15 +55,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    onPressed: () => _step > 0 ? setState(() => _step--) : Navigator.pop(context),
+                    onPressed: () => Navigator.pop(context),
                     icon: const Icon(PhosphorIconsRegular.arrowLeft, color: AppColors.white),
                   ),
                 ),
               ),
+
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Form(
+                  child: _sent ? _SuccessView(email: _emailCtrl.text.trim()) : Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,73 +73,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         Text('Reset password', style: AppTextStyles.h2),
                         const SizedBox(height: 8),
                         Text(
-                          _step == 0
-                            ? 'Enter your phone number to receive a reset code.'
-                            : _step == 1
-                              ? 'Enter the code sent to your phone and choose a new password.'
-                              : '',
+                          'Enter your email and we\'ll send you a link to reset your password.',
                           style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 32),
 
-                        // Step 0 — phone
-                        if (_step == 0) ...[
-                          AppTextField(
-                            controller: _phoneCtrl,
-                            label: 'Phone Number',
-                            hint: '+233 XX XXX XXXX',
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: const Icon(PhosphorIconsRegular.phone, color: AppColors.muted, size: 20),
-                            validator: Validators.phone,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _sendOtp(),
-                          ),
-                          const SizedBox(height: 32),
-                          AppButton(label: 'Send Code', loading: auth.loading, onPressed: _sendOtp),
-                        ],
+                        AppTextField(
+                          controller: _emailCtrl,
+                          label: 'Email',
+                          hint: 'you@example.com',
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
+                          validator: Validators.email,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _sendReset(),
+                        ),
 
-                        // Step 1 — OTP + new password
-                        if (_step == 1) ...[
-                          AppTextField(
-                            controller: _otpCtrl,
-                            label: 'Verification Code',
-                            hint: '6-digit code',
-                            keyboardType: TextInputType.number,
-                            prefixIcon: const Icon(PhosphorIconsRegular.shield, color: AppColors.muted, size: 20),
-                            validator: Validators.otp,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 16),
-                          AppTextField(
-                            controller: _passCtrl,
-                            label: 'New Password',
-                            hint: 'At least 8 characters',
-                            obscureText: !_showPassword,
-                            prefixIcon: const Icon(PhosphorIconsRegular.lock, color: AppColors.muted, size: 20),
-                            suffixIcon: GestureDetector(
-                              onTap: () => setState(() => _showPassword = !_showPassword),
-                              child: Icon(
-                                _showPassword ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
-                                color: AppColors.muted, size: 20,
-                              ),
-                            ),
-                            validator: Validators.password,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 16),
-                          AppTextField(
-                            controller: _confirmCtrl,
-                            label: 'Confirm Password',
-                            hint: 'Re-enter password',
-                            obscureText: !_showPassword,
-                            prefixIcon: const Icon(PhosphorIconsRegular.lockKey, color: AppColors.muted, size: 20),
-                            validator: (v) => Validators.confirmPassword(v, _passCtrl.text),
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _reset(),
-                          ),
-                          const SizedBox(height: 32),
-                          AppButton(label: 'Reset Password', loading: auth.loading, onPressed: _reset),
-                        ],
+                        const SizedBox(height: 32),
+
+                        AppButton(
+                          label: 'Send Reset Link',
+                          loading: auth.loading,
+                          onPressed: _sendReset,
+                        ),
                       ],
                     ),
                   ),
@@ -177,6 +106,45 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SuccessView extends StatelessWidget {
+  const _SuccessView({required this.email});
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: 40),
+        Container(
+          width: 72, height: 72,
+          decoration: BoxDecoration(
+            color: AppColors.success.withAlpha(20),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.success.withAlpha(60), width: 2),
+          ),
+          child: const Center(
+            child: Icon(PhosphorIconsRegular.envelopeOpen, color: AppColors.success, size: 32),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('Check your email', style: AppTextStyles.h2, textAlign: TextAlign.center),
+        const SizedBox(height: 12),
+        Text(
+          'A password reset link has been sent to\n$email',
+          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 40),
+        AppButton(
+          label: 'Back to Sign In',
+          onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+        ),
+      ],
     );
   }
 }

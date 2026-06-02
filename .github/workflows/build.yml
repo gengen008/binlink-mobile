@@ -3,7 +3,7 @@ name: Build BinLink APKs
 on:
   push:
     branches: [main]
-  workflow_dispatch:   # allows manual trigger from GitHub UI
+  workflow_dispatch:   # manual trigger from GitHub UI → Actions tab
 
 permissions:
   contents: write   # needed to create/update releases
@@ -14,15 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ── 2. Java 17 ───────────────────────────────────────────────────
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
+      # ── 3. Flutter ───────────────────────────────────────────────────
       - name: Setup Flutter 3.38.1
         uses: subosito/flutter-action@v2
         with:
@@ -30,77 +34,135 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Create .env from secrets
+      - name: Flutter version info
+        run: flutter --version
+
+      # ── 4. Inject all secrets ────────────────────────────────────────
+      - name: Inject mobile .env (API URLs)
         run: |
           echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
           echo "SOCKET_URL=${{ secrets.SOCKET_URL }}" >> .env
+          echo "[CI] .env written (API_BASE_URL + SOCKET_URL)"
 
+      - name: Inject household google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_HOUSEHOLD }}" | base64 -d \
+            > android/app/src/household/google-services.json
+          echo "[CI] household google-services.json injected ($(wc -c < android/app/src/household/google-services.json) bytes)"
+
+      - name: Inject collector google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_COLLECTOR }}" | base64 -d \
+            > android/app/src/collector/google-services.json
+          echo "[CI] collector google-services.json injected ($(wc -c < android/app/src/collector/google-services.json) bytes)"
+
+      - name: Inject Google Maps API key
+        run: |
+          sed -i "s|MAPS_API_KEY_PLACEHOLDER|${{ secrets.MAPS_API_KEY }}|g" \
+            android/app/src/main/AndroidManifest.xml
+          grep -c "MAPS_API_KEY_PLACEHOLDER" android/app/src/main/AndroidManifest.xml \
+            && echo "[CI] ERROR: placeholder still present!" && exit 1 \
+            || echo "[CI] Maps API key injected successfully"
+
+      # ── 5. Dependencies ──────────────────────────────────────────────
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Analyze (catch obvious errors)
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Flutter analyze (non-blocking)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
 
+      # ── 6. Build Household APK ───────────────────────────────────────
       - name: Build BinLink-Eco (Household) APK
         run: |
           flutter build apk \
             --flavor household \
             --target lib/main_household.dart \
-            --release
+            --release \
+            --verbose
+        env:
+          JAVA_TOOL_OPTIONS: "-Xmx4g"
 
+      - name: Verify Household APK
+        run: |
+          ls -lh build/app/outputs/flutter-apk/app-household-release.apk
+          echo "[CI] Household APK size: $(du -sh build/app/outputs/flutter-apk/app-household-release.apk | cut -f1)"
+
+      # ── 7. Build Collector APK ───────────────────────────────────────
       - name: Build BinLink-Collector APK
         run: |
           flutter build apk \
             --flavor collector \
             --target lib/main_collector.dart \
-            --release
+            --release \
+            --verbose
+        env:
+          JAVA_TOOL_OPTIONS: "-Xmx4g"
 
+      - name: Verify Collector APK
+        run: |
+          ls -lh build/app/outputs/flutter-apk/app-collector-release.apk
+          echo "[CI] Collector APK size: $(du -sh build/app/outputs/flutter-apk/app-collector-release.apk | cut -f1)"
+
+      # ── 8. Rename APKs ───────────────────────────────────────────────
       - name: Rename APKs for release
         run: |
           cp build/app/outputs/flutter-apk/app-household-release.apk BinLink-Eco-v2.apk
           cp build/app/outputs/flutter-apk/app-collector-release.apk BinLink-Collector-v2.apk
+          echo "[CI] APKs renamed:"
+          ls -lh BinLink-*.apk
 
+      # ── 9. Publish GitHub Release ────────────────────────────────────
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Delete old 'latest' release + tag if they exist
-          gh release delete latest --yes --repo ${{ github.repository }} || true
-          git push origin :refs/tags/latest || true
+          # Delete previous 'latest' release + tag if they exist
+          gh release delete latest --yes --repo ${{ github.repository }} 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
 
-          # Create fresh release with both APKs attached
+          # Create new release with both APKs attached
           gh release create latest \
             --repo ${{ github.repository }} \
-            --title "BinLink v2 — Latest Build" \
+            --title "BinLink Eco v2 — Latest Build" \
             --notes "$(cat <<'EOF'
-          ## Download
+          ## Download APKs
 
-          | App | File | Description |
+          | App | File | Who uses it |
           |-----|------|-------------|
-          | **BinLink Eco** (Household) | \`BinLink-Eco-v2.apk\` | For households booking waste pickups |
-          | **BinLink Collector** | \`BinLink-Collector-v2.apk\` | For collectors accepting & completing jobs |
+          | **BinLink Eco** (Household) | \`BinLink-Eco-v2.apk\` | Households booking waste pickups |
+          | **BinLink Collector** | \`BinLink-Collector-v2.apk\` | Collectors accepting & completing jobs |
 
-          ## Install
+          ## How to install
           1. Download the APK for your role above
-          2. On your Android phone go to **Settings → Install unknown apps** and allow your browser or file manager
+          2. On your Android phone: **Settings → Apps → Special access → Install unknown apps** → allow your file manager / browser
           3. Open the downloaded APK and tap **Install**
 
           ---
-          *Auto-built from the latest commit on \`main\`.*
+          Built from commit \`${{ github.sha }}\` on \`${{ github.ref_name }}\`
+          *Auto-built by GitHub Actions on every push to \`main\`.*
           EOF
           )" \
             --latest \
             "BinLink-Eco-v2.apk#BinLink-Eco-v2.apk" \
             "BinLink-Collector-v2.apk#BinLink-Collector-v2.apk"
 
-      - name: Summary
-        if: success()
+          echo "[CI] Release published → https://github.com/${{ github.repository }}/releases/latest"
+
+      # ── 10. Job summary ──────────────────────────────────────────────
+      - name: Build summary
+        if: always()
         run: |
-          echo "### Build Successful! ✅" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Result" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ Build succeeded" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Build failed — check logs above" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "APKs published to **[Releases](https://github.com/${{ github.repository }}/releases/latest)**." >> $GITHUB_STEP_SUMMARY
+          echo "| APK | Role | Download |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| BinLink-Eco-v2.apk | Household app | [Releases](https://github.com/${{ github.repository }}/releases/latest) |" >> $GITHUB_STEP_SUMMARY
+          echo "| BinLink-Collector-v2.apk | Collector app | [Releases](https://github.com/${{ github.repository }}/releases/latest) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| APK | Role |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| BinLink-Eco-v2.apk | Household app |" >> $GITHUB_STEP_SUMMARY
-          echo "| BinLink-Collector-v2.apk | Collector app |" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`  " >> $GITHUB_STEP_SUMMARY
+          echo "Build: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY

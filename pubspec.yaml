@@ -42,6 +42,11 @@ dependencies:
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
 
+  # Firebase Auth (email/password + Google Sign-In)
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  google_sign_in: ^6.2.1
+
   # URL launcher (for calls, maps)
   url_launcher: ^6.3.0
 

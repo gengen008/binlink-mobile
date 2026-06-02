@@ -1,6 +1,13 @@
 class Validators {
   Validators._();
 
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Email required';
+    final re = RegExp(r'^[\w.+\-]+@[a-zA-Z\d\-]+(\.[a-zA-Z\d\-]+)*\.[a-zA-Z]{2,}$');
+    if (!re.hasMatch(value.trim())) return 'Enter a valid email address';
+    return null;
+  }
+
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) return 'Phone number required';
     final cleaned = value.replaceAll(RegExp(r'[\s\-()]'), '');

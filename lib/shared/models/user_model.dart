@@ -1,6 +1,7 @@
 class UserModel {
   final String id;
-  final String phone;
+  final String? phone;
+  final String? email;
   final String role; // HOUSEHOLD | COLLECTOR | ADMIN
   final String? fullName;
   final String? address;
@@ -15,8 +16,9 @@ class UserModel {
 
   const UserModel({
     required this.id,
-    required this.phone,
     required this.role,
+    this.phone,
+    this.email,
     this.fullName,
     this.address,
     this.status = 'ACTIVE',
@@ -37,7 +39,8 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id:           json['id'] as String,
-      phone:        json['phone'] as String,
+      phone:        json['phone'] as String?,
+      email:        json['email'] as String?,
       role:         json['role'] as String? ?? 'HOUSEHOLD',
       fullName:     json['fullName'] as String?,
       address:      json['address'] as String?,
@@ -53,7 +56,7 @@ class UserModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id, 'phone': phone, 'role': role,
+    'id': id, 'phone': phone, 'email': email, 'role': role,
     'fullName': fullName, 'address': address, 'status': status,
     'isOnline': isOnline, 'rating': rating, 'totalPickups': totalPickups,
     'vehicleType': vehicleType, 'vehiclePlate': vehiclePlate,
@@ -61,13 +64,15 @@ class UserModel {
   };
 
   UserModel copyWith({
-    String? fullName, String? address, bool? isOnline,
-    String? vehicleType, String? vehiclePlate,
+    String? phone, String? email, String? fullName, String? address,
+    bool? isOnline, String? vehicleType, String? vehiclePlate,
     double? lastLat, double? lastLng,
   }) {
     return UserModel(
-      id: id, phone: phone, role: role, status: status,
+      id: id, role: role, status: status,
       rating: rating, totalPickups: totalPickups,
+      phone:       phone       ?? this.phone,
+      email:       email       ?? this.email,
       fullName:    fullName    ?? this.fullName,
       address:     address     ?? this.address,
       isOnline:    isOnline    ?? this.isOnline,
