@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:   # allows manual trigger from GitHub UI
 
+permissions:
+  contents: write   # needed to create/update releases
+
 jobs:
   build:
     name: Build APKs
@@ -43,39 +46,61 @@ jobs:
           flutter build apk \
             --flavor household \
             --target lib/main_household.dart \
-            --release \
-            --verbose
+            --release
 
       - name: Build BinLink-Collector APK
         run: |
           flutter build apk \
             --flavor collector \
             --target lib/main_collector.dart \
-            --release \
-            --verbose
+            --release
 
-      - name: Upload BinLink-Eco APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BinLink-Eco-v2
-          path: build/app/outputs/flutter-apk/app-household-release.apk
-          retention-days: 30
+      - name: Rename APKs for release
+        run: |
+          cp build/app/outputs/flutter-apk/app-household-release.apk BinLink-Eco-v2.apk
+          cp build/app/outputs/flutter-apk/app-collector-release.apk BinLink-Collector-v2.apk
 
-      - name: Upload BinLink-Collector APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BinLink-Collector-v2
-          path: build/app/outputs/flutter-apk/app-collector-release.apk
-          retention-days: 30
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete old 'latest' release + tag if they exist
+          gh release delete latest --yes --repo ${{ github.repository }} || true
+          git push origin :refs/tags/latest || true
+
+          # Create fresh release with both APKs attached
+          gh release create latest \
+            --repo ${{ github.repository }} \
+            --title "BinLink v2 — Latest Build" \
+            --notes "$(cat <<'EOF'
+          ## Download
+
+          | App | File | Description |
+          |-----|------|-------------|
+          | **BinLink Eco** (Household) | \`BinLink-Eco-v2.apk\` | For households booking waste pickups |
+          | **BinLink Collector** | \`BinLink-Collector-v2.apk\` | For collectors accepting & completing jobs |
+
+          ## Install
+          1. Download the APK for your role above
+          2. On your Android phone go to **Settings → Install unknown apps** and allow your browser or file manager
+          3. Open the downloaded APK and tap **Install**
+
+          ---
+          *Auto-built from the latest commit on \`main\`.*
+          EOF
+          )" \
+            --latest \
+            "BinLink-Eco-v2.apk#BinLink-Eco-v2.apk" \
+            "BinLink-Collector-v2.apk#BinLink-Collector-v2.apk"
 
       - name: Summary
         if: success()
         run: |
           echo "### Build Successful! ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Both APKs are ready to download from the **Artifacts** section above." >> $GITHUB_STEP_SUMMARY
+          echo "APKs published to **[Releases](https://github.com/${{ github.repository }}/releases/latest)**." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| APK | Flavor |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| BinLink-Eco-v2 | Household app |" >> $GITHUB_STEP_SUMMARY
-          echo "| BinLink-Collector-v2 | Collector app |" >> $GITHUB_STEP_SUMMARY
+          echo "| APK | Role |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| BinLink-Eco-v2.apk | Household app |" >> $GITHUB_STEP_SUMMARY
+          echo "| BinLink-Collector-v2.apk | Collector app |" >> $GITHUB_STEP_SUMMARY
