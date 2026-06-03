@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
@@ -171,21 +172,20 @@ class _MapTab extends StatefulWidget {
 }
 
 class _MapTabState extends State<_MapTab> {
-  final Completer<GoogleMapController> _mapCtrl = Completer();
+  final MapController _mapCtrl = MapController();
 
   Future<void> _locateMe() async {
     HapticFeedback.lightImpact();
-    final ctrl = await _mapCtrl.future;
-    ctrl.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: widget.pos, zoom: 15.5)));
+    _mapCtrl.move(widget.pos, 15.5);
   }
 
   @override
   void didUpdateWidget(_MapTab old) {
     super.didUpdateWidget(old);
     if (old.pos != widget.pos) {
-      _mapCtrl.future.then(
-          (c) => c.animateCamera(CameraUpdate.newLatLng(widget.pos)));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mapCtrl.move(widget.pos, 14.0);
+      });
     }
   }
 
@@ -194,35 +194,55 @@ class _MapTabState extends State<_MapTab> {
     final prov   = context.watch<CollectorProvider>();
     final active = prov.currentActivePickup;
 
-    final markers = <Marker>{
+    final mapMarkers = [
       Marker(
-        markerId: const MarkerId('me'),
-        position: widget.pos,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          prov.isOnline
-              ? BitmapDescriptor.hueGreen
-              : BitmapDescriptor.hueRed,
+        point: widget.pos,
+        width: 48,
+        height: 48,
+        child: Container(
+          decoration: BoxDecoration(
+            color: (prov.isOnline ? AppColors.success : AppColors.danger)
+                .withAlpha(50),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: prov.isOnline ? AppColors.success : AppColors.danger,
+              width: 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (prov.isOnline ? AppColors.success : AppColors.danger)
+                    .withAlpha(80),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: Icon(
+            PhosphorIconsFill.truck,
+            color: AppColors.white,
+            size: 24,
+          ),
         ),
-        infoWindow: InfoWindow(title: prov.isOnline ? 'Online' : 'Offline'),
       ),
-    };
+    ];
 
     return Stack(
       children: [
         // Full-screen map
-        GoogleMap(
-          onMapCreated: (c) {
-            if (!_mapCtrl.isCompleted) _mapCtrl.complete(c);
-            c.setMapStyle(kDarkMapStyle);
-          },
-          initialCameraPosition:
-              CameraPosition(target: widget.pos, zoom: 14),
-          markers: markers,
-          mapType: MapType.normal,
-          zoomControlsEnabled: false,
-          compassEnabled: false,
-          mapToolbarEnabled: false,
-          myLocationButtonEnabled: false,
+        FlutterMap(
+          mapController: _mapCtrl,
+          options: MapOptions(
+            initialCenter: widget.pos,
+            initialZoom: 14.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: kMapTileUrl,
+              subdomains: kMapTileSubdomains,
+              userAgentPackageName: 'com.binlink.collector',
+              maxZoom: 20,
+            ),
+            MarkerLayer(markers: mapMarkers),
+          ],
         ),
 
         // Top UI overlay

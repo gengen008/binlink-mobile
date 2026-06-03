@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +27,6 @@ class ActivePickupScreen extends StatefulWidget {
 }
 
 class _ActivePickupScreenState extends State<ActivePickupScreen> {
-  final Completer<GoogleMapController> _mapCtrl = Completer();
   final _picker = ImagePicker();
 
   XFile? _beforePhoto;
@@ -39,10 +39,6 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   void initState() {
     super.initState();
     _currentStatus = widget.booking['status'] as String? ?? 'ACCEPTED';
-  }
-
-  void _onMapCreated(GoogleMapController ctrl) {
-    if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
   }
 
   LatLng get _pickupPos => LatLng(
@@ -229,23 +225,39 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             // ── Map ──
             SizedBox(
               height: 200,
-              child: GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(target: _pickupPos, zoom: 15),
-                style: kDarkMapStyle,
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('pickup'),
-                    position: _pickupPos,
-                    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-                    infoWindow: InfoWindow(title: address),
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: _pickupPos,
+                  initialZoom: 15.0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none,
                   ),
-                },
-                mapType: MapType.normal,
-                zoomControlsEnabled: false,
-                compassEnabled: false,
-                mapToolbarEnabled: false,
-                myLocationButtonEnabled: false,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: kMapTileUrl,
+                    subdomains: kMapTileSubdomains,
+                    userAgentPackageName: 'com.binlink.collector',
+                    maxZoom: 20,
+                  ),
+                  MarkerLayer(markers: [
+                    Marker(
+                      point: _pickupPos,
+                      width: 44,
+                      height: 44,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.iceBlue.withAlpha(50),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: AppColors.iceBlue, width: 2.5),
+                        ),
+                        child: const Icon(PhosphorIconsFill.mapPin,
+                            color: AppColors.white, size: 22),
+                      ),
+                    ),
+                  ]),
+                ],
               ),
             ),
 

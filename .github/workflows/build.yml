@@ -38,11 +38,13 @@ jobs:
         run: flutter --version
 
       # ── 4. Inject all secrets ────────────────────────────────────────
-      - name: Inject mobile .env (API URLs)
+      - name: Inject mobile .env
         run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
-          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}" >> .env
-          echo "[CI] .env written (API_BASE_URL + SOCKET_URL)"
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"   > .env
+          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"      >> .env
+          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"  >> .env
+          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}" >> .env
+          echo "[CI] .env written"
 
       - name: Inject household google-services.json
         run: |
@@ -57,14 +59,6 @@ jobs:
           echo "${{ secrets.GOOGLE_SERVICES_JSON_COLLECTOR }}" | base64 -d \
             > android/app/src/collector/google-services.json
           echo "[CI] collector google-services.json injected ($(wc -c < android/app/src/collector/google-services.json) bytes)"
-
-      - name: Inject Google Maps API key
-        run: |
-          sed -i "s|MAPS_API_KEY_PLACEHOLDER|${{ secrets.MAPS_API_KEY }}|g" \
-            android/app/src/main/AndroidManifest.xml
-          grep -c "MAPS_API_KEY_PLACEHOLDER" android/app/src/main/AndroidManifest.xml \
-            && echo "[CI] ERROR: placeholder still present!" && exit 1 \
-            || echo "[CI] Maps API key injected successfully"
 
       # ── 5. Dependencies ──────────────────────────────────────────────
       - name: Flutter pub get

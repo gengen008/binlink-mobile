@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/household_provider.dart';
@@ -176,26 +177,21 @@ class _HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<_HomeTab> {
-  final Completer<GoogleMapController> _mapCtrl = Completer();
-  Map<String, dynamic>? _tappedCollector;
+  final MapController _mapCtrl = MapController();
 
   @override
   void didUpdateWidget(_HomeTab old) {
     super.didUpdateWidget(old);
     if (old.myPos != widget.myPos) {
-      _mapCtrl.future.then((c) =>
-          c.animateCamera(CameraUpdate.newLatLng(widget.myPos)));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mapCtrl.move(widget.myPos, 14.0);
+      });
     }
   }
 
   Future<void> _locateMe() async {
     HapticFeedback.lightImpact();
-    final ctrl = await _mapCtrl.future;
-    ctrl.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: widget.myPos, zoom: 15.5),
-      ),
-    );
+    _mapCtrl.move(widget.myPos, 15.5);
   }
 
   @override
@@ -204,34 +200,56 @@ class _HomeTabState extends State<_HomeTab> {
     final auth   = context.watch<AuthProvider>();
     final active = prov.activeBooking;
 
-    final markers = <Marker>{
+    // Build markers for flutter_map
+    final mapMarkers = <Marker>[
+      // My location
       Marker(
-        markerId: const MarkerId('me'),
-        position: widget.myPos,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: const InfoWindow(title: 'My Location'),
+        point: widget.myPos,
+        width: 44,
+        height: 44,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.steelBlue.withAlpha(50),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.steelBlue, width: 2.5),
+          ),
+          child: const Icon(PhosphorIconsFill.mapPin,
+              color: AppColors.white, size: 22),
+        ),
       ),
+      // Online collectors
       ...prov.onlineCollectors.map((c) {
         final lat = (c['lastLat'] as num?)?.toDouble();
         final lng = (c['lastLng'] as num?)?.toDouble();
         if (lat == null || lng == null) return null;
         return Marker(
-          markerId: MarkerId('c_${c['id']}'),
-          position: LatLng(lat, lng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            showCollectorSheet(
-              context, c,
-              onRequestPickup: () => Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (_) => const BookScreen(mode: 'immediate'),
-                  )),
-            );
-          },
+          point: LatLng(lat, lng),
+          width: 44,
+          height: 44,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              showCollectorSheet(
+                context, c,
+                onRequestPickup: () => Navigator.push(context,
+                    MaterialPageRoute(
+                      builder: (_) => const BookScreen(mode: 'immediate'),
+                    )),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.success.withAlpha(50),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.success, width: 2.5),
+              ),
+              child: const Icon(PhosphorIconsFill.truck,
+                  color: AppColors.white, size: 22),
+            ),
+          ),
         );
       }).whereType<Marker>(),
-    };
+    ];
 
     return Container(
       color: AppColors.midnightNavy,
@@ -239,20 +257,21 @@ class _HomeTabState extends State<_HomeTab> {
         children: [
           // ── Full-screen map ────────────────────────────────────────
           Positioned.fill(
-            child: GoogleMap(
-              onMapCreated: (c) {
-                if (!_mapCtrl.isCompleted) _mapCtrl.complete(c);
-                c.setMapStyle(kDarkMapStyle);
-              },
-              initialCameraPosition:
-                  CameraPosition(target: widget.myPos, zoom: 14),
-              markers: markers,
-              mapType: MapType.normal,
-              zoomControlsEnabled: false,
-              compassEnabled: false,
-              mapToolbarEnabled: false,
-              myLocationButtonEnabled: false,
-              myLocationEnabled: false,
+            child: FlutterMap(
+              mapController: _mapCtrl,
+              options: MapOptions(
+                initialCenter: widget.myPos,
+                initialZoom: 14.0,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: kMapTileUrl,
+                  subdomains: kMapTileSubdomains,
+                  userAgentPackageName: 'com.binlink.eco',
+                  maxZoom: 20,
+                ),
+                MarkerLayer(markers: mapMarkers),
+              ],
             ),
           ),
 
@@ -375,14 +394,7 @@ class _HomeTabState extends State<_HomeTab> {
                         lng: widget.myPos.longitude,
                       );
                       if (result != null && context.mounted) {
-                        // Move map to selected location
-                        final ctrl = await _mapCtrl.future;
-                        ctrl.animateCamera(CameraUpdate.newCameraPosition(
-                          CameraPosition(
-                            target: LatLng(result.lat, result.lng),
-                            zoom: 16,
-                          ),
-                        ));
+                        _mapCtrl.move(LatLng(result.lat, result.lng), 16.0);
                       }
                     },
                     child: Container(

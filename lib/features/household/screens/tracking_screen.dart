@@ -1,19 +1,21 @@
 import 'dart:async';
-import 'dart:math' show sin, cos, sqrt, atan2, pi;
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/routing_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 
-// Haversine distance in km between two lat/lng points
+// Haversine distance in km
 double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   const r = 6371.0;
   final dLat = (lat2 - lat1) * pi / 180;
@@ -24,6 +26,16 @@ double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   return r * 2 * atan2(sqrt(a), sqrt(1 - a));
 }
 
+// Bearing in degrees from [from] to [to]
+double _bearingDeg(LatLng from, LatLng to) {
+  final dLng = (to.longitude - from.longitude) * pi / 180;
+  final lat1 = from.latitude  * pi / 180;
+  final lat2 = to.latitude    * pi / 180;
+  final y = sin(dLng) * cos(lat2);
+  final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLng);
+  return (atan2(y, x) * 180 / pi + 360) % 360;
+}
+
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({super.key, required this.bookingId});
   final String bookingId;
@@ -32,52 +44,65 @@ class TrackingScreen extends StatefulWidget {
   State<TrackingScreen> createState() => _TrackingScreenState();
 }
 
-class _TrackingScreenState extends State<TrackingScreen> {
-  final Completer<GoogleMapController> _mapCtrl = Completer();
+class _TrackingScreenState extends State<TrackingScreen>
+    with TickerProviderStateMixin {
+
+  final MapController _mapCtrl = MapController();
   Map<String, dynamic>? _booking;
   bool _loading = true;
 
-  // Track previous collector position to avoid redundant camera moves
+  // Previous position to detect movement
   double? _prevCollectorLat;
   double? _prevCollectorLng;
 
-  // Route: real road polyline from Directions API
+  // Route polyline
   List<LatLng>? _routePoints;
   double? _routeFetchLat;
   double? _routeFetchLng;
 
-  void _onMapCreated(GoogleMapController ctrl) {
-    if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
-    if (_booking != null) {
-      ctrl.animateCamera(CameraUpdate.newLatLngZoom(_pickupLatLng, 15));
-    }
-  }
+  // Animated marker state (Bolt-style smooth movement)
+  LatLng? _collectorAnimPos;
+  LatLng? _collectorPrevPos;
+  LatLng? _collectorTargetPos;
+  double  _collectorBearing = 0;
+  late AnimationController _markerAnim;
 
   @override
   void initState() {
     super.initState();
+    _markerAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..addListener(_tickMarker);
     _loadAndListen();
   }
 
-  Future<void> _loadAndListen() async {
-    try {
-      final res = await ApiClient.get('/api/bookings/${widget.bookingId}');
-      if (mounted) {
-        setState(() {
-          _booking = Map<String, dynamic>.from(res.data['data'] as Map);
-          _loading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
+  void _tickMarker() {
+    if (_collectorPrevPos == null || _collectorTargetPos == null) return;
+    final t = CurvedAnimation(parent: _markerAnim, curve: Curves.easeOut).value;
+    setState(() {
+      _collectorAnimPos = LatLng(
+        _collectorPrevPos!.latitude  + (_collectorTargetPos!.latitude  - _collectorPrevPos!.latitude)  * t,
+        _collectorPrevPos!.longitude + (_collectorTargetPos!.longitude - _collectorPrevPos!.longitude) * t,
+      );
+    });
+  }
 
-    if (!mounted) return;
-    context.read<HouseholdProvider>().listenToBooking(widget.bookingId);
+  void _animateCollectorTo(double lat, double lng) {
+    final newPos = LatLng(lat, lng);
+    if (_collectorAnimPos != null) {
+      _collectorBearing = _bearingDeg(_collectorAnimPos!, newPos);
+    }
+    _collectorPrevPos   = _collectorAnimPos ?? newPos;
+    _collectorTargetPos = newPos;
+    _markerAnim.forward(from: 0);
+    // Also move camera
+    _mapCtrl.move(newPos, 15.0);
   }
 
   @override
   void dispose() {
+    _markerAnim.dispose();
     context.read<HouseholdProvider>().stopListening();
     super.dispose();
   }
@@ -87,64 +112,54 @@ class _TrackingScreenState extends State<TrackingScreen> {
     (_booking?['pickupLng'] as num?)?.toDouble() ?? -0.1870,
   );
 
-  Future<void> _fetchRoute(double oLat, double oLng) async {
+  Future<void> _loadAndListen() async {
     try {
-      final res = await ApiClient.get('/api/directions', params: {
-        'olat': oLat.toString(),
-        'olng': oLng.toString(),
-        'dlat': _pickupLatLng.latitude.toString(),
-        'dlng': _pickupLatLng.longitude.toString(),
-      });
-      final encoded = res.data['data']?['points'] as String?;
-      if (encoded != null && mounted) {
-        setState(() => _routePoints = _decodePolyline(encoded));
+      final res = await ApiClient.get('/api/bookings/${widget.bookingId}');
+      if (mounted) {
+        setState(() {
+          _booking = Map<String, dynamic>.from(res.data['data'] as Map);
+          _loading = false;
+        });
+        // Move camera to pickup location once we know it
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _mapCtrl.move(_pickupLatLng, 15.0);
+        });
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+    if (!mounted) return;
+    context.read<HouseholdProvider>().listenToBooking(widget.bookingId);
   }
 
-  List<LatLng> _decodePolyline(String encoded) {
-    final points = <LatLng>[];
-    int index = 0, lat = 0, lng = 0;
-    while (index < encoded.length) {
-      int shift = 0, result = 0, b;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      shift = 0; result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      points.add(LatLng(lat / 1e5, lng / 1e5));
+  Future<void> _fetchRoute(double oLat, double oLng) async {
+    final result = await RoutingService.getRoute(
+      LatLng(oLat, oLng),
+      _pickupLatLng,
+    );
+    if (result != null && result.points.isNotEmpty && mounted) {
+      setState(() => _routePoints = result.points);
     }
-    return points;
   }
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<HouseholdProvider>();
-    final status = _booking?['status'] as String? ?? 'PENDING';
+    final prov         = context.watch<HouseholdProvider>();
+    final status       = _booking?['status'] as String? ?? 'PENDING';
     final collectorLat = prov.collectorLat;
     final collectorLng = prov.collectorLng;
 
-    // Animate camera to collector when their position updates
+    // Trigger animation when collector moves
     if (collectorLat != null && collectorLng != null &&
         (collectorLat != _prevCollectorLat || collectorLng != _prevCollectorLng)) {
       _prevCollectorLat = collectorLat;
       _prevCollectorLng = collectorLng;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _mapCtrl.future.then((ctrl) {
-          ctrl.animateCamera(CameraUpdate.newLatLng(LatLng(collectorLat, collectorLng)));
-        });
+        if (mounted) _animateCollectorTo(collectorLat, collectorLng);
       });
     }
 
-    // Fetch/refresh real road route when collector moves >200m from last fetch
+    // Refresh route when collector moves >200 m from last fetch
     if (collectorLat != null && collectorLng != null && _booking != null) {
       final fetchLat = _routeFetchLat;
       final fetchLng = _routeFetchLng;
@@ -153,45 +168,19 @@ class _TrackingScreenState extends State<TrackingScreen> {
         _routeFetchLat = collectorLat;
         _routeFetchLng = collectorLng;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _fetchRoute(collectorLat, collectorLng);
+          if (mounted) _fetchRoute(collectorLat, collectorLng);
         });
       }
     }
 
-    // Build markers
-    final markers = <Marker>{
-      if (_booking != null)
-        Marker(
-          markerId: const MarkerId('pickup'),
-          position: _pickupLatLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-          infoWindow: const InfoWindow(title: 'Pickup Location'),
-        ),
-      if (collectorLat != null && collectorLng != null)
-        Marker(
-          markerId: const MarkerId('collector'),
-          position: LatLng(collectorLat, collectorLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(title: 'Collector'),
-        ),
-    };
+    // Route polyline: real road route or straight-line fallback
+    final polylinePoints = (_routePoints != null && _routePoints!.length > 1)
+        ? _routePoints!
+        : (collectorLat != null && collectorLng != null)
+            ? [LatLng(collectorLat, collectorLng), _pickupLatLng]
+            : null;
 
-    // Route polyline: real road route when available, straight dashed fallback
-    final hasRealRoute = _routePoints != null && _routePoints!.length > 1;
-    final polylines = <Polyline>{
-      if (collectorLat != null && collectorLng != null)
-        Polyline(
-          polylineId: const PolylineId('route'),
-          points: hasRealRoute
-              ? _routePoints!
-              : [LatLng(collectorLat, collectorLng), _pickupLatLng],
-          color: AppColors.steelBlue.withAlpha(hasRealRoute ? 220 : 160),
-          width: hasRealRoute ? 4 : 3,
-          patterns: hasRealRoute ? [] : [PatternItem.dash(12), PatternItem.gap(8)],
-        ),
-    };
-
-    // ETA: distance / 30 km/h
+    // ETA
     String? etaLabel;
     if (collectorLat != null && collectorLng != null &&
         status != 'COMPLETED' && status != 'ARRIVED') {
@@ -228,37 +217,104 @@ class _TrackingScreenState extends State<TrackingScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft, color: AppColors.white),
+                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
+                          color: AppColors.white),
                     ),
-                    const Expanded(child: Text('Live Tracking', style: AppTextStyles.h3)),
-                    if (_booking != null) StatusBadge(status: status, animate: true),
+                    const Expanded(
+                        child: Text('Live Tracking', style: AppTextStyles.h3)),
+                    if (_booking != null)
+                      StatusBadge(status: status, animate: true),
                   ],
                 ),
               ),
             ),
 
-            // Google Map
+            // Map
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.steelBlue))
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                          color: AppColors.steelBlue))
                   : Stack(
                       children: [
-                        GoogleMap(
-                          onMapCreated: _onMapCreated,
-                          initialCameraPosition: CameraPosition(
-                            target: _pickupLatLng,
-                            zoom: 15,
+                        FlutterMap(
+                          mapController: _mapCtrl,
+                          options: MapOptions(
+                            initialCenter: _pickupLatLng,
+                            initialZoom: 15.0,
                           ),
-                          style: kDarkMapStyle,
-                          markers: markers,
-                          polylines: polylines,
-                          mapType: MapType.normal,
-                          zoomControlsEnabled: false,
-                          compassEnabled: false,
-                          mapToolbarEnabled: false,
-                          myLocationButtonEnabled: false,
+                          children: [
+                            TileLayer(
+                              urlTemplate: kMapTileUrl,
+                              subdomains: kMapTileSubdomains,
+                              userAgentPackageName: 'com.binlink.eco',
+                              maxZoom: 20,
+                            ),
+                            // Route polyline
+                            if (polylinePoints != null)
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: polylinePoints,
+                                    color: AppColors.steelBlue.withAlpha(210),
+                                    strokeWidth: 4.0,
+                                    strokeCap: StrokeCap.round,
+                                    strokeJoin: StrokeJoin.round,
+                                  ),
+                                ],
+                              ),
+                            MarkerLayer(markers: [
+                              // Pickup location pin
+                              if (_booking != null)
+                                Marker(
+                                  point: _pickupLatLng,
+                                  width: 44,
+                                  height: 44,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.iceBlue.withAlpha(50),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: AppColors.iceBlue,
+                                          width: 2.5),
+                                    ),
+                                    child: const Icon(PhosphorIconsFill.mapPin,
+                                        color: AppColors.white, size: 22),
+                                  ),
+                                ),
+                              // Animated collector truck
+                              if (_collectorAnimPos != null)
+                                Marker(
+                                  point: _collectorAnimPos!,
+                                  width: 50,
+                                  height: 50,
+                                  child: Transform.rotate(
+                                    angle: _collectorBearing * pi / 180,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.steelBlue.withAlpha(60),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: AppColors.steelBlue,
+                                            width: 2.5),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.steelBlue
+                                                .withAlpha(100),
+                                            blurRadius: 12,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(PhosphorIconsFill.truck,
+                                          color: AppColors.white, size: 26),
+                                    ),
+                                  ),
+                                ),
+                            ]),
+                          ],
                         ),
-                        // ETA chip overlay
+
+                        // ETA overlay chip
                         if (etaLabel != null)
                           Positioned(
                             top: 12, left: 12,
@@ -279,7 +335,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                                   const SizedBox(width: 6),
                                   Text(etaLabel,
                                       style: AppTextStyles.monoSm.copyWith(
-                                        color: AppColors.white)),
+                                          color: AppColors.white)),
                                 ],
                               ),
                             ),
@@ -294,14 +350,16 @@ class _TrackingScreenState extends State<TrackingScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 decoration: const BoxDecoration(
                   color: AppColors.deepOcean,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(28)),
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
                 child: Column(
                   children: [
                     Center(
                       child: Container(
-                        width: 40, height: 4,
+                        width: 40,
+                        height: 4,
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           color: AppColors.border,
@@ -319,14 +377,16 @@ class _TrackingScreenState extends State<TrackingScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(
+                            width: 48,
+                            height: 48,
+                            decoration: const BoxDecoration(
                               gradient: AppColors.primaryGradient,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
-                                Fmt.initials(_booking!['collector']['fullName'] as String?),
+                                Fmt.initials(_booking!['collector']
+                                    ['fullName'] as String?),
                                 style: AppTextStyles.h4,
                               ),
                             ),
@@ -337,12 +397,15 @@ class _TrackingScreenState extends State<TrackingScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _booking!['collector']['fullName'] as String? ?? 'Collector',
+                                  _booking!['collector']['fullName']
+                                          as String? ??
+                                      'Collector',
                                   style: AppTextStyles.h4,
                                 ),
                                 Row(
                                   children: [
-                                    const Icon(PhosphorIconsFill.star, color: AppColors.warning, size: 14),
+                                    const Icon(PhosphorIconsFill.star,
+                                        color: AppColors.warning, size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${_booking!['collector']['rating'] ?? 5.0}',
@@ -354,7 +417,8 @@ class _TrackingScreenState extends State<TrackingScreen> {
                             ),
                           ),
                           if (status == 'COMPLETED')
-                            const Icon(PhosphorIconsFill.checkCircle, color: AppColors.success, size: 28),
+                            const Icon(PhosphorIconsFill.checkCircle,
+                                color: AppColors.success, size: 28),
                         ],
                       ),
                     ],
@@ -362,12 +426,14 @@ class _TrackingScreenState extends State<TrackingScreen> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Icon(PhosphorIconsRegular.mapPin, color: AppColors.skyBlue, size: 16),
+                        const Icon(PhosphorIconsRegular.mapPin,
+                            color: AppColors.skyBlue, size: 16),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _booking!['pickupAddress'] as String? ?? '',
-                            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.body
+                                .copyWith(color: AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -389,18 +455,19 @@ class _StatusMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, msg, color) = switch (status) {
-      'PENDING'   => (PhosphorIconsRegular.clock,       'Waiting for a collector to accept...', AppColors.warning),
-      'ACCEPTED'  => (PhosphorIconsFill.checkCircle,    'Collector accepted your request!',      AppColors.steelBlue),
-      'EN_ROUTE'  => (PhosphorIconsFill.truck,          'Collector is on the way to you!',       AppColors.warning),
-      'ARRIVED'   => (PhosphorIconsFill.mapPin,         'Collector has arrived!',                AppColors.success),
-      'COMPLETED' => (PhosphorIconsFill.sparkle,        'Pickup complete — great job!',          AppColors.success),
-      _           => (PhosphorIconsRegular.question,    status,                                  AppColors.muted),
+      'PENDING'   => (PhosphorIconsRegular.clock,    'Waiting for a collector to accept...', AppColors.warning),
+      'ACCEPTED'  => (PhosphorIconsFill.checkCircle, 'Collector accepted your request!',     AppColors.steelBlue),
+      'EN_ROUTE'  => (PhosphorIconsFill.truck,       'Collector is on the way to you!',      AppColors.warning),
+      'ARRIVED'   => (PhosphorIconsFill.mapPin,      'Collector has arrived!',               AppColors.success),
+      'COMPLETED' => (PhosphorIconsFill.sparkle,     'Pickup complete — great job!',         AppColors.success),
+      _           => (PhosphorIconsRegular.question, status,                                 AppColors.muted),
     };
 
     return Row(
       children: [
         Container(
-          width: 44, height: 44,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: color.withAlpha(25),
             shape: BoxShape.circle,

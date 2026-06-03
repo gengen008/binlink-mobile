@@ -11,4 +11,7 @@ class Env {
 
   static String get mapsApiKey =>
       dotenv.env['MAPS_API_KEY'] ?? '';
+
+  static String get tomtomApiKey =>
+      dotenv.env['TOMTOM_API_KEY'] ?? '';
 }

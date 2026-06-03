@@ -92,23 +92,24 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
 
   Future<void> _selectPrediction(PlacePrediction p) async {
     HapticFeedback.selectionClick();
+    // TomTom / Nominatim predictions already include lat/lng — use directly
+    if (p.lat != null && p.lng != null) {
+      Navigator.pop(context, LocationResult(
+        address: p.fullText,
+        lat: p.lat!,
+        lng: p.lng!,
+      ));
+      return;
+    }
+    // Fallback: detail lookup (legacy path)
     setState(() => _searching = true);
     final detail = await PlacesService.getDetail(p.placeId);
     if (!mounted) return;
-    if (detail != null) {
-      Navigator.pop(context, LocationResult(
-        address: detail.address,
-        lat: detail.lat,
-        lng: detail.lng,
-      ));
-    } else {
-      // fallback: use the text as address with last known position
-      Navigator.pop(context, LocationResult(
-        address: p.fullText,
-        lat: widget.userLat,
-        lng: widget.userLng,
-      ));
-    }
+    Navigator.pop(context, LocationResult(
+      address: detail?.address ?? p.fullText,
+      lat: detail?.lat ?? widget.userLat,
+      lng: detail?.lng ?? widget.userLng,
+    ));
   }
 
   Future<void> _useCurrentLocation() async {

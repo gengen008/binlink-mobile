@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/household_provider.dart';
@@ -1199,28 +1200,40 @@ class _Step4AddressState extends State<_Step4Address> {
                   height: 180,
                   child: Stack(
                     children: [
-                      GoogleMap(
-                        initialCameraPosition:
-                            CameraPosition(target: target, zoom: 15),
-                        onMapCreated: (ctrl) {
-                          ctrl.setMapStyle(kDarkMapStyle);
-                        },
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('pickup'),
-                            position: target,
-                            icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueAzure),
+                      FlutterMap(
+                        options: MapOptions(
+                          initialCenter: target,
+                          initialZoom: 15.0,
+                          interactionOptions: const InteractionOptions(
+                            flags: InteractiveFlag.none,
                           ),
-                        },
-                        zoomControlsEnabled: false,
-                        compassEnabled: false,
-                        mapToolbarEnabled: false,
-                        myLocationButtonEnabled: false,
-                        scrollGesturesEnabled: false,
-                        zoomGesturesEnabled: false,
-                        rotateGesturesEnabled: false,
-                        tiltGesturesEnabled: false,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: kMapTileUrl,
+                            subdomains: kMapTileSubdomains,
+                            userAgentPackageName: 'com.binlink.eco',
+                            maxZoom: 20,
+                          ),
+                          MarkerLayer(markers: [
+                            Marker(
+                              point: target,
+                              width: 44,
+                              height: 44,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.steelBlue.withAlpha(50),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: AppColors.steelBlue,
+                                      width: 2.5),
+                                ),
+                                child: const Icon(PhosphorIconsFill.mapPin,
+                                    color: AppColors.white, size: 22),
+                              ),
+                            ),
+                          ]),
+                        ],
                       ),
                       // Tap overlay hint
                       Positioned(
