@@ -44,7 +44,9 @@ class HouseholdProvider extends ChangeNotifier {
       final res = await ApiClient.get('/api/bookings');
       _bookings = List<Map<String, dynamic>>.from(res.data['data'] as List);
       _activeBooking = _bookings.firstWhere(
-        (b) => ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(b['status']),
+        (b) => ['PENDING', 'SEARCHING', 'ASSIGNED', 'ACCEPTED',
+                 'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED',
+                 'COLLECTING', 'COLLECTED'].contains(b['status']),
         orElse: () => {},
       );
       if (_activeBooking?.isEmpty == true) _activeBooking = null;

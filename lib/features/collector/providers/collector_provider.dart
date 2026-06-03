@@ -56,7 +56,8 @@ class CollectorProvider extends ChangeNotifier {
       final all = List<Map<String, dynamic>>.from(res.data['data'] as List);
       _completedPickups = all.where((b) => b['status'] == 'COMPLETED').toList();
       _activePickups    = all.where((b) =>
-        ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(b['status'])
+        ['ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY',
+         'ARRIVED', 'COLLECTING', 'COLLECTED'].contains(b['status'])
       ).toList();
 
       // Load unassigned PENDING bookings within 30 km — fills the request queue
@@ -179,9 +180,13 @@ class CollectorProvider extends ChangeNotifier {
       }
       await ApiClient.put('/api/bookings/$bookingId/$action', body.isEmpty ? null : body);
       final statusMap = {
-        'en-route': 'EN_ROUTE',
-        'arrived':  'ARRIVED',
-        'complete': 'COMPLETED',
+        'on-the-way': 'ON_THE_WAY',
+        'collecting': 'COLLECTING',
+        'collected':  'COLLECTED',
+        // Legacy aliases kept for backward compat
+        'en-route':   'EN_ROUTE',
+        'arrived':    'ARRIVED',
+        'complete':   'COMPLETED',
       };
       final newStatus = statusMap[action];
       final idx = _activePickups.indexWhere((p) => p['id'] == bookingId);
@@ -203,7 +208,8 @@ class CollectorProvider extends ChangeNotifier {
   bool _loadingJobs = false;
 
   List<Map<String, dynamic>> get assignedJobs =>
-      _allJobs.where((b) => ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(b['status'])).toList();
+      _allJobs.where((b) => ['ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY',
+                              'ARRIVED', 'COLLECTING', 'COLLECTED'].contains(b['status'])).toList();
   List<Map<String, dynamic>> get pendingJobs =>
       _allJobs.where((b) => b['status'] == 'PENDING').toList();
   List<Map<String, dynamic>> get completedJobs =>
