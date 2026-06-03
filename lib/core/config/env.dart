@@ -14,4 +14,7 @@ class Env {
 
   static String get tomtomApiKey =>
       dotenv.env['TOMTOM_API_KEY'] ?? '';
+
+  static String get mapboxToken =>
+      dotenv.env['MAPBOX_TOKEN'] ?? '';
 }

@@ -1,7 +1,7 @@
-// Carto Voyager tile layer — free, no API key, clean light map visible on all networks
-// Switched from dark_all (rendered pitch-black on Ghana networks) to voyager_labels_under
-// which loads reliably and shows streets/landmarks clearly.
-const String kMapTileUrl =
-    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+import '../maps/map_service.dart';
 
-const List<String> kMapTileSubdomains = ['a', 'b', 'c', 'd'];
+/// Active tile URL from the running MapService provider.
+/// All map screens use these getters — changing the active provider here
+/// automatically propagates to every TileLayer in the app.
+String get kMapTileUrl => MapService.instance.tileUrl;
+List<String> get kMapTileSubdomains => MapService.instance.subdomains;
