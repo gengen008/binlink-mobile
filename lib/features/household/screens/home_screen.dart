@@ -513,14 +513,10 @@ class _ActiveBookingBanner extends StatefulWidget {
 }
 
 class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
-  static const _cancellable = {'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'};
-  static const _cancelReasons = [
-    'I no longer need it',
-    'Collector taking too long',
-    'Found another solution',
-    'Wrong address entered',
-    'Other',
-  ];
+  static const _cancellable = {
+    'PENDING', 'SEARCHING', 'ASSIGNED',
+    'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED',
+  };
 
   Color _statusColor(String status) => AppColors.statusColor(status);
 
