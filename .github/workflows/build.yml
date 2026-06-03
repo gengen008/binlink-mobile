@@ -40,10 +40,11 @@ jobs:
       # ── 4. Inject all secrets ────────────────────────────────────────
       - name: Inject mobile .env
         run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"   > .env
-          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"      >> .env
-          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"  >> .env
-          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}" >> .env
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"         > .env
+          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"            >> .env
+          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"        >> .env
+          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}"    >> .env
+          echo "MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}"        >> .env
           echo "[CI] .env written"
 
       - name: Inject household google-services.json
@@ -75,8 +76,8 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Flutter analyze (non-blocking)
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
+      - name: Flutter analyze (blocking — 0 issues required)
+        run: flutter analyze --no-fatal-infos
 
       # ── 6. Build Household APK ───────────────────────────────────────
       - name: Build BinLink-Eco (Household) APK
