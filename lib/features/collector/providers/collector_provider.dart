@@ -168,9 +168,13 @@ class CollectorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateStatus(String bookingId, String action) async {
+  Future<void> updateStatus(String bookingId, String action, {double? actualWeightKg}) async {
     try {
-      await ApiClient.put('/api/bookings/$bookingId/$action');
+      final body = <String, dynamic>{};
+      if (action == 'complete' && actualWeightKg != null) {
+        body['actualWeightKg'] = actualWeightKg;
+      }
+      await ApiClient.put('/api/bookings/$bookingId/$action', body.isEmpty ? null : body);
       final statusMap = {
         'en-route': 'EN_ROUTE',
         'arrived':  'ARRIVED',

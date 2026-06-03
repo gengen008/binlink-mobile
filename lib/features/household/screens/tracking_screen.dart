@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -418,7 +419,31 @@ class _TrackingScreenState extends State<TrackingScreen>
                           ),
                           if (status == 'COMPLETED')
                             const Icon(PhosphorIconsFill.checkCircle,
-                                color: AppColors.success, size: 28),
+                                color: AppColors.success, size: 28)
+                          else ...[
+                            // Call collector button
+                            if (_booking!['collector']['phone'] != null)
+                              _ActionCircle(
+                                icon: PhosphorIconsFill.phone,
+                                color: AppColors.success,
+                                onTap: () => launchUrl(Uri.parse(
+                                  'tel:${_booking!['collector']['phone']}')),
+                              ),
+                            const SizedBox(width: 8),
+                            // Navigate to pickup (opens Google Maps / device nav)
+                            _ActionCircle(
+                              icon: PhosphorIconsFill.navigationArrow,
+                              color: AppColors.steelBlue,
+                              onTap: () {
+                                final lat = (_booking!['pickupLat'] as num?)?.toDouble();
+                                final lng = (_booking!['pickupLng'] as num?)?.toDouble();
+                                if (lat == null || lng == null) return;
+                                launchUrl(Uri.parse(
+                                  'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+                                ), mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -443,6 +468,29 @@ class _TrackingScreenState extends State<TrackingScreen>
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ActionCircle extends StatelessWidget {
+  const _ActionCircle({required this.icon, required this.color, required this.onTap});
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: color.withAlpha(25),
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withAlpha(80)),
+        ),
+        child: Icon(icon, color: color, size: 19),
       ),
     );
   }

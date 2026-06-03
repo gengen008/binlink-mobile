@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
+import '../../../core/network/api_client.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -27,7 +31,7 @@ const double _kBagPrice   = 6;
 // ── Step labels ───────────────────────────────────────────────────────────────
 
 const List<String> _kStepLabels = [
-  'Category', 'Volume', 'Schedule', 'Address', 'Review',
+  'Category', 'Volume', 'Photos', 'Schedule', 'Address', 'Review',
 ];
 
 // ── Waste categories ──────────────────────────────────────────────────────────
@@ -136,20 +140,25 @@ class _BookScreenState extends State<BookScreen>
   int    _extraBags  = 0;
   int    _estWeightKg = 100;
 
-  // Step 3 — Schedule
+  // Step 3 — Waste photos (optional)
+  final _picker = ImagePicker();
+  final List<XFile> _wastePhotos = [];
+  bool _uploadingPhotos = false;
+
+  // Step 4 — Schedule
   bool      _isNow         = true;
   DateTime? _scheduledDate;
   String    _timePref       = 'MORNING';
   String    _frequency      = 'ONE_TIME';
 
-  // Step 4 — Address
+  // Step 5 — Address
   final _addressCtrl = TextEditingController();
   final _notesCtrl   = TextEditingController();
   double _lat         = 5.6037;
   double _lng         = -0.1870;
   bool   _locating    = false;
 
-  // Step 5 — Payment
+  // Step 6 — Payment
   String _payMethod = 'MTN_MOMO';
   final _momoCtrl   = TextEditingController();
 
@@ -207,7 +216,7 @@ class _BookScreenState extends State<BookScreen>
   }
 
   void _toStep(int s) {
-    if (s < 0 || s >= 5) return;
+    if (s < 0 || s >= 6) return;
     setState(() => _step = s);
     _anim.forward(from: 0);
     _pageCtrl.animateToPage(s,
@@ -217,10 +226,11 @@ class _BookScreenState extends State<BookScreen>
   bool _canAdvance() {
     switch (_step) {
       case 0: return _category != null;
-      case 1: return true;
-      case 2: return _isNow || _scheduledDate != null;
-      case 3: return _addressCtrl.text.trim().isNotEmpty;
-      case 4: return true;
+      case 1: return true; // Volume
+      case 2: return true; // Photos — optional
+      case 3: return _isNow || _scheduledDate != null;
+      case 4: return _addressCtrl.text.trim().isNotEmpty;
+      case 5: return true; // Review
     }
     return true;
   }
@@ -247,6 +257,23 @@ class _BookScreenState extends State<BookScreen>
 
     if (!mounted) return;
     if (booking != null) {
+      // Upload waste photo if user took one
+      if (_wastePhotos.isNotEmpty) {
+        setState(() => _uploadingPhotos = true);
+        try {
+          final file = _wastePhotos.first;
+          final formData = FormData.fromMap({
+            'photo': await MultipartFile.fromFile(file.path, filename: 'waste.jpg'),
+            'type': 'waste',
+          });
+          await ApiClient.instance.post(
+            '/api/bookings/${booking['id']}/photos',
+            data: formData,
+          );
+        } catch (_) {}
+        if (mounted) setState(() => _uploadingPhotos = false);
+      }
+      if (!mounted) return;
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (_) => PaymentScreen(booking: booking)));
     } else {
@@ -292,7 +319,7 @@ class _BookScreenState extends State<BookScreen>
                         children: [
                           const Text('Book a Pickup', style: AppTextStyles.h3),
                           Text(
-                            'Step ${_step + 1} of 5 — ${_kStepLabels[_step]}',
+                            'Step ${_step + 1} of 6 — ${_kStepLabels[_step]}',
                             style: AppTextStyles.caption,
                           ),
                         ],
@@ -308,7 +335,7 @@ class _BookScreenState extends State<BookScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: StepProgressBar(
-                  totalSteps: 5,
+                  totalSteps: 6,
                   currentStep: _step,
                 ),
               ),
@@ -333,6 +360,23 @@ class _BookScreenState extends State<BookScreen>
                       onBinSize: (s) => setState(() => _binSize = s),
                       onExtraBags: (v) => setState(() => _extraBags = v),
                       onWeight: (v) => setState(() => _estWeightKg = v),
+                      fade: _fade,
+                    ),
+                    _Step3Photos(
+                      photos: _wastePhotos,
+                      uploading: _uploadingPhotos,
+                      onPickImage: () async {
+                        final img = await _picker.pickImage(
+                          source: ImageSource.camera,
+                          imageQuality: 75,
+                        );
+                        if (img != null) setState(() => _wastePhotos.add(img));
+                      },
+                      onPickGallery: () async {
+                        final imgs = await _picker.pickMultiImage(imageQuality: 75);
+                        if (imgs.isNotEmpty) setState(() => _wastePhotos.addAll(imgs));
+                      },
+                      onRemove: (i) => setState(() => _wastePhotos.removeAt(i)),
                       fade: _fade,
                     ),
                     _Step3Schedule(
@@ -381,12 +425,12 @@ class _BookScreenState extends State<BookScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                 child: AppButton(
-                  label: _step == 4 ? 'Confirm & Pay ${Fmt.currency(_total)}' : 'Continue',
-                  loading: prov.loading,
+                  label: _step == 5 ? 'Confirm & Pay ${Fmt.currency(_total)}' : 'Continue',
+                  loading: prov.loading || _uploadingPhotos,
                   onPressed: _canAdvance()
-                      ? () => _step == 4 ? _confirm() : _toStep(_step + 1)
+                      ? () => _step == 5 ? _confirm() : _toStep(_step + 1)
                       : null,
-                  icon: _step == 4
+                  icon: _step == 5
                       ? const Icon(PhosphorIconsRegular.checkCircle,
                           color: AppColors.white, size: 20)
                       : const Icon(PhosphorIconsRegular.arrowRight,
@@ -777,7 +821,183 @@ class _Step2Volume extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 3 — Date & Time
+// Step 3 — Waste Photos (optional)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _Step3Photos extends StatelessWidget {
+  const _Step3Photos({
+    required this.photos,
+    required this.uploading,
+    required this.onPickImage,
+    required this.onPickGallery,
+    required this.onRemove,
+    required this.fade,
+  });
+  final List<XFile> photos;
+  final bool uploading;
+  final VoidCallback onPickImage;
+  final VoidCallback onPickGallery;
+  final ValueChanged<int> onRemove;
+  final Animation<double> fade;
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: fade,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Add Waste Photos', style: AppTextStyles.h3),
+            const SizedBox(height: 6),
+            Text(
+              'Optional — helps collector prepare for pickup',
+              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+
+            // Photo grid
+            if (photos.isNotEmpty) ...[
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 1,
+                ),
+                itemCount: photos.length,
+                itemBuilder: (_, i) => Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(photos[i].path),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 4, right: 4,
+                      child: GestureDetector(
+                        onTap: () => onRemove(i),
+                        child: Container(
+                          width: 22, height: 22,
+                          decoration: BoxDecoration(
+                            color: AppColors.danger.withAlpha(220),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(PhosphorIconsRegular.x,
+                              color: AppColors.white, size: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Camera / gallery buttons
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: onPickImage,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.steelBlue.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(PhosphorIconsFill.camera,
+                                color: AppColors.steelBlue, size: 22),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Camera', style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: onPickGallery,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.skyBlue.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(PhosphorIconsFill.images,
+                                color: AppColors.skyBlue, size: 22),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Gallery', style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Skip hint
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(PhosphorIconsRegular.info,
+                      color: AppColors.muted, size: 16),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Photos are optional. Tap Continue to skip this step.',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.muted, height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 4 — Date & Time
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _Step3Schedule extends StatelessWidget {

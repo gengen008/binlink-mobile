@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -1599,7 +1600,98 @@ class _DetailRow extends StatelessWidget {
 
 // ── PROFILE TAB ───────────────────────────────────────────────────────────────
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends StatefulWidget {
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  bool _darkMode = false;
+  String _language = 'English';
+
+  static const _languages = ['English', 'Twi', 'Hausa', 'Ewe', 'Ga'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _darkMode  = prefs.getBool('darkMode')     ?? false;
+        _language  = prefs.getString('language')   ?? 'English';
+      });
+    }
+  }
+
+  Future<void> _setDarkMode(bool v) async {
+    setState(() => _darkMode = v);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('darkMode', v);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${v ? 'Dark' : 'Light'} mode will apply on next launch'),
+          backgroundColor: AppColors.card,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickLanguage(BuildContext context) async {
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Language', style: AppTextStyles.h3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _languages.map((lang) {
+            final sel = lang == _language;
+            return GestureDetector(
+              onTap: () => Navigator.pop(ctx, lang),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: sel ? AppColors.steelBlue.withAlpha(30) : AppColors.deepOcean,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: sel ? AppColors.steelBlue : AppColors.border,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(lang,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: sel ? AppColors.steelBlue : AppColors.textPrimary,
+                          )),
+                    ),
+                    if (sel)
+                      const Icon(PhosphorIconsFill.checkCircle,
+                          color: AppColors.steelBlue, size: 18),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+    if (picked != null && picked != _language) {
+      setState(() => _language = picked);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('language', picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -1761,6 +1853,106 @@ class _ProfileTab extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (_) => const TermsScreen(),
                         )),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // ── Preferences section ──────────────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('PREFERENCES',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        )),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        // Dark mode toggle
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36, height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.skyBlue.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(PhosphorIconsRegular.moon,
+                                    color: AppColors.skyBlue, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text('Dark Mode',
+                                    style: AppTextStyles.bodyMedium),
+                              ),
+                              Switch(
+                                value: _darkMode,
+                                onChanged: _setDarkMode,
+                                activeThumbColor: AppColors.steelBlue,
+                                activeTrackColor: AppColors.steelBlue.withAlpha(80),
+                                inactiveTrackColor: AppColors.border,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Divider(height: 1, color: AppColors.border),
+                        ),
+                        // Language selector
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _pickLanguage(context),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36, height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.skyBlue.withAlpha(20),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(PhosphorIconsRegular.globe,
+                                      color: AppColors.skyBlue, size: 18),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text('Language',
+                                      style: AppTextStyles.bodyMedium),
+                                ),
+                                Text(_language,
+                                    style: AppTextStyles.body.copyWith(
+                                      color: AppColors.muted,
+                                      fontSize: 13,
+                                    )),
+                                const SizedBox(width: 6),
+                                const Icon(PhosphorIconsRegular.caretRight,
+                                    color: AppColors.muted, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

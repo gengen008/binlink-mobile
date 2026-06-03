@@ -34,11 +34,18 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   bool _uploadingBefore = false;
   bool _uploadingAfter  = false;
   late String _currentStatus;
+  final _weightCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.booking['status'] as String? ?? 'ACCEPTED';
+  }
+
+  @override
+  void dispose() {
+    _weightCtrl.dispose();
+    super.dispose();
   }
 
   LatLng get _pickupPos => LatLng(
@@ -129,6 +136,16 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
       _snack(ctx, 'Take an After photo first', AppColors.warning);
       return;
     }
+    final weightStr = _weightCtrl.text.trim();
+    if (weightStr.isEmpty) {
+      _snack(ctx, 'Enter the actual weight to complete', AppColors.warning);
+      return;
+    }
+    final actualWeight = double.tryParse(weightStr);
+    if (actualWeight == null || actualWeight <= 0) {
+      _snack(ctx, 'Enter a valid weight in kg', AppColors.warning);
+      return;
+    }
     setState(() => _uploadingAfter = true);
     final ok = await _uploadPhoto(bookingId, _afterPhoto!, 'after');
     if (!ctx.mounted) return;
@@ -137,7 +154,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
       _snack(ctx, 'Photo upload failed — try again', AppColors.danger);
       return;
     }
-    await prov.updateStatus(bookingId, 'complete');
+    await prov.updateStatus(bookingId, 'complete', actualWeightKg: actualWeight);
     if (!ctx.mounted) return;
     setState(() {
       _uploadingAfter = false;
@@ -392,6 +409,57 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
 
       case 'ARRIVED':
         return [
+          // Actual weight input — required before completing
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(PhosphorIconsRegular.scales, color: AppColors.skyBlue, size: 15),
+                    const SizedBox(width: 6),
+                    const Text('Actual Weight (kg)', style: AppTextStyles.label),
+                    const SizedBox(width: 4),
+                    Text('*required', style: AppTextStyles.caption.copyWith(color: AppColors.warning, fontSize: 9)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _weightCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: AppTextStyles.mono,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 85',
+                    hintStyle: AppTextStyles.caption,
+                    suffixText: 'kg',
+                    suffixStyle: AppTextStyles.caption.copyWith(color: AppColors.muted),
+                    filled: true,
+                    fillColor: AppColors.deepOcean,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.steelBlue),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Opacity(
             opacity: _afterPhoto != null ? 1.0 : 0.45,
             child: AppButton(
