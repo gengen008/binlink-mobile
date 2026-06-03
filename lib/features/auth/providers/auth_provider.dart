@@ -43,14 +43,18 @@ class AuthProvider extends ChangeNotifier {
 
   // ── Email + Password ─────────────────────────────────────────
 
-  Future<bool> loginWithEmail({required String email, required String password}) async {
+  Future<bool> loginWithEmail({
+    required String email,
+    required String password,
+    String role = 'HOUSEHOLD',
+  }) async {
     _setLoading(true);
     try {
       final cred = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password,
       );
       final idToken = await cred.user!.getIdToken();
-      return await _firebaseExchange(idToken!);
+      return await _firebaseExchange(idToken!, role: role);
     } on FirebaseAuthException catch (e) {
       _error = _firebaseError(e);
       return false;

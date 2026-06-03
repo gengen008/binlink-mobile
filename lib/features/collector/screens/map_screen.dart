@@ -99,6 +99,7 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.deepOcean,
@@ -111,22 +112,22 @@ class _BottomNav extends StatelessWidget {
             _NavItem(
               icon: PhosphorIconsRegular.mapTrifold,
               iconFill: PhosphorIconsFill.mapTrifold,
-              label: 'Map',      index: 0, current: current, onTap: onTap,
+              label: s.map,      index: 0, current: current, onTap: onTap,
             ),
             _NavItem(
               icon: PhosphorIconsRegular.clipboardText,
               iconFill: PhosphorIconsFill.clipboardText,
-              label: 'Pickups',  index: 1, current: current, onTap: onTap,
+              label: s.pickups,  index: 1, current: current, onTap: onTap,
             ),
             _NavItem(
               icon: PhosphorIconsRegular.coins,
               iconFill: PhosphorIconsFill.coins,
-              label: 'Earnings', index: 2, current: current, onTap: onTap,
+              label: s.earnings, index: 2, current: current, onTap: onTap,
             ),
             _NavItem(
               icon: PhosphorIconsRegular.user,
               iconFill: PhosphorIconsFill.user,
-              label: 'Profile',  index: 3, current: current, onTap: onTap,
+              label: s.profile,  index: 3, current: current, onTap: onTap,
             ),
           ],
         ),
@@ -325,7 +326,7 @@ class _MapTabState extends State<_MapTab> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              prov.isOnline ? 'Online — Accepting jobs' : 'Offline',
+                              prov.isOnline ? S.of(context).onlineAccepting : S.of(context).offline,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontSize: 13,
                                 color: prov.isOnline
@@ -466,7 +467,7 @@ class _MapTabState extends State<_MapTab> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Active Pickup',
+                                Text(S.of(context).activePickupBanner,
                                     style: AppTextStyles.h4.copyWith(
                                       color: AppColors.white,
                                     )),
@@ -642,7 +643,7 @@ class _RequestCardState extends State<_RequestCard> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Theme.of(ctx).primaryColor.withAlpha(60)),
                 ),
-                child: Text('New Request',
+                child: Text(S.of(ctx).newRequest,
                     style: AppTextStyles.caption.copyWith(
                       color: Theme.of(ctx).primaryColor,
                       fontWeight: FontWeight.w700,
@@ -730,7 +731,7 @@ class _RequestCardState extends State<_RequestCard> {
                           color: AppColors.danger.withAlpha(60)),
                     ),
                     child: Center(
-                      child: Text('Decline',
+                      child: Text(S.of(context).declineJob,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.danger,
                             fontSize: 13,
@@ -773,7 +774,7 @@ class _RequestCardState extends State<_RequestCard> {
                       ],
                     ),
                     child: Center(
-                      child: Text('Accept Pickup',
+                      child: Text(S.of(context).acceptJob,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.white,
                             fontSize: 13,
@@ -1002,11 +1003,11 @@ class _ProfileTabState extends State<_ProfileTab> {
 
               // Menu
               _MenuSection(
-                title: 'Account',
+                title: S.of(context).account,
                 items: [
                   _MenuItem(
                     icon: PhosphorIconsRegular.userCircle,
-                    label: 'Edit Profile',
+                    label: S.of(context).editProfile,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const CollectorEditProfileScreen(),
@@ -1014,7 +1015,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.truck,
-                    label: 'Vehicle Details',
+                    label: S.of(context).vehicleDetails,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const VehicleDetailsScreen(),
@@ -1022,12 +1023,12 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.coins,
-                    label: 'Earnings & Wallet',
+                    label: S.of(context).earningsWallet,
                     onTap: () {/* navigate to earnings screen */},
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.bell,
-                    label: 'Notifications',
+                    label: S.of(context).notifications,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const CollectorNotificationsScreen(),
@@ -1039,11 +1040,11 @@ class _ProfileTabState extends State<_ProfileTab> {
               const SizedBox(height: 12),
 
               _MenuSection(
-                title: 'Support',
+                title: S.of(context).support,
                 items: [
                   _MenuItem(
                     icon: PhosphorIconsRegular.headset,
-                    label: 'Help & Support',
+                    label: S.of(context).helpSupport,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const CollectorHelpScreen(),
@@ -1051,7 +1052,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.shieldCheck,
-                    label: 'Privacy Policy',
+                    label: S.of(context).privacyPolicy,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const CollectorPrivacyScreen(),
@@ -1076,7 +1077,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                      child: Text('Preferences',
+                      child: Text(S.of(context).preferences,
                           style: AppTextStyles.caption.copyWith(
                               color: AppColors.muted,
                               fontWeight: FontWeight.w600,
@@ -1096,8 +1097,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 color: AppColors.warning, size: 18),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text('Dark Mode', style: AppTextStyles.bodyMedium),
+                          Expanded(
+                            child: Text(S.of(context).darkMode, style: AppTextStyles.bodyMedium),
                           ),
                           Consumer<ThemeProvider>(
                             builder: (_, tp, __) => Switch(
@@ -1133,8 +1134,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                                   color: AppColors.skyBlue, size: 18),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text('Language', style: AppTextStyles.bodyMedium),
+                            Expanded(
+                              child: Text(S.of(context).language, style: AppTextStyles.bodyMedium),
                             ),
                             Text(context.watch<AppStringsProvider>().langCode,
                                 style: AppTextStyles.body.copyWith(

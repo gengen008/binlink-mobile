@@ -6,6 +6,7 @@ import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import 'tracking_screen.dart';
@@ -143,8 +144,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                     icon: const Icon(PhosphorIconsRegular.arrowLeft,
                         color: AppColors.white),
                   ),
-                  const Expanded(
-                      child: Text('Payment', style: AppTextStyles.h3)),
+                  Expanded(
+                      child: Text(S.of(context).payment, style: AppTextStyles.h3)),
                 ],
               ),
             ),
@@ -203,7 +204,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                                 const Icon(PhosphorIconsRegular.info,
                                     color: AppColors.warning, size: 18),
                                 const SizedBox(width: 8),
-                                Text('How to pay',
+                                Text(S.of(context).howToPay,
                                     style: AppTextStyles.label
                                         .copyWith(color: AppColors.warning)),
                               ],
@@ -236,7 +237,7 @@ class _PaymentScreenState extends State<PaymentScreen>
 
                       const SizedBox(height: 24),
                       AppButton(
-                        label: 'Pay Now',
+                        label: S.of(context).payNow,
                         loading: _paying,
                         onPressed: _pay,
                         icon: const Icon(PhosphorIconsRegular.arrowRight,
@@ -260,7 +261,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Pay in Cash',
+                                  Text(S.of(context).payInCash,
                                       style: AppTextStyles.h4
                                           .copyWith(color: AppColors.success)),
                                   const SizedBox(height: 4),
@@ -277,7 +278,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                       ),
                       const SizedBox(height: 24),
                       AppButton(
-                        label: 'Confirm Booking',
+                        label: S.of(context).confirmBooking,
                         onPressed: _showSuccess,
                         icon: const Icon(PhosphorIconsRegular.checkCircle,
                             color: AppColors.white, size: 20),
@@ -356,7 +357,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                 opacity: _fadePop,
                 child: Column(
                   children: [
-                    Text('Pickup Confirmed!',
+                    Text(S.of(context).pickupConfirmed,
                         style: AppTextStyles.h1.copyWith(
                           color: AppColors.white,
                           fontSize: 28,
@@ -395,7 +396,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Booking Ref',
+                          Text(S.of(context).bookingRef,
                               style: AppTextStyles.caption
                                   .copyWith(color: AppColors.muted)),
                           Text(
@@ -413,7 +414,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Amount Paid',
+                          Text(S.of(context).amountPaid,
                               style: AppTextStyles.caption
                                   .copyWith(color: AppColors.muted)),
                           Text(
@@ -452,7 +453,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                 child: Column(
                   children: [
                     AppButton(
-                      label: 'Track My Pickup',
+                      label: S.of(context).trackPickup,
                       onPressed: _trackPickup,
                       icon: const Icon(PhosphorIconsRegular.mapPin,
                           color: AppColors.white, size: 20),
@@ -476,7 +477,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                             const Icon(PhosphorIconsRegular.downloadSimple,
                                 color: AppColors.skyBlue, size: 18),
                             const SizedBox(width: 8),
-                            Text('Download Receipt',
+                            Text(S.of(context).downloadReceipt,
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: AppColors.skyBlue,
                                 )),
@@ -493,7 +494,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          'Back to Home',
+                          S.of(context).backToHome,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.muted,
                           ),

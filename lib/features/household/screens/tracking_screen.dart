@@ -13,6 +13,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/services/routing_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
+import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 
@@ -221,8 +222,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
                           color: AppColors.white),
                     ),
-                    const Expanded(
-                        child: Text('Live Tracking', style: AppTextStyles.h3)),
+                    Expanded(
+                        child: Text(S.of(context).liveTracking, style: AppTextStyles.h3)),
                     if (_booking != null)
                       StatusBadge(status: status, animate: true),
                   ],

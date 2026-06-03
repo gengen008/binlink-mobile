@@ -27,6 +27,10 @@ class AppStrings {
   String get resetPassword        => isFrench ? 'Réinitialiser le mot de passe' : 'Reset Password';
   String get sendResetLink        => isFrench ? 'Envoyer le lien de réinitialisation' : 'Send Reset Link';
 
+  // ── Navigation labels ─────────────────────────────────────────────────────
+  String get home                 => isFrench ? 'Accueil' : 'Home';
+  String get map                  => isFrench ? 'Carte' : 'Map';
+
   // ── Household Home ────────────────────────────────────────────────────────
   String get hello                => isFrench ? 'Bonjour' : 'Hello';
   String get bookPickup           => isFrench ? 'Planifier un ramassage' : 'Book a Pickup';
@@ -68,6 +72,26 @@ class AppStrings {
   String get biweekly             => isFrench ? 'Bihebdomadaire' : 'Bi-weekly';
   String get monthly              => isFrench ? 'Mensuel' : 'Monthly';
 
+  // ── Home tab extras ───────────────────────────────────────────────────────
+  String get requestNow           => isFrench ? 'Commander' : 'Request Now';
+  String get arrival15min         => isFrench ? '~15 min' : '~15 min arrival';
+  String get pickDate             => isFrench ? 'Choisir une date' : 'Pick a date';
+  String get tapToTrack           => isFrench ? 'Toucher pour suivre' : 'Tap to track your pickup';
+  String get searchAreaLandmark   => isFrench ? 'Chercher un quartier, rue...' : 'Search area, street, landmark...';
+  String get nearbyCount          => isFrench ? 'à proximité' : 'nearby';
+  String get allBookings          => isFrench ? 'Toutes les réservations' : 'All Bookings';
+  String get activeSubscriptionsTitle => isFrench ? 'Abonnements actifs' : 'Active Subscriptions';
+  String get noPickupsYetSub      => isFrench ? 'Vos ramassages apparaîtront ici' : 'Your completed pickups will appear here';
+  String get totalPickupsLabel    => isFrench ? 'ramassages au total' : 'total pickups';
+  String get bookingDetails       => isFrench ? 'Détails de la réservation' : 'Booking Details';
+  String get totalPaid            => isFrench ? 'Total payé' : 'Total Paid';
+  String get yourImpact           => isFrench ? 'Votre impact environnemental' : 'Your Environmental Impact';
+  String get tellUsWhyCancel      => isFrench ? 'Dites-nous pourquoi — cela nous aide.' : 'Tell us why — this helps us improve.';
+
+  // ── Collector map extras ──────────────────────────────────────────────────
+  String get onlineAccepting      => isFrench ? 'En ligne — Disponible' : 'Online — Accepting jobs';
+  String get activePickupBanner   => isFrench ? 'Ramassage actif' : 'Active Pickup';
+
   // ── Payment ───────────────────────────────────────────────────────────────
   String get payment              => isFrench ? 'Paiement' : 'Payment';
   String get payNow               => isFrench ? 'Payer maintenant' : 'Pay Now';
@@ -108,6 +132,14 @@ class AppStrings {
 
   // ── Profile ───────────────────────────────────────────────────────────────
   String get profile              => isFrench ? 'Profil' : 'Profile';
+  String get account              => isFrench ? 'Compte' : 'Account';
+  String get support              => isFrench ? 'Support' : 'Support';
+  String get helpSupport          => isFrench ? 'Aide et support' : 'Help & Support';
+  String get privacyPolicy        => isFrench ? 'Politique de confidentialité' : 'Privacy Policy';
+  String get householdMember      => isFrench ? 'Membre ménage' : 'Household Member';
+  String get collectorLabel       => isFrench ? 'Collecteur' : 'Collector';
+  String get vehicleDetails       => isFrench ? 'Détails du véhicule' : 'Vehicle Details';
+  String get earningsWallet       => isFrench ? 'Revenus et portefeuille' : 'Earnings & Wallet';
   String get editProfile          => isFrench ? 'Modifier le profil' : 'Edit Profile';
   String get notifications        => isFrench ? 'Notifications' : 'Notifications';
   String get preferences          => isFrench ? 'Préférences' : 'Preferences';
@@ -125,6 +157,7 @@ class AppStrings {
   String get cancel               => isFrench ? 'Annuler' : 'Cancel';
 
   // ── Tracking ──────────────────────────────────────────────────────────────
+  String get liveTracking         => isFrench ? 'Suivi en direct' : 'Live Tracking';
   String get collectorOnWay       => isFrench ? 'Collecteur en route' : 'Collector On the Way';
   String get collectorArrived     => isFrench ? 'Collecteur arrivé' : 'Collector Arrived';
   String get pickupComplete       => isFrench ? 'Ramassage terminé' : 'Pickup Complete';

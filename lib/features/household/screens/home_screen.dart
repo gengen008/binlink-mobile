@@ -86,6 +86,7 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.deepOcean,
@@ -98,17 +99,17 @@ class _BottomNav extends StatelessWidget {
             _NavItem(
               icon: PhosphorIconsRegular.house,
               iconFill: PhosphorIconsFill.house,
-              label: 'Home', index: 0, current: current, onTap: onTap,
+              label: s.home, index: 0, current: current, onTap: onTap,
             ),
             _NavItem(
               icon: PhosphorIconsRegular.clockCounterClockwise,
               iconFill: PhosphorIconsFill.clockCounterClockwise,
-              label: 'History', index: 1, current: current, onTap: onTap,
+              label: s.history, index: 1, current: current, onTap: onTap,
             ),
             _NavItem(
               icon: PhosphorIconsRegular.user,
               iconFill: PhosphorIconsFill.user,
-              label: 'Profile', index: 2, current: current, onTap: onTap,
+              label: s.profile, index: 2, current: current, onTap: onTap,
             ),
           ],
         ),
@@ -349,7 +350,7 @@ class _HomeTabState extends State<_HomeTab> {
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
-                                  '${prov.onlineCollectors.length} nearby',
+                                  '${prov.onlineCollectors.length} ${S.of(context).nearbyCount}',
                                   style: AppTextStyles.caption.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w700,
@@ -423,7 +424,7 @@ class _HomeTabState extends State<_HomeTab> {
                               color: AppColors.steelBlue, size: 18),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text('Search area, street, landmark...',
+                            child: Text(S.of(context).searchAreaLandmark,
                                 style: AppTextStyles.body.copyWith(
                                   color: AppColors.muted,
                                 )),
@@ -503,53 +504,175 @@ class _HomeTabState extends State<_HomeTab> {
 
 // ── Active booking banner ─────────────────────────────────────────────────────
 
-class _ActiveBookingBanner extends StatelessWidget {
+class _ActiveBookingBanner extends StatefulWidget {
   const _ActiveBookingBanner({required this.booking});
   final Map<String, dynamic> booking;
 
+  @override
+  State<_ActiveBookingBanner> createState() => _ActiveBookingBannerState();
+}
+
+class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
+  static const _cancellable = {'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'};
+  static const _cancelReasons = [
+    'I no longer need it',
+    'Collector taking too long',
+    'Found another solution',
+    'Wrong address entered',
+    'Other',
+  ];
+
   Color _statusColor(String status) => AppColors.statusColor(status);
+
+  Future<void> _showCancelDialog() async {
+    String? selectedReason;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setDialogState) {
+          final s = S.of(ctx2);
+          final reasons = s.cancelReasons;
+          return AlertDialog(
+            backgroundColor: AppColors.card,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text(s.cancelConfirm, style: AppTextStyles.h3),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.tellUsWhyCancel,
+                  style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                ...reasons.map((reason) {
+                  final sel = reason == selectedReason;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedReason = reason),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? AppColors.danger.withAlpha(15)
+                            : AppColors.deepOcean,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: sel ? AppColors.danger : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(reason,
+                                style: AppTextStyles.body.copyWith(
+                                  color: sel
+                                      ? AppColors.danger
+                                      : AppColors.textPrimary,
+                                  fontSize: 13,
+                                )),
+                          ),
+                          if (sel)
+                            const Icon(PhosphorIconsFill.checkCircle,
+                                color: AppColors.danger, size: 16),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(s.keepBooking,
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.muted)),
+              ),
+              TextButton(
+                onPressed: selectedReason != null
+                    ? () => Navigator.pop(ctx, true)
+                    : null,
+                child: Text(s.yesCancel,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: selectedReason != null
+                          ? AppColors.danger
+                          : AppColors.muted,
+                    )),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final prov = context.read<HouseholdProvider>();
+      final ok = await prov.cancelBooking(
+        widget.booking['id'] as String,
+        reason: selectedReason,
+      );
+      if (mounted) {
+        final s = S.read(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? s.bookingCancelled
+                : 'Could not cancel — please try again'),
+            backgroundColor: ok ? AppColors.success : AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final status = booking['status'] as String? ?? 'PENDING';
+    final status = widget.booking['status'] as String? ?? 'PENDING';
     final color  = _statusColor(status);
+    final canCancel = _cancellable.contains(status);
 
-    return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(
-            builder: (_) => TrackingScreen(bookingId: booking['id'] as String),
-          )),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.deepOcean.withAlpha(240),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withAlpha(80)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withAlpha(40),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(
+                builder: (_) => TrackingScreen(bookingId: widget.booking['id'] as String),
+              )),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.deepOcean.withAlpha(240),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withAlpha(80)),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withAlpha(40),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 46, height: 46,
-              decoration: BoxDecoration(
-                color: color.withAlpha(25),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(PhosphorIconsFill.trashSimple,
-                  color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Row(
+              children: [
+                Container(
+                  width: 46, height: 46,
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(25),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(PhosphorIconsFill.trashSimple,
+                      color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -566,28 +689,57 @@ class _ActiveBookingBanner extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 3),
+                      Text(S.of(context).tapToTrack,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.muted,
+                          )),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text('Tap to track your pickup',
+                ),
+                Container(
+                  width: 34, height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(PhosphorIconsRegular.arrowRight,
+                      color: AppColors.steelBlue, size: 18),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        if (canCancel) ...[
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: _showCancelDialog,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withAlpha(12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.danger.withAlpha(50)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(PhosphorIconsRegular.xCircle,
+                      color: AppColors.danger, size: 16),
+                  const SizedBox(width: 6),
+                  Text(S.of(context).cancelBooking,
                       style: AppTextStyles.caption.copyWith(
-                        color: AppColors.muted,
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.w600,
                       )),
                 ],
               ),
             ),
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(PhosphorIconsRegular.arrowRight,
-                  color: AppColors.steelBlue, size: 18),
-            ),
-          ],
-        ),
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -647,11 +799,11 @@ class _SplitCta extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Request Now',
+                          Text(S.of(context).requestNow,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.white,
                               )),
-                          Text('~15 min arrival',
+                          Text(S.of(context).arrival15min,
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.iceBlue,
                                 fontSize: 10,
@@ -713,11 +865,11 @@ class _SplitCta extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Schedule',
+                          Text(S.of(context).schedule,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.white,
                               )),
-                          Text('Pick a date',
+                          Text(S.of(context).pickDate,
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.muted,
                                 fontSize: 10,
@@ -768,8 +920,8 @@ class _HistoryTab extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('History', style: AppTextStyles.h2),
-                      Text('${allBookings.length} total pickups',
+                      Text(S.of(context).history, style: AppTextStyles.h2),
+                      Text('${allBookings.length} ${S.of(context).totalPickupsLabel}',
                           style: AppTextStyles.caption),
                     ],
                   ),
@@ -808,7 +960,7 @@ class _HistoryTab extends StatelessWidget {
                 children: [
                   // ── Active Subscriptions ──────────────────────────
                   if (subscriptions.isNotEmpty) ...[
-                    const Text('Active Subscriptions', style: AppTextStyles.h4),
+                    Text(S.of(context).activeSubscriptionsTitle, style: AppTextStyles.h4),
                     const SizedBox(height: 10),
                     ...subscriptions.map(
                       (b) => _SubscriptionCard(
@@ -821,13 +973,13 @@ class _HistoryTab extends StatelessWidget {
 
                   // ── All bookings list ─────────────────────────────
                   if (allBookings.isEmpty)
-                    const _EmptyState(
+                    _EmptyState(
                       icon: PhosphorIconsRegular.clockCounterClockwise,
-                      title: 'No pickups yet',
-                      subtitle: 'Your completed pickups will appear here',
+                      title: S.of(context).noBookingsYet,
+                      subtitle: S.of(context).noPickupsYetSub,
                     )
                   else ...[
-                    const Text('All Bookings', style: AppTextStyles.h4),
+                    Text(S.of(context).allBookings, style: AppTextStyles.h4),
                     const SizedBox(height: 10),
                     ...List.generate(allBookings.length, (i) {
                       final b = allBookings[i];
@@ -866,7 +1018,7 @@ class _HistoryTab extends StatelessWidget {
                                           color: AppColors.danger,
                                           size: 16),
                                       const SizedBox(width: 6),
-                                      Text('Cancel Booking',
+                                      Text(S.of(context).cancelBooking,
                                           style: AppTextStyles.caption.copyWith(
                                             color: AppColors.danger,
                                             fontWeight: FontWeight.w600,
@@ -890,93 +1042,89 @@ class _HistoryTab extends StatelessWidget {
     );
   }
 
-  static const _cancelReasons = [
-    'I no longer need it',
-    'Collector taking too long',
-    'Found another solution',
-    'Wrong address entered',
-    'Other',
-  ];
-
   Future<void> _showCancelDialog(
       BuildContext context, Map<String, dynamic> booking) async {
     String? selectedReason;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx2, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.card,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Cancel Booking?', style: AppTextStyles.h3),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tell us why — this helps us improve.',
-                style: AppTextStyles.body.copyWith(
-                    color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              ..._cancelReasons.map((reason) {
-                final sel = reason == selectedReason;
-                return GestureDetector(
-                  onTap: () => setDialogState(() => selectedReason = reason),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? AppColors.danger.withAlpha(15)
-                          : AppColors.deepOcean,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: sel ? AppColors.danger : AppColors.border,
+        builder: (ctx2, setDialogState) {
+          final s = S.of(ctx2);
+          final reasons = s.cancelReasons;
+          return AlertDialog(
+            backgroundColor: AppColors.card,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text(s.cancelConfirm, style: AppTextStyles.h3),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.tellUsWhyCancel,
+                  style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                ...reasons.map((reason) {
+                  final sel = reason == selectedReason;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedReason = reason),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? AppColors.danger.withAlpha(15)
+                            : AppColors.deepOcean,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: sel ? AppColors.danger : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(reason,
+                                style: AppTextStyles.body.copyWith(
+                                  color: sel
+                                      ? AppColors.danger
+                                      : AppColors.textPrimary,
+                                  fontSize: 13,
+                                )),
+                          ),
+                          if (sel)
+                            const Icon(PhosphorIconsFill.checkCircle,
+                                color: AppColors.danger, size: 16),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(reason,
-                              style: AppTextStyles.body.copyWith(
-                                color: sel
-                                    ? AppColors.danger
-                                    : AppColors.textPrimary,
-                                fontSize: 13,
-                              )),
-                        ),
-                        if (sel)
-                          const Icon(PhosphorIconsFill.checkCircle,
-                              color: AppColors.danger, size: 16),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(s.keepBooking,
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.muted)),
+              ),
+              TextButton(
+                onPressed: selectedReason != null
+                    ? () => Navigator.pop(ctx, true)
+                    : null,
+                child: Text(s.yesCancel,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: selectedReason != null
+                          ? AppColors.danger
+                          : AppColors.muted,
+                    )),
+              ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Keep It',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.muted)),
-            ),
-            TextButton(
-              onPressed: selectedReason != null
-                  ? () => Navigator.pop(ctx, true)
-                  : null,
-              child: Text('Yes, Cancel',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: selectedReason != null
-                        ? AppColors.danger
-                        : AppColors.muted,
-                  )),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
 
@@ -987,10 +1135,11 @@ class _HistoryTab extends StatelessWidget {
         reason: selectedReason,
       );
       if (context.mounted) {
+        final s = S.read(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ok
-                ? 'Booking cancelled'
+                ? s.bookingCancelled
                 : 'Could not cancel — please try again'),
             backgroundColor: ok ? AppColors.success : AppColors.danger,
             behavior: SnackBarBehavior.floating,
@@ -1896,7 +2045,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       border: Border.all(
                           color: AppColors.steelBlue.withAlpha(60)),
                     ),
-                    child: Text('Household Member',
+                    child: Text(S.of(context).householdMember,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.steelBlue,
                           fontWeight: FontWeight.w700,
@@ -1919,11 +2068,11 @@ class _ProfileTabState extends State<_ProfileTab> {
 
               // ── Menu sections ───────────────────────────────────────
               _MenuSection(
-                title: 'Account',
+                title: S.of(context).account,
                 items: [
                   _MenuItem(
                     icon: PhosphorIconsRegular.userCircle,
-                    label: 'Edit Profile',
+                    label: S.of(context).editProfile,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const EditProfileScreen(),
@@ -1931,7 +2080,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.bell,
-                    label: 'Notifications',
+                    label: S.of(context).notifications,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const NotificationsScreen(),
@@ -1939,7 +2088,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.mapPin,
-                    label: 'Saved Addresses',
+                    label: S.of(context).savedAddresses,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const SavedAddressesScreen(),
@@ -1951,11 +2100,11 @@ class _ProfileTabState extends State<_ProfileTab> {
               const SizedBox(height: 12),
 
               _MenuSection(
-                title: 'Support',
+                title: S.of(context).support,
                 items: [
                   _MenuItem(
                     icon: PhosphorIconsRegular.headset,
-                    label: 'Help & Support',
+                    label: S.of(context).helpSupport,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const HelpScreen(),
@@ -1963,7 +2112,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.shieldCheck,
-                    label: 'Privacy Policy',
+                    label: S.of(context).privacyPolicy,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const PrivacyScreen(),
@@ -1971,7 +2120,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.files,
-                    label: 'Terms of Service',
+                    label: S.of(context).termsOfService,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
                           builder: (_) => const TermsScreen(),
@@ -1988,7 +2137,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 8),
-                    child: Text('PREFERENCES',
+                    child: Text(S.of(context).preferences.toUpperCase(),
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.muted,
                           fontWeight: FontWeight.w700,
@@ -2019,8 +2168,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                                     color: AppColors.skyBlue, size: 18),
                               ),
                               const SizedBox(width: 12),
-                              const Expanded(
-                                child: Text('Dark Mode',
+                              Expanded(
+                                child: Text(S.of(context).darkMode,
                                     style: AppTextStyles.bodyMedium),
                               ),
                               Consumer<ThemeProvider>(
@@ -2060,8 +2209,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                                       color: AppColors.skyBlue, size: 18),
                                 ),
                                 const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Text('Language',
+                                Expanded(
+                                  child: Text(S.of(context).language,
                                       style: AppTextStyles.bodyMedium),
                                 ),
                                 Text(context.watch<AppStringsProvider>().langCode,

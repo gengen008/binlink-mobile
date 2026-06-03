@@ -14,6 +14,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
+import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 import '../../../shared/widgets/status_badge.dart';
@@ -384,7 +385,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           Opacity(
             opacity: _beforePhoto != null ? 1.0 : 0.45,
             child: AppButton(
-              label: 'Start Navigation',
+              label: S.of(context).startRoute,
               loading: _uploadingBefore,
               onPressed: _beforePhoto != null && !_uploadingBefore
                   ? () => _handleEnRoute(context, prov, bookingId)
@@ -394,14 +395,14 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           ),
           if (_beforePhoto == null) ...[
             const SizedBox(height: 8),
-            const _PhotoRequiredHint(label: 'Take a Before photo to unlock navigation'),
+            _PhotoRequiredHint(label: S.of(context).takeBefore),
           ],
         ];
 
       case 'EN_ROUTE':
         return [
           AppButton(
-            label: "I've Arrived",
+            label: S.of(context).markArrived,
             onPressed: () => _handleArrived(prov, bookingId),
             icon: const Icon(PhosphorIconsFill.mapPin, color: AppColors.white, size: 20),
           ),
@@ -463,7 +464,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           Opacity(
             opacity: _afterPhoto != null ? 1.0 : 0.45,
             child: AppButton(
-              label: 'Complete Pickup',
+              label: S.of(context).completePickup,
               loading: _uploadingAfter,
               onPressed: _afterPhoto != null && !_uploadingAfter
                   ? () => _handleComplete(context, prov, bookingId)
@@ -473,7 +474,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           ),
           if (_afterPhoto == null) ...[
             const SizedBox(height: 8),
-            const _PhotoRequiredHint(label: 'Take an After photo to complete pickup'),
+            _PhotoRequiredHint(label: S.of(context).takeAfter),
           ],
         ];
 

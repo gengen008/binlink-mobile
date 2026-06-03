@@ -35,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final ok = await auth.loginWithEmail(
       email:    _emailCtrl.text.trim(),
       password: _passCtrl.text,
+      role:     FlavorConfig.defaultRole,
     );
     if (!mounted) return;
     if (ok) {
