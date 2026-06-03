@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -7,12 +8,14 @@ import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/services/places_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../shared/widgets/step_progress_bar.dart';
 import '../../../shared/widgets/date_picker_row.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/location_search_sheet.dart';
 import 'payment_screen.dart';
 
 // ── Pricing constants ─────────────────────────────────────────────────────────
@@ -179,14 +182,28 @@ class _BookScreenState extends State<BookScreen>
     setState(() => _locating = true);
     final pos = await LocationService.getCurrentPosition();
     if (pos != null && mounted) {
-      setState(() {
-        _lat = pos.latitude;
-        _lng = pos.longitude;
-        _locating = false;
-      });
+      final address = await PlacesService.reverseGeocode(pos.latitude, pos.longitude);
+      if (mounted) {
+        setState(() {
+          _lat = pos.latitude;
+          _lng = pos.longitude;
+          _locating = false;
+        });
+        if (address != null && _addressCtrl.text.isEmpty) {
+          _addressCtrl.text = address;
+        }
+      }
     } else if (mounted) {
       setState(() => _locating = false);
     }
+  }
+
+  void _onAddressSelected(String address, double lat, double lng) {
+    setState(() {
+      _lat = lat;
+      _lng = lng;
+    });
+    _addressCtrl.text = address;
   }
 
   void _toStep(int s) {
@@ -333,6 +350,7 @@ class _BookScreenState extends State<BookScreen>
                       lng: _lng,
                       locating: _locating,
                       onLocate: _getLocation,
+                      onAddressSelected: _onAddressSelected,
                       fade: _fade,
                     ),
                     _Step5Review(
@@ -1042,6 +1060,7 @@ class _Step4Address extends StatefulWidget {
     required this.lng,
     required this.locating,
     required this.onLocate,
+    required this.onAddressSelected,
     required this.fade,
   });
   final TextEditingController addressCtrl;
@@ -1050,6 +1069,7 @@ class _Step4Address extends StatefulWidget {
   final double lng;
   final bool locating;
   final VoidCallback onLocate;
+  final void Function(String address, double lat, double lng) onAddressSelected;
   final Animation<double> fade;
 
   @override
@@ -1060,10 +1080,19 @@ class _Step4AddressState extends State<_Step4Address> {
   @override
   void initState() {
     super.initState();
+    widget.addressCtrl.addListener(_onAddressChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HouseholdProvider>().loadSavedAddresses();
     });
   }
+
+  @override
+  void dispose() {
+    widget.addressCtrl.removeListener(_onAddressChanged);
+    super.dispose();
+  }
+
+  void _onAddressChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
@@ -1152,81 +1181,217 @@ class _Step4AddressState extends State<_Step4Address> {
               },
             ),
 
-            // Map preview
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: SizedBox(
-                height: 160,
-                child: GoogleMap(
-                  initialCameraPosition:
-                      CameraPosition(target: target, zoom: 15),
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('pickup'),
-                      position: target,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueAzure),
-                    ),
-                  },
-                  style: kDarkMapStyle,
-                  zoomControlsEnabled: false,
-                  compassEnabled: false,
-                  mapToolbarEnabled: false,
-                  myLocationButtonEnabled: false,
-                  scrollGesturesEnabled: false,
-                  zoomGesturesEnabled: false,
+            // Map preview — tap to search
+            GestureDetector(
+              onTap: () async {
+                final result = await showLocationSearch(
+                  context,
+                  lat: widget.lat,
+                  lng: widget.lng,
+                );
+                if (result != null) {
+                  widget.onAddressSelected(result.address, result.lat, result.lng);
+                }
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  height: 180,
+                  child: Stack(
+                    children: [
+                      GoogleMap(
+                        initialCameraPosition:
+                            CameraPosition(target: target, zoom: 15),
+                        onMapCreated: (ctrl) {
+                          ctrl.setMapStyle(kDarkMapStyle);
+                        },
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('pickup'),
+                            position: target,
+                            icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueAzure),
+                          ),
+                        },
+                        zoomControlsEnabled: false,
+                        compassEnabled: false,
+                        mapToolbarEnabled: false,
+                        myLocationButtonEnabled: false,
+                        scrollGesturesEnabled: false,
+                        zoomGesturesEnabled: false,
+                        rotateGesturesEnabled: false,
+                        tiltGesturesEnabled: false,
+                      ),
+                      // Tap overlay hint
+                      Positioned(
+                        top: 10, right: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.deepOcean.withAlpha(220),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(PhosphorIconsRegular.magnifyingGlass,
+                                  color: AppColors.steelBlue, size: 12),
+                              const SizedBox(width: 5),
+                              Text('Tap to search',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.steelBlue,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  )),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // Use current location button
-            GestureDetector(
-              onTap: widget.onLocate,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.steelBlue.withAlpha(20),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.steelBlue.withAlpha(60)),
+            // Search / Use current location row
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      final result = await showLocationSearch(
+                        context,
+                        lat: widget.lat,
+                        lng: widget.lng,
+                      );
+                      if (result != null) {
+                        widget.onAddressSelected(result.address, result.lat, result.lng);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.steelBlue.withAlpha(50),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(PhosphorIconsRegular.magnifyingGlass,
+                              color: AppColors.white, size: 15),
+                          SizedBox(width: 7),
+                          Text('Search Address',
+                              style: TextStyle(
+                                fontFamily: 'PlusJakartaSans',
+                                color: AppColors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    widget.locating
-                        ? const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: widget.onLocate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 11),
+                    decoration: BoxDecoration(
+                      color: AppColors.steelBlue.withAlpha(20),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppColors.steelBlue.withAlpha(60)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        widget.locating
+                            ? const SizedBox(
+                                width: 15, height: 15,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.steelBlue))
+                            : const Icon(PhosphorIconsFill.crosshair,
+                                color: AppColors.steelBlue, size: 15),
+                        const SizedBox(width: 7),
+                        Text('My Location',
+                            style: AppTextStyles.caption.copyWith(
                               color: AppColors.steelBlue,
-                            ),
-                          )
-                        : const Icon(PhosphorIconsFill.crosshair,
-                            color: AppColors.steelBlue, size: 16),
-                    const SizedBox(width: 8),
-                    Text('Use current location',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.steelBlue,
-                          fontSize: 13,
-                        )),
-                  ],
+                              fontWeight: FontWeight.w700,
+                            )),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
 
             const SizedBox(height: 16),
+
+            // Address display / manual override
             Text('Pickup Address', style: AppTextStyles.label),
             const SizedBox(height: 8),
-            AppTextField(
-              controller: widget.addressCtrl,
-              label: '',
-              hint: 'House number, street, area',
-              maxLines: 2,
-              prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
-                  color: AppColors.muted, size: 20),
+            GestureDetector(
+              onTap: () async {
+                final result = await showLocationSearch(
+                  context,
+                  initialQuery: widget.addressCtrl.text,
+                  lat: widget.lat,
+                  lng: widget.lng,
+                );
+                if (result != null) {
+                  widget.onAddressSelected(result.address, result.lat, result.lng);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: widget.addressCtrl.text.isNotEmpty
+                        ? AppColors.steelBlue.withAlpha(100)
+                        : AppColors.border,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(PhosphorIconsRegular.mapPin,
+                        color: AppColors.muted, size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.addressCtrl.text.isEmpty
+                            ? 'Tap to search your pickup address'
+                            : widget.addressCtrl.text,
+                        style: AppTextStyles.body.copyWith(
+                          color: widget.addressCtrl.text.isEmpty
+                              ? AppColors.muted
+                              : AppColors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(PhosphorIconsRegular.pencilSimple,
+                        color: AppColors.muted, size: 14),
+                  ],
+                ),
+              ),
             ),
 
             const SizedBox(height: 16),

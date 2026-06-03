@@ -50,9 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (auth.status == AuthStatus.authenticated) {
       final user = auth.user!;
-      if (user.isPending) {
-        Navigator.pushReplacementNamed(context, '/pending');
-      } else if (user.isCollector) {
+      if (user.isCollector) {
         Navigator.pushReplacementNamed(context, '/collector');
       } else {
         Navigator.pushReplacementNamed(context, '/household');

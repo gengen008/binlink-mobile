@@ -92,8 +92,14 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> loginWithGoogle({String role = 'HOUSEHOLD'}) async {
     _setLoading(true);
     try {
+      // Sign out first to force account picker every time
+      await _googleSignIn.signOut();
       final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return false; // user cancelled
+      if (googleUser == null) {
+        // User dismissed the picker — not an error
+        _error = null;
+        return false;
+      }
       final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -112,8 +118,12 @@ class AuthProvider extends ChangeNotifier {
     } on DioException catch (e) {
       _error = _extractError(e);
       return false;
+    } catch (e) {
+      _error = 'Google sign-in failed. Please try again.';
+      return false;
     } finally {
       _setLoading(false);
+      notifyListeners();
     }
   }
 

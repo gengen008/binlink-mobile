@@ -45,9 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     if (ok) {
       final user = auth.user!;
-      if (user.isPending) {
-        Navigator.pushReplacementNamed(context, '/pending');
-      } else if (user.isCollector) {
+      if (user.isCollector) {
         Navigator.pushReplacementNamed(context, '/collector');
       } else {
         Navigator.pushReplacementNamed(context, '/household');
@@ -65,9 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     if (ok) {
       final user = auth.user!;
-      if (user.isPending) {
-        Navigator.pushReplacementNamed(context, '/pending');
-      } else if (user.isCollector) {
+      if (user.isCollector) {
         Navigator.pushReplacementNamed(context, '/collector');
       } else {
         Navigator.pushReplacementNamed(context, '/household');
@@ -163,24 +159,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onFieldSubmitted: (_) => _register(),
                         ),
 
-                        // Collector notice
+                        // Collector welcome
                         if (_role == 'COLLECTOR') ...[
                           const SizedBox(height: 16),
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppColors.warning.withAlpha(20),
+                              color: AppColors.success.withAlpha(15),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.warning.withAlpha(80)),
+                              border: Border.all(color: AppColors.success.withAlpha(60)),
                             ),
                             child: Row(
                               children: [
-                                const Icon(PhosphorIconsRegular.info, color: AppColors.warning, size: 18),
+                                const Icon(PhosphorIconsFill.checkCircle, color: AppColors.success, size: 18),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    'Collector accounts require admin verification before you can go online.',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.warning),
+                                    'You can start accepting pickups immediately after signing up.',
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.success),
                                   ),
                                 ),
                               ],

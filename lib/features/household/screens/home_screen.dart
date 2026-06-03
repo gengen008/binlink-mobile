@@ -18,6 +18,7 @@ import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/stats_row.dart';
 import '../../../shared/widgets/collector_bottom_sheet.dart';
+import '../../../shared/widgets/location_search_sheet.dart';
 import 'book_screen.dart';
 import 'tracking_screen.dart';
 import 'edit_profile_screen.dart';
@@ -241,10 +242,10 @@ class _HomeTabState extends State<_HomeTab> {
             child: GoogleMap(
               onMapCreated: (c) {
                 if (!_mapCtrl.isCompleted) _mapCtrl.complete(c);
+                c.setMapStyle(kDarkMapStyle);
               },
               initialCameraPosition:
                   CameraPosition(target: widget.myPos, zoom: 14),
-              style: kDarkMapStyle,
               markers: markers,
               mapType: MapType.normal,
               zoomControlsEnabled: false,
@@ -362,45 +363,63 @@ class _HomeTabState extends State<_HomeTab> {
 
                 const SizedBox(height: 10),
 
-                // Search bar pill
+                // Search bar pill — opens Places search
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Address search coming in Phase 2'),
-                          backgroundColor: AppColors.card,
-                          behavior: SnackBarBehavior.floating,
-                        ),
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      final result = await showLocationSearch(
+                        context,
+                        lat: widget.myPos.latitude,
+                        lng: widget.myPos.longitude,
                       );
+                      if (result != null && context.mounted) {
+                        // Move map to selected location
+                        final ctrl = await _mapCtrl.future;
+                        ctrl.animateCamera(CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(result.lat, result.lng),
+                            zoom: 16,
+                          ),
+                        ));
+                      }
                     },
                     child: Container(
-                      height: 48,
+                      height: 50,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.surface.withAlpha(220),
-                        borderRadius: BorderRadius.circular(14),
+                        color: AppColors.deepOcean.withAlpha(230),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(40),
-                            blurRadius: 12,
+                            color: Colors.black.withAlpha(50),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Row(
                         children: [
                           const Icon(PhosphorIconsRegular.magnifyingGlass,
-                              color: AppColors.muted, size: 18),
+                              color: AppColors.steelBlue, size: 18),
                           const SizedBox(width: 10),
-                          Text('Search your area...',
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.muted,
-                              )),
-                          const Spacer(),
-                          const Icon(PhosphorIconsRegular.sliders,
-                              color: AppColors.muted, size: 16),
+                          Expanded(
+                            child: Text('Search area, street, landmark...',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.muted,
+                                )),
+                          ),
+                          Container(
+                            width: 28, height: 28,
+                            decoration: BoxDecoration(
+                              color: AppColors.steelBlue.withAlpha(25),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(PhosphorIconsRegular.mapPin,
+                                color: AppColors.steelBlue, size: 14),
+                          ),
                         ],
                       ),
                     ),

@@ -57,9 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navigate(AuthProvider auth) {
     final user = auth.user!;
-    if (user.isPending) {
-      Navigator.pushReplacementNamed(context, '/pending');
-    } else if (user.isCollector) {
+    if (user.isCollector) {
       Navigator.pushReplacementNamed(context, '/collector');
     } else {
       Navigator.pushReplacementNamed(context, '/household');

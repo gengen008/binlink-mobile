@@ -213,10 +213,10 @@ class _MapTabState extends State<_MapTab> {
         GoogleMap(
           onMapCreated: (c) {
             if (!_mapCtrl.isCompleted) _mapCtrl.complete(c);
+            c.setMapStyle(kDarkMapStyle);
           },
           initialCameraPosition:
               CameraPosition(target: widget.pos, zoom: 14),
-          style: kDarkMapStyle,
           markers: markers,
           mapType: MapType.normal,
           zoomControlsEnabled: false,
