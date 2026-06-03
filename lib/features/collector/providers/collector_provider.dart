@@ -47,12 +47,25 @@ class CollectorProvider extends ChangeNotifier {
   Future<void> loadDashboard() async {
     _setLoading(true);
     try {
+      // Load this collector's assigned/completed bookings
       final res = await ApiClient.get('/api/bookings');
       final all = List<Map<String, dynamic>>.from(res.data['data'] as List);
       _completedPickups = all.where((b) => b['status'] == 'COMPLETED').toList();
       _activePickups    = all.where((b) =>
         ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(b['status'])
       ).toList();
+
+      // Load unassigned PENDING bookings within 30 km — fills the request queue
+      // even when the collector was offline when jobs were created
+      final avail = await ApiClient.get('/api/bookings/available');
+      final available = List<Map<String, dynamic>>.from(avail.data['data'] as List? ?? []);
+      // Merge: keep existing socket-received jobs, add any new ones from API
+      for (final b in available) {
+        if (!_pendingRequests.any((r) => r['id'] == b['id'])) {
+          _pendingRequests.add(b);
+        }
+      }
+
       _error = null;
     } on DioException catch (e) {
       _error = e.response?.data?['error'] ?? 'Failed to load dashboard';
@@ -188,8 +201,20 @@ class CollectorProvider extends ChangeNotifier {
     _loadingJobs = true;
     notifyListeners();
     try {
+      // Assigned/completed bookings for this collector
       final res = await ApiClient.get('/api/bookings');
-      _allJobs = List<Map<String, dynamic>>.from(res.data['data'] as List? ?? []);
+      final mine = List<Map<String, dynamic>>.from(res.data['data'] as List? ?? []);
+
+      // Available PENDING bookings (unassigned, within 30 km)
+      final avail = await ApiClient.get('/api/bookings/available');
+      final available = List<Map<String, dynamic>>.from(avail.data['data'] as List? ?? []);
+
+      // Merge: deduplicate by id
+      final merged = <String, Map<String, dynamic>>{};
+      for (final b in mine) merged[b['id'] as String] = b;
+      for (final b in available) merged.putIfAbsent(b['id'] as String, () => b);
+      _allJobs = merged.values.toList()
+        ..sort((a, b) => (b['createdAt'] as String? ?? '').compareTo(a['createdAt'] as String? ?? ''));
     } catch (_) {}
     _loadingJobs = false;
     notifyListeners();

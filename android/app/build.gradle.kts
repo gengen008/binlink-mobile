@@ -47,9 +47,23 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Keystore decoded from KEYSTORE_BASE64 secret by CI — placed at android/app/keystore.jks
+            storeFile = file("keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias     = System.getenv("KEYSTORE_ALIAS")    ?: "binlink"
+            keyPassword  = System.getenv("KEY_PASSWORD")      ?: ""
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // Use release keystore if it exists (CI); fall back to debug for local builds
+            signingConfig = if (file("keystore.jks").exists())
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(

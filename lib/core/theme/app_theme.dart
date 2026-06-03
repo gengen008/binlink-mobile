@@ -6,14 +6,26 @@ import 'app_text_styles.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get dark {
+  // Household app — steelBlue primary (default)
+  static ThemeData get dark => _build(
+    primary: AppColors.steelBlue,
+    secondary: AppColors.skyBlue,
+  );
+
+  // Collector app — amber primary (Bolt Driver / warm driver-app convention)
+  static ThemeData get collectorDark => _build(
+    primary: AppColors.warning,
+    secondary: const Color(0xFFFBBF24),
+  );
+
+  static ThemeData _build({required Color primary, required Color secondary}) {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.midnightNavy,
-      primaryColor: AppColors.steelBlue,
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.steelBlue,
-        secondary: AppColors.skyBlue,
+      primaryColor: primary,
+      colorScheme: ColorScheme.dark(
+        primary: primary,
+        secondary: secondary,
         surface: AppColors.surface,
         error: AppColors.danger,
       ),
@@ -63,7 +75,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.steelBlue, width: 1.5),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -73,7 +85,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.steelBlue,
+          backgroundColor: primary,
           foregroundColor: AppColors.white,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -81,9 +93,9 @@ class AppTheme {
           elevation: 0,
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.deepOcean,
-        selectedItemColor: AppColors.steelBlue,
+        selectedItemColor: primary,
         unselectedItemColor: AppColors.muted,
         type: BottomNavigationBarType.fixed,
         elevation: 0,

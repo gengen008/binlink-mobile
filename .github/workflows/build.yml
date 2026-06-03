@@ -60,6 +60,17 @@ jobs:
             > android/app/src/collector/google-services.json
           echo "[CI] collector google-services.json injected ($(wc -c < android/app/src/collector/google-services.json) bytes)"
 
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+            echo "[CI] Release keystore injected ($(wc -c < android/app/keystore.jks) bytes)"
+          else
+            echo "[CI] KEYSTORE_BASE64 not set — APK will use debug signing (Google Sign-In will not work)"
+          fi
+
       # ── 5. Dependencies ──────────────────────────────────────────────
       - name: Flutter pub get
         run: flutter pub get
@@ -77,6 +88,9 @@ jobs:
             --verbose
         env:
           JAVA_TOOL_OPTIONS: "-Xmx4g"
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Verify Household APK
         run: |
@@ -93,6 +107,9 @@ jobs:
             --verbose
         env:
           JAVA_TOOL_OPTIONS: "-Xmx4g"
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Verify Collector APK
         run: |

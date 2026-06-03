@@ -49,12 +49,12 @@ class _SplashScreenState extends State<SplashScreen>
     final auth = context.read<AuthProvider>();
 
     if (auth.status == AuthStatus.authenticated) {
-      final user = auth.user!;
-      if (user.isCollector) {
-        Navigator.pushReplacementNamed(context, '/collector');
-      } else {
-        Navigator.pushReplacementNamed(context, '/household');
-      }
+      // Route based on APK flavor, not user role.
+      // Each APK is a separate product — Collector APK always shows collector UI.
+      Navigator.pushReplacementNamed(
+        context,
+        FlavorConfig.isCollector ? '/collector' : '/household',
+      );
     } else {
       // Household: show onboarding on first ever launch
       final showOnboarding = await shouldShowOnboarding();

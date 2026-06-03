@@ -140,16 +140,16 @@ class _NavItem extends StatelessWidget {
                 width: sel ? 36 : 0, height: sel ? 4 : 0,
                 margin: const EdgeInsets.only(bottom: 4),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: Theme.of(context).primaryColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               Icon(sel ? iconFill : icon,
-                  color: sel ? AppColors.steelBlue : AppColors.muted, size: 22),
+                  color: sel ? Theme.of(context).primaryColor : AppColors.muted, size: 22),
               const SizedBox(height: 3),
               Text(label,
                   style: AppTextStyles.caption.copyWith(
-                    color: sel ? AppColors.steelBlue : AppColors.muted,
+                    color: sel ? Theme.of(context).primaryColor : AppColors.muted,
                     fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 10,
                   )),
@@ -372,11 +372,18 @@ class _MapTabState extends State<_MapTab> {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor.withAlpha(180),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.steelBlue.withAlpha(80),
+                            color: Theme.of(context).primaryColor.withAlpha(80),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -555,19 +562,19 @@ class _RequestCardState extends State<_RequestCard> {
           Row(
             children: [
               // New request label
-              Container(
+              Builder(builder: (ctx) => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.steelBlue.withAlpha(25),
+                  color: Theme.of(ctx).primaryColor.withAlpha(25),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
+                  border: Border.all(color: Theme.of(ctx).primaryColor.withAlpha(60)),
                 ),
                 child: Text('New Request',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.steelBlue,
+                      color: Theme.of(ctx).primaryColor,
                       fontWeight: FontWeight.w700,
                     )),
-              ),
+              )),
               const Spacer(),
               Text(Fmt.currency(amount),
                   style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
@@ -662,7 +669,7 @@ class _RequestCardState extends State<_RequestCard> {
               const SizedBox(width: 10),
               Expanded(
                 flex: 2,
-                child: GestureDetector(
+                child: Builder(builder: (ctx) => GestureDetector(
                   onTap: () async {
                     HapticFeedback.mediumImpact();
                     _timer?.cancel();
@@ -679,11 +686,16 @@ class _RequestCardState extends State<_RequestCard> {
                   child: Container(
                     height: 38,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(ctx).primaryColor,
+                          Theme.of(ctx).primaryColor.withAlpha(200),
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.steelBlue.withAlpha(80),
+                          color: Theme.of(ctx).primaryColor.withAlpha(80),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -697,7 +709,7 @@ class _RequestCardState extends State<_RequestCard> {
                           )),
                     ),
                   ),
-                ),
+                )),
               ),
             ],
           ),
@@ -733,11 +745,18 @@ class _ProfileTab extends StatelessWidget {
                   Container(
                     width: 88, height: 88,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withAlpha(160),
+                        ],
+                      ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.steelBlue.withAlpha(80),
+                          color: Theme.of(context).primaryColor.withAlpha(80),
                           blurRadius: 28,
                         ),
                       ],
