@@ -46,7 +46,7 @@ class _PickupsScreenState extends State<PickupsScreen>
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('My Pickups', style: AppTextStyles.h2),
@@ -211,7 +211,6 @@ class _JobCard extends StatelessWidget {
     final amount   = (job['totalAmount'] as num?)?.toDouble() ?? 0;
     final category = job['wasteCategory'] as String?;
     final date     = job['createdAt'] as String?;
-    final prov     = context.read<CollectorProvider>();
     final isActive = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
 
     return GestureDetector(
@@ -349,7 +348,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                Text('Pickup Details', style: AppTextStyles.h3),
+                const Text('Pickup Details', style: AppTextStyles.h3),
                 const Spacer(),
                 StatusBadge(status: status),
               ],
@@ -363,8 +362,8 @@ class _JobCard extends StatelessWidget {
             const Divider(color: AppColors.border),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Earnings', style: AppTextStyles.h4),
-              Text(Fmt.currency(amount * 0.8),
+              const Text('Earnings', style: AppTextStyles.h4),
+              Text(Fmt.currency(amount * 0.9),
                   style: AppTextStyles.monoLg.copyWith(color: AppColors.iceBlue)),
             ]),
           ],

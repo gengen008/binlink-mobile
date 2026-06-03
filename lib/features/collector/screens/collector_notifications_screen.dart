@@ -4,14 +4,16 @@ import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
-class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+class CollectorNotificationsScreen extends StatefulWidget {
+  const CollectorNotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  State<CollectorNotificationsScreen> createState() =>
+      _CollectorNotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _CollectorNotificationsScreenState
+    extends State<CollectorNotificationsScreen> {
   List<Map<String, dynamic>> _notifs = [];
   bool _loading = true;
 
@@ -26,7 +28,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final res = await ApiClient.get('/api/notifications');
       if (mounted) {
         setState(() {
-          _notifs = List<Map<String, dynamic>>.from(res.data['data'] as List? ?? []);
+          _notifs = List<Map<String, dynamic>>.from(
+              res.data['data'] as List? ?? []);
           _loading = false;
         });
       }
@@ -46,19 +49,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   IconData _typeIcon(String? type) {
     switch (type) {
-      case 'BOOKING_UPDATE': return PhosphorIconsFill.trashSimple;
-      case 'PAYMENT':        return PhosphorIconsFill.wallet;
-      case 'PROMO':          return PhosphorIconsFill.gift;
-      default:               return PhosphorIconsFill.bell;
+      case 'NEW_JOB':     return PhosphorIconsFill.trashSimple;
+      case 'JOB_UPDATE':  return PhosphorIconsFill.arrowCircleRight;
+      case 'EARNINGS':    return PhosphorIconsFill.wallet;
+      case 'PAYOUT':      return PhosphorIconsFill.bank;
+      case 'SYSTEM':      return PhosphorIconsFill.info;
+      default:            return PhosphorIconsFill.bell;
     }
   }
 
   Color _typeColor(String? type) {
     switch (type) {
-      case 'BOOKING_UPDATE': return AppColors.steelBlue;
-      case 'PAYMENT':        return AppColors.success;
-      case 'PROMO':          return AppColors.warning;
-      default:               return AppColors.muted;
+      case 'NEW_JOB':    return AppColors.warning;
+      case 'JOB_UPDATE': return AppColors.steelBlue;
+      case 'EARNINGS':   return AppColors.success;
+      case 'PAYOUT':     return AppColors.success;
+      case 'SYSTEM':     return AppColors.skyBlue;
+      default:           return AppColors.muted;
     }
   }
 
@@ -67,8 +74,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final dt   = DateTime.tryParse(createdAt);
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60)  return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24)    return '${diff.inHours}h ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24)   return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
   }
 
@@ -100,7 +107,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 const Expanded(
                   child: Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.steelBlue, strokeWidth: 2,
+                      color: AppColors.warning, strokeWidth: 2,
                     ),
                   ),
                 )
@@ -126,7 +133,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               color: AppColors.textSecondary,
                             )),
                         const SizedBox(height: 6),
-                        const Text("You're all caught up!",
+                        const Text('Go online to start receiving job alerts.',
                             style: AppTextStyles.caption),
                       ],
                     ),
@@ -139,13 +146,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     itemCount: _notifs.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (_, i) {
-                      final n     = _notifs[i];
-                      final isRead  = n['isRead'] as bool? ?? false;
-                      final type    = n['type'] as String?;
-                      final color   = _typeColor(type);
+                      final n      = _notifs[i];
+                      final isRead = n['isRead'] as bool? ?? false;
+                      final type   = n['type'] as String?;
+                      final color  = _typeColor(type);
 
                       return GestureDetector(
-                        onTap: isRead ? null : () => _markRead(n['id'] as String, i),
+                        onTap: isRead
+                            ? null
+                            : () => _markRead(n['id'] as String, i),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.all(16),

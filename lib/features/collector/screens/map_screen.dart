@@ -12,16 +12,15 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
-import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/stats_row.dart';
 import 'active_pickup_screen.dart';
 import 'earnings_screen.dart';
 import 'pickups_screen.dart';
 import 'vehicle_details_screen.dart';
-import '../../household/screens/notifications_screen.dart';
-import '../../household/screens/help_screen.dart';
-import '../../household/screens/privacy_screen.dart';
-import '../../household/screens/edit_profile_screen.dart';
+import 'collector_notifications_screen.dart';
+import 'collector_help_screen.dart';
+import 'collector_privacy_screen.dart';
+import 'collector_edit_profile_screen.dart';
 
 class CollectorMapScreen extends StatefulWidget {
   const CollectorMapScreen({super.key});
@@ -191,8 +190,11 @@ class _MapTabState extends State<_MapTab> {
 
   @override
   Widget build(BuildContext context) {
-    final prov   = context.watch<CollectorProvider>();
-    final active = prov.currentActivePickup;
+    final prov         = context.watch<CollectorProvider>();
+    final user         = context.watch<AuthProvider>().user;
+    final currentLoad  = user?.currentLoadKg ?? 0.0;
+    final maxCapacity  = user?.maxCapacityKg ?? 500.0;
+    final active       = prov.currentActivePickup;
 
     final mapMarkers = [
       Marker(
@@ -216,7 +218,7 @@ class _MapTabState extends State<_MapTab> {
               ),
             ],
           ),
-          child: Icon(
+          child: const Icon(
             PhosphorIconsFill.truck,
             color: AppColors.white,
             size: 24,
@@ -245,8 +247,10 @@ class _MapTabState extends State<_MapTab> {
           ],
         ),
 
-        // Top UI overlay
-        SafeArea(
+        // Top UI overlay — Positioned so it only takes natural height, never covers map
+        Positioned(
+          top: 0, left: 0, right: 0,
+          child: SafeArea(
           bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -304,6 +308,38 @@ class _MapTabState extends State<_MapTab> {
                                     : AppColors.muted,
                               ),
                             ),
+                            // Capacity indicator pill
+                            if (prov.isOnline && currentLoad > 0) ...[
+                              const SizedBox(width: 8),
+                              Builder(builder: (ctx) {
+                                final pct = maxCapacity > 0
+                                    ? (currentLoad / maxCapacity).clamp(0.0, 1.0)
+                                    : 0.0;
+                                final color = pct < 0.7
+                                    ? AppColors.success
+                                    : pct < 0.9
+                                        ? AppColors.warning
+                                        : AppColors.danger;
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: color.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: color.withAlpha(80)),
+                                  ),
+                                  child: Text(
+                                    '${(pct * 100).toStringAsFixed(0)}% full',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: color,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
                           ],
                         ),
                       ),
@@ -431,6 +467,7 @@ class _MapTabState extends State<_MapTab> {
             ],
           ),
         ),
+        ), // end Positioned top overlay
 
         // Locate-me FAB
         Positioned(
@@ -730,7 +767,7 @@ class _ProfileTab extends StatelessWidget {
 
     // Collector stats
     final earned = prov.completedPickups.fold<double>(
-        0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * 0.8);
+        0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * 0.9);
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
@@ -883,7 +920,7 @@ class _ProfileTab extends StatelessWidget {
                     label: 'Edit Profile',
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
-                          builder: (_) => const EditProfileScreen(),
+                          builder: (_) => const CollectorEditProfileScreen(),
                         )),
                   ),
                   _MenuItem(
@@ -904,7 +941,7 @@ class _ProfileTab extends StatelessWidget {
                     label: 'Notifications',
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
-                          builder: (_) => const NotificationsScreen(),
+                          builder: (_) => const CollectorNotificationsScreen(),
                         )),
                   ),
                 ],
@@ -920,7 +957,7 @@ class _ProfileTab extends StatelessWidget {
                     label: 'Help & Support',
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
-                          builder: (_) => const HelpScreen(),
+                          builder: (_) => const CollectorHelpScreen(),
                         )),
                   ),
                   _MenuItem(
@@ -928,7 +965,7 @@ class _ProfileTab extends StatelessWidget {
                     label: 'Privacy Policy',
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
-                          builder: (_) => const PrivacyScreen(),
+                          builder: (_) => const CollectorPrivacyScreen(),
                         )),
                   ),
                 ],
@@ -988,7 +1025,7 @@ class _ProfileTab extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-              Text('BinLink Collector v3.0.0',
+              const Text('BinLink Collector v3.0.0',
                   style: AppTextStyles.caption),
             ],
           ),
@@ -1070,7 +1107,7 @@ class _MenuSection extends StatelessWidget {
                                   color: item.color ?? AppColors.textPrimary,
                                 )),
                           ),
-                          Icon(PhosphorIconsRegular.caretRight,
+                          const Icon(PhosphorIconsRegular.caretRight,
                               color: AppColors.muted, size: 16),
                         ],
                       ),

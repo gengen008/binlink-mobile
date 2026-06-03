@@ -26,6 +26,16 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get completedBookings =>
       _bookings.where((b) => b['status'] == 'COMPLETED').toList();
 
+  // Recurring bookings (frequency set and not ONE_TIME)
+  List<Map<String, dynamic>> get subscriptionBookings =>
+      _bookings.where((b) {
+        final freq = b['frequency'] as String?;
+        return freq != null && freq.isNotEmpty && freq != 'ONE_TIME';
+      }).toList();
+
+  // All bookings (for history + subscriptions display)
+  List<Map<String, dynamic>> get allBookings => List.unmodifiable(_bookings);
+
   Future<void> loadBookings() async {
     _setLoading(true);
     try {

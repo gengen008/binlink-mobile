@@ -70,7 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
-                        Text('Reset password', style: AppTextStyles.h2),
+                        const Text('Reset password', style: AppTextStyles.h2),
                         const SizedBox(height: 8),
                         Text(
                           'Enter your email and we\'ll send you a link to reset your password.',
@@ -132,7 +132,7 @@ class _SuccessView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        Text('Check your email', style: AppTextStyles.h2, textAlign: TextAlign.center),
+        const Text('Check your email', style: AppTextStyles.h2, textAlign: TextAlign.center),
         const SizedBox(height: 12),
         Text(
           'A password reset link has been sent to\n$email',

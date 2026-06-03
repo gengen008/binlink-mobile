@@ -175,7 +175,7 @@ class _CollectorSheet extends StatelessWidget {
                     label: vehicle.replaceAll('_', ' '),
                   ),
                 if (vehicle != null) const SizedBox(width: 10),
-                _InfoChip(
+                const _InfoChip(
                   icon: PhosphorIconsRegular.clock,
                   label: '~10-15 min',
                   color: AppColors.warning,
@@ -193,9 +193,9 @@ class _CollectorSheet extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: const Divider(color: AppColors.border, height: 1),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Divider(color: AppColors.border, height: 1),
           ),
           const SizedBox(height: 20),
 
@@ -257,12 +257,12 @@ class _CollectorSheet extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(PhosphorIconsFill.trashSimple,
+                          Icon(PhosphorIconsFill.trashSimple,
                               color: AppColors.white, size: 18),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text('Request Pickup',
                               style: AppTextStyles.button),
                         ],

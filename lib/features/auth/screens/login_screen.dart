@@ -57,11 +57,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navigate(AuthProvider auth) {
     final user = auth.user!;
-    if (user.isCollector) {
-      Navigator.pushReplacementNamed(context, '/collector');
-    } else {
-      Navigator.pushReplacementNamed(context, '/household');
+    // Guard: if user's role doesn't match this APK flavor, show a clear error
+    // rather than routing to the wrong screen (which would crash without the right Provider)
+    if (FlavorConfig.isCollector && !user.isCollector) {
+      _showError('This app is for collectors. Please use the BinLink Household app.');
+      auth.signOut();
+      return;
     }
+    if (!FlavorConfig.isCollector && user.isCollector) {
+      _showError('This app is for households. Please use the BinLink Collector app.');
+      auth.signOut();
+      return;
+    }
+    Navigator.pushReplacementNamed(
+      context,
+      FlavorConfig.isCollector ? '/collector' : '/household',
+    );
   }
 
   void _showError(String msg) {
@@ -102,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  Text('Welcome back', style: AppTextStyles.h1),
+                  const Text('Welcome back', style: AppTextStyles.h1),
                   const SizedBox(height: 8),
                   Text(
                     'Sign in to your BinLink account',

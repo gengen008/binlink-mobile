@@ -74,7 +74,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       onTap: _showAddSheet,
                       child: Container(
                         width: 38, height: 38,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           shape: BoxShape.circle,
                         ),
@@ -114,7 +114,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                               const Text('No saved addresses',
                                   style: AppTextStyles.h4),
                               const SizedBox(height: 6),
-                              Text(
+                              const Text(
                                 'Add up to 5 addresses for quick booking',
                                 style: AppTextStyles.caption,
                                 textAlign: TextAlign.center,
@@ -295,11 +295,11 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
           ),
           const SizedBox(height: 20),
 
-          Text('Add Address', style: AppTextStyles.h3),
+          const Text('Add Address', style: AppTextStyles.h3),
           const SizedBox(height: 20),
 
           // Label selector
-          Text('Label', style: AppTextStyles.label),
+          const Text('Label', style: AppTextStyles.label),
           const SizedBox(height: 10),
           Row(
             children: _labels.map((l) {
@@ -336,7 +336,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
 
           const SizedBox(height: 16),
 
-          Text('Address', style: AppTextStyles.label),
+          const Text('Address', style: AppTextStyles.label),
           const SizedBox(height: 8),
           AppTextField(
             controller: _addrCtrl,
@@ -349,7 +349,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
 
           const SizedBox(height: 16),
 
-          Text('Gate Notes (optional)', style: AppTextStyles.label),
+          const Text('Gate Notes (optional)', style: AppTextStyles.label),
           const SizedBox(height: 8),
           AppTextField(
             controller: _notesCtrl,

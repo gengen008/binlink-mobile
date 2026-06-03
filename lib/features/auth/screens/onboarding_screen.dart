@@ -40,28 +40,28 @@ class _OnboardingPage {
 typedef _IllustrationBuilder = Widget Function();
 
 final List<_OnboardingPage> _pages = [
-  _OnboardingPage(
+  const _OnboardingPage(
     heading: 'Clean Cities\nStart Here',
     subtitle:
         'BinLink connects households with trusted\ncollectors for a cleaner Ghana.',
     accentColor: AppColors.steelBlue,
     illustration: _buildCityIllustration,
   ),
-  _OnboardingPage(
+  const _OnboardingPage(
     heading: 'Pick Up On\nYour Schedule',
     subtitle:
         'Book same-day pickups or schedule ahead.\nWe work around your timing.',
     accentColor: AppColors.skyBlue,
     illustration: _buildScheduleIllustration,
   ),
-  _OnboardingPage(
+  const _OnboardingPage(
     heading: 'Get Rewarded\nfor Recycling',
     subtitle:
         'Earn Eco Points every time you recycle.\nRedeem for discounts on future pickups.',
     accentColor: AppColors.success,
     illustration: _buildRewardsIllustration,
   ),
-  _OnboardingPage(
+  const _OnboardingPage(
     heading: 'Watch Your\nCollector Live',
     subtitle:
         'Real-time GPS tracking. Know exactly\nwhen your collector will arrive.',
@@ -137,9 +137,9 @@ Widget _buildCityIllustration() {
           bottom: 20, right: 24,
           child: Container(
             width: 48, height: 48,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [AppColors.steelBlue, AppColors.skyBlue],
               ),
             ),
@@ -207,9 +207,9 @@ Widget _buildScheduleIllustration() {
           bottom: 22, left: 20,
           child: Container(
             width: 48, height: 48,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [AppColors.skyBlue, AppColors.iceBlue],
               ),
             ),
@@ -277,9 +277,9 @@ Widget _buildRewardsIllustration() {
           bottom: 20, left: 22,
           child: Container(
             width: 48, height: 48,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [AppColors.success, Color(0xFF16A34A)],
               ),
             ),
@@ -347,9 +347,9 @@ Widget _buildTrackingIllustration() {
           bottom: 22, right: 20,
           child: Container(
             width: 48, height: 48,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [AppColors.warning, Color(0xFFD97706)],
               ),
             ),

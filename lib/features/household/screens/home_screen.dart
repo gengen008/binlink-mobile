@@ -276,11 +276,14 @@ class _HomeTabState extends State<_HomeTab> {
           ),
 
           // ── Top overlay: header + search bar ──────────────────────
-          SafeArea(
-            bottom: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          // Positioned so it only takes its natural height, never covers the map.
+          Positioned(
+            top: 0, left: 0, right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 // Greeting header (glass card)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -440,6 +443,7 @@ class _HomeTabState extends State<_HomeTab> {
               ],
             ),
           ),
+          ), // end Positioned top overlay
 
           // ── Locate-me FAB ──────────────────────────────────────────
           Positioned(
@@ -735,8 +739,9 @@ class _SplitCta extends StatelessWidget {
 class _HistoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final prov     = context.watch<HouseholdProvider>();
-    final bookings = prov.completedBookings;
+    final prov          = context.watch<HouseholdProvider>();
+    final bookings      = prov.completedBookings;
+    final subscriptions = prov.subscriptionBookings;
 
     // Stats
     final totalSpent = bookings.fold<double>(
@@ -758,7 +763,7 @@ class _HistoryTab extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('History',
+                      const Text('History',
                           style: AppTextStyles.h2),
                       Text('${bookings.length} completed pickups',
                           style: AppTextStyles.caption),
@@ -794,27 +799,47 @@ class _HistoryTab extends StatelessWidget {
             const SizedBox(height: 16),
 
             Expanded(
-              child: bookings.isEmpty
-                  ? _EmptyState(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                children: [
+                  // ── Active Subscriptions ──────────────────────────
+                  if (subscriptions.isNotEmpty) ...[
+                    const Text('Active Subscriptions', style: AppTextStyles.h4),
+                    const SizedBox(height: 10),
+                    ...subscriptions.map(
+                      (b) => _SubscriptionCard(
+                        booking: b,
+                        onTap: () => _showBookingDetail(context, b),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Completed Pickups', style: AppTextStyles.h4),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // ── Completed bookings ────────────────────────────
+                  if (bookings.isEmpty)
+                    const _EmptyState(
                       icon: PhosphorIconsRegular.clockCounterClockwise,
                       title: 'No pickups yet',
                       subtitle: 'Your completed pickups will appear here',
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                      itemCount: bookings.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) {
-                        final b = bookings[i];
-                        return GestureDetector(
+                  else
+                    ...List.generate(bookings.length, (i) {
+                      final b = bookings[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: GestureDetector(
                           onTap: () => _showBookingDetail(context, b),
                           child: BookingCard(
                             booking: b,
                             showCollector: true,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
             ),
           ],
         ),
@@ -829,6 +854,112 @@ class _HistoryTab extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _BookingDetailSheet(booking: booking),
+    );
+  }
+}
+
+// ── Subscription card ─────────────────────────────────────────────────────
+
+class _SubscriptionCard extends StatelessWidget {
+  const _SubscriptionCard({required this.booking, required this.onTap});
+  final Map<String, dynamic> booking;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final freq      = booking['frequency'] as String? ?? 'WEEKLY';
+    final status    = booking['status'] as String? ?? 'PENDING';
+    final address   = booking['pickupAddress'] as String? ?? '';
+    final binSize   = booking['binSize'] as String? ?? '';
+    final category  = (booking['wasteCategory'] as String?)?.replaceAll('_', ' ') ?? '';
+
+    const freqLabels = {
+      'WEEKLY': 'Weekly',
+      'BIWEEKLY': 'Every 2 Weeks',
+      'MONTHLY': 'Monthly',
+    };
+    const freqIcons = {
+      'WEEKLY': PhosphorIconsRegular.repeat,
+      'BIWEEKLY': PhosphorIconsRegular.arrowsCounterClockwise,
+      'MONTHLY': PhosphorIconsRegular.calendarCheck,
+    };
+
+    final isActive = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isActive ? AppColors.steelBlue.withAlpha(100) : AppColors.border,
+            width: isActive ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.steelBlue.withAlpha(25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                freqIcons[freq] ?? PhosphorIconsRegular.repeat,
+                color: AppColors.steelBlue, size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        freqLabels[freq] ?? freq,
+                        style: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (isActive ? AppColors.success : AppColors.muted).withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isActive ? 'ACTIVE' : status,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isActive ? AppColors.success : AppColors.muted,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '$binSize bin${category.isNotEmpty ? ' · $category' : ''}',
+                    style: AppTextStyles.caption.copyWith(fontSize: 10),
+                  ),
+                  Text(
+                    address,
+                    style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.muted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(PhosphorIconsRegular.caretRight,
+                color: AppColors.muted, size: 16),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -892,10 +1023,10 @@ class _ImpactCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(PhosphorIconsFill.leaf, color: AppColors.success, size: 16),
-                const SizedBox(width: 8),
+                Icon(PhosphorIconsFill.leaf, color: AppColors.success, size: 16),
+                SizedBox(width: 8),
                 Text('Your Environmental Impact', style: AppTextStyles.label),
               ],
             ),
@@ -918,7 +1049,7 @@ class _ImpactCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 _ImpactChip(
                   value: trees >= 1
-                      ? '${trees.toStringAsFixed(1)}'
+                      ? trees.toStringAsFixed(1)
                       : '<1',
                   label: 'Trees Eq.',
                   color: AppColors.warning,
@@ -1037,7 +1168,7 @@ class _BookingDetailSheet extends StatelessWidget {
             // Status badge
             Row(
               children: [
-                Text('Booking Details', style: AppTextStyles.h3),
+                const Text('Booking Details', style: AppTextStyles.h3),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1109,7 +1240,7 @@ class _BookingDetailSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total Paid', style: AppTextStyles.h4),
+                const Text('Total Paid', style: AppTextStyles.h4),
                 Text(Fmt.currency(amount),
                     style: AppTextStyles.monoLg.copyWith(
                       color: AppColors.iceBlue,
@@ -1281,7 +1412,7 @@ class _RatingSheetState extends State<_RatingSheet> {
         const SizedBox(height: 16),
         const Text('Thanks for your feedback!', style: AppTextStyles.h3),
         const SizedBox(height: 6),
-        Text('Your rating helps us improve the service.',
+        const Text('Your rating helps us improve the service.',
             style: AppTextStyles.caption, textAlign: TextAlign.center),
         const SizedBox(height: 24),
       ],
@@ -1306,7 +1437,7 @@ class _RatingSheetState extends State<_RatingSheet> {
         ),
         const SizedBox(height: 20),
 
-        Text('Rate Your Collector', style: AppTextStyles.h3),
+        const Text('Rate Your Collector', style: AppTextStyles.h3),
         const SizedBox(height: 4),
         Text(
           'How was your experience with ${widget.collectorName}?',
@@ -1654,7 +1785,7 @@ class _ProfileTab extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-              Text('BinLink Eco v3.0.0', style: AppTextStyles.caption),
+              const Text('BinLink Eco v3.0.0', style: AppTextStyles.caption),
             ],
           ),
         ),
@@ -2000,13 +2131,11 @@ class _MenuItem {
     required this.label,
     required this.onTap,
     this.color,
-    this.trailing,
   });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final Color? color;
-  final Widget? trailing;
 }
 
 class _MenuTile extends StatelessWidget {
@@ -2037,9 +2166,8 @@ class _MenuTile extends StatelessWidget {
               child: Text(item.label,
                   style: AppTextStyles.bodyMedium.copyWith(color: color)),
             ),
-            item.trailing ??
-                Icon(PhosphorIconsRegular.caretRight,
-                    color: AppColors.muted, size: 16),
+            const Icon(PhosphorIconsRegular.caretRight,
+                color: AppColors.muted, size: 16),
           ],
         ),
       ),

@@ -93,8 +93,11 @@ class _HelpScreenState extends State<HelpScreen> {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: GestureDetector(
                             onTap: () => setState(() {
-                              if (isOpen) _expanded.remove(i);
-                              else _expanded.add(i);
+                              if (isOpen) {
+                                _expanded.remove(i);
+                              } else {
+                                _expanded.add(i);
+                              }
                             }),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),

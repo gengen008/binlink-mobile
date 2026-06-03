@@ -44,12 +44,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
     if (!mounted) return;
     if (ok) {
-      final user = auth.user!;
-      if (user.isCollector) {
-        Navigator.pushReplacementNamed(context, '/collector');
-      } else {
-        Navigator.pushReplacementNamed(context, '/household');
-      }
+      Navigator.pushReplacementNamed(
+        context,
+        FlavorConfig.isCollector ? '/collector' : '/household',
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Registration failed'), backgroundColor: AppColors.danger),
@@ -62,12 +60,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final ok = await auth.loginWithGoogle(role: _role);
     if (!mounted) return;
     if (ok) {
-      final user = auth.user!;
-      if (user.isCollector) {
-        Navigator.pushReplacementNamed(context, '/collector');
-      } else {
-        Navigator.pushReplacementNamed(context, '/household');
-      }
+      Navigator.pushReplacementNamed(
+        context,
+        FlavorConfig.isCollector ? '/collector' : '/household',
+      );
     } else if (auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error!), backgroundColor: AppColors.danger),
@@ -106,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
-                        Text('Create account', style: AppTextStyles.h1),
+                        const Text('Create account', style: AppTextStyles.h1),
                         const SizedBox(height: 8),
                         Text(
                           FlavorConfig.registerSubtitle,

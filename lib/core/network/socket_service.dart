@@ -1,11 +1,11 @@
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as sio;
 import '../config/env.dart';
 import '../storage/secure_storage.dart';
 
 class SocketService {
   SocketService._();
 
-  static IO.Socket? _socket;
+  static sio.Socket? _socket;
 
   static bool get isConnected => _socket?.connected ?? false;
 
@@ -16,9 +16,9 @@ class SocketService {
 
       _socket?.disconnect();
 
-      _socket = IO.io(
+      _socket = sio.io(
         Env.socketUrl,
-        IO.OptionBuilder()
+        sio.OptionBuilder()
             .setTransports(['websocket'])
             .enableAutoConnect()
             .enableReconnection()

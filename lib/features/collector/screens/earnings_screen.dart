@@ -39,7 +39,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Row(
                   children: [
-                    Column(
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Earnings & Wallet', style: AppTextStyles.h2),
@@ -108,7 +108,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                           // ── Transaction history ──
                           Row(
                             children: [
-                              Text('Transaction History', style: AppTextStyles.h4),
+                              const Text('Transaction History', style: AppTextStyles.h4),
                               const Spacer(),
                               Text('${prov.walletTransactions.length} entries',
                                   style: AppTextStyles.caption),
@@ -127,7 +127,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                           // ── Completed pickups ──
                           Row(
                             children: [
-                              Text('Completed Pickups', style: AppTextStyles.h4),
+                              const Text('Completed Pickups', style: AppTextStyles.h4),
                               const Spacer(),
                               Text('${prov.completedPickups.length} total',
                                   style: AppTextStyles.caption),
@@ -236,7 +236,7 @@ class _WalletCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Available Balance', style: AppTextStyles.label),
+                  const Text('Available Balance', style: AppTextStyles.label),
                   const SizedBox(height: 2),
                   Text(Fmt.currency(available),
                       style: AppTextStyles.monoLg.copyWith(
@@ -390,7 +390,7 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final type   = tx['type'] as String? ?? 'EARNING';
     final amount = (tx['amount'] as num?)?.toDouble() ?? 0;
-    final date   = tx['createdAt'] as String?;
+    final date   = tx['date'] as String?;
     final isPayout = type == 'PAYOUT';
 
     return Container(
@@ -473,7 +473,7 @@ class _PickupEarningTile extends StatelessWidget {
     final amount  = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
     final address = booking['pickupAddress'] as String? ?? '';
     final date    = booking['createdAt'] as String?;
-    final earned  = amount * 0.8; // 80% collector cut
+    final earned  = amount * 0.9; // platform takes 10%
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -616,7 +616,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
 
             const SizedBox(height: 24),
 
-            Text('MoMo Number', style: AppTextStyles.label),
+            const Text('MoMo Number', style: AppTextStyles.label),
             const SizedBox(height: 8),
             TextFormField(
               controller: _phoneCtrl,
@@ -632,7 +632,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
 
             const SizedBox(height: 16),
 
-            Text('Amount (GHC)', style: AppTextStyles.label),
+            const Text('Amount (GHC)', style: AppTextStyles.label),
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountCtrl,

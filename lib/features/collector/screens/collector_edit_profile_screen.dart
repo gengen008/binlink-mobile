@@ -9,31 +9,40 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../auth/providers/auth_provider.dart';
 
-class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+class CollectorEditProfileScreen extends StatefulWidget {
+  const CollectorEditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  State<CollectorEditProfileScreen> createState() =>
+      _CollectorEditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _CollectorEditProfileScreenState
+    extends State<CollectorEditProfileScreen> {
   final _nameCtrl    = TextEditingController();
-  final _addressCtrl = TextEditingController();
+  final _phoneCtrl   = TextEditingController();
+  final _plateCtrl   = TextEditingController();
   final _formKey     = GlobalKey<FormState>();
-  bool _saving       = false;
+  String? _vehicleType;
+  bool _saving = false;
+
+  static const _vehicleTypes = ['Tricycle', 'Pickup Truck', 'Mini Truck', 'Van', 'Other'];
 
   @override
   void initState() {
     super.initState();
     final user = context.read<AuthProvider>().user;
-    _nameCtrl.text    = user?.fullName ?? '';
-    _addressCtrl.text = user?.address ?? '';
+    _nameCtrl.text  = user?.fullName ?? '';
+    _phoneCtrl.text = user?.phone ?? '';
+    _plateCtrl.text = user?.vehiclePlate ?? '';
+    _vehicleType    = user?.vehicleType;
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _addressCtrl.dispose();
+    _phoneCtrl.dispose();
+    _plateCtrl.dispose();
     super.dispose();
   }
 
@@ -42,8 +51,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _saving = true);
     try {
       final res = await ApiClient.put('/api/profile', {
-        'fullName': _nameCtrl.text.trim(),
-        'address':  _addressCtrl.text.trim(),
+        'fullName':     _nameCtrl.text.trim(),
+        'phone':        _phoneCtrl.text.trim(),
+        'vehicleType':  _vehicleType,
+        'vehiclePlate': _plateCtrl.text.trim(),
       });
       if (!mounted) return;
       final updated = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
@@ -76,7 +87,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // App bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
                 child: Row(
@@ -95,35 +105,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar preview
+                        // Avatar
                         Center(
                           child: Consumer<AuthProvider>(
                             builder: (_, auth, __) {
-                              final initials = _nameCtrl.text.isNotEmpty
-                                  ? _initials(_nameCtrl.text)
-                                  : _initials(auth.user?.fullName ?? '?');
+                              final name = _nameCtrl.text.isNotEmpty
+                                  ? _nameCtrl.text
+                                  : (auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
                                 decoration: BoxDecoration(
-                                  gradient: AppColors.primaryGradient,
+                                  gradient: const LinearGradient(
+                                    colors: [AppColors.warning, Color(0xFFFBBF24)],
+                                  ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.steelBlue.withAlpha(80),
+                                      color: AppColors.warning.withAlpha(80),
                                       blurRadius: 24,
                                     ),
                                   ],
                                 ),
                                 child: Center(
                                   child: Text(
-                                    initials,
-                                    style: AppTextStyles.h2,
+                                    _initials(name),
+                                    style: AppTextStyles.h2.copyWith(
+                                      color: AppColors.midnightNavy,
+                                    ),
                                   ),
                                 ),
                               );
@@ -132,6 +146,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
 
                         const SizedBox(height: 32),
+
+                        // Full name
                         const Text('Full Name', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
@@ -147,18 +163,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
 
                         const SizedBox(height: 20),
-                        const Text('Primary Address', style: AppTextStyles.label),
+
+                        // Phone
+                        const Text('Phone Number', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
-                          controller: _addressCtrl,
+                          controller: _phoneCtrl,
                           label: '',
-                          hint: 'Your home address',
-                          maxLines: 2,
-                          prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
+                          hint: '+233 xx xxx xxxx',
+                          keyboardType: TextInputType.phone,
+                          prefixIcon: const Icon(PhosphorIconsRegular.phone,
+                              color: AppColors.muted, size: 20),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Vehicle type
+                        const Text('Vehicle Type', style: AppTextStyles.label),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.card,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _vehicleType,
+                              hint: Text('Select vehicle type',
+                                  style: AppTextStyles.body.copyWith(
+                                      color: AppColors.muted)),
+                              isExpanded: true,
+                              dropdownColor: AppColors.card,
+                              style: AppTextStyles.body,
+                              items: _vehicleTypes
+                                  .map((t) => DropdownMenuItem(
+                                        value: t,
+                                        child: Text(t),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) => setState(() => _vehicleType = v),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Vehicle plate
+                        const Text('Vehicle Plate Number', style: AppTextStyles.label),
+                        const SizedBox(height: 8),
+                        AppTextField(
+                          controller: _plateCtrl,
+                          label: '',
+                          hint: 'e.g. GR-1234-23',
+                          prefixIcon: const Icon(PhosphorIconsRegular.truck,
                               color: AppColors.muted, size: 20),
                         ),
 
                         const SizedBox(height: 36),
+
                         AppButton(
                           label: 'Save Changes',
                           loading: _saving,

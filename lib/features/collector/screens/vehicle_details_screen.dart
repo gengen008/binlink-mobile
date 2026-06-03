@@ -54,17 +54,10 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await ApiClient.put('/api/collector/vehicle', {
-        'vehicleType':    _vehicleType,
-        'registrationNo': _regCtrl.text.trim(),
-        'color':          _colorCtrl.text.trim(),
-        'maxCapacityKg':  _maxCapacity,
-        'notes':          _notesCtrl.text.trim(),
-      });
-      // Also update profile to reflect vehicle type
       final res = await ApiClient.put('/api/profile', {
-        'vehicleType':  _vehicleType,
-        'vehiclePlate': _regCtrl.text.trim(),
+        'vehicleType':   _vehicleType,
+        'vehiclePlate':  _regCtrl.text.trim(),
+        'maxCapacityKg': _maxCapacity,
       });
       if (!mounted) return;
       final updated = UserModel.fromJson(
@@ -79,6 +72,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
       );
       Navigator.pop(context);
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to save vehicle details'),
@@ -123,7 +117,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Vehicle Type', style: AppTextStyles.label),
+                        const Text('Vehicle Type', style: AppTextStyles.label),
                         const SizedBox(height: 12),
 
                         // Type selector
@@ -175,7 +169,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 24),
-                        Text('Registration Number', style: AppTextStyles.label),
+                        const Text('Registration Number', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _regCtrl,
@@ -191,7 +185,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 20),
-                        Text('Vehicle Color', style: AppTextStyles.label),
+                        const Text('Vehicle Color', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _colorCtrl,
@@ -206,7 +200,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            Text('Max Capacity', style: AppTextStyles.label),
+                            const Text('Max Capacity', style: AppTextStyles.label),
                             const Spacer(),
                             Text('${_maxCapacity.toInt()}kg',
                                 style: AppTextStyles.monoSm.copyWith(
@@ -234,7 +228,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 20),
-                        Text('Notes (optional)', style: AppTextStyles.label),
+                        const Text('Notes (optional)', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _notesCtrl,

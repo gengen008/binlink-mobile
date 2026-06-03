@@ -8,10 +8,10 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PolicyScreen(
+    return const _PolicyScreen(
       title: 'Privacy Policy',
       icon: PhosphorIconsFill.shieldCheck,
-      sections: const [
+      sections: [
         _PolicySection(
           heading: '1. Information We Collect',
           body:
@@ -62,10 +62,10 @@ class TermsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PolicyScreen(
+    return const _PolicyScreen(
       title: 'Terms of Service',
       icon: PhosphorIconsFill.files,
-      sections: const [
+      sections: [
         _PolicySection(
           heading: '1. Acceptance of Terms',
           body:

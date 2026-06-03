@@ -27,7 +27,7 @@ android {
         applicationId = "com.binlink.eco"
         // API 23+ required for AES_GCM cipher in flutter_secure_storage
         // Android 6.0+ — covers 99%+ of active Ghana devices
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

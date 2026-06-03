@@ -57,8 +57,11 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     );
     if (photo == null) return;
     setState(() {
-      if (isBefore) _beforePhoto = photo;
-      else _afterPhoto = photo;
+      if (isBefore) {
+        _beforePhoto = photo;
+      } else {
+        _afterPhoto = photo;
+      }
     });
   }
 
@@ -306,7 +309,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   // ── Photo section ──────────────────────────────────────────────────────────
 
   Widget _photoSection() {
-    final showBefore = true; // always show before tile
+    const showBefore = true; // always show before tile
     final showAfter  = ['ARRIVED', 'COMPLETED'].contains(_currentStatus);
     final canTakeBefore = _currentStatus == 'ACCEPTED';
     final canTakeAfter  = _currentStatus == 'ARRIVED';
@@ -314,10 +317,10 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           children: [
-            const Icon(PhosphorIconsRegular.camera, color: AppColors.skyBlue, size: 16),
-            const SizedBox(width: 6),
+            Icon(PhosphorIconsRegular.camera, color: AppColors.skyBlue, size: 16),
+            SizedBox(width: 6),
             Text('Verification Photos', style: AppTextStyles.label),
           ],
         ),
@@ -374,7 +377,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           ),
           if (_beforePhoto == null) ...[
             const SizedBox(height: 8),
-            _PhotoRequiredHint(label: 'Take a Before photo to unlock navigation'),
+            const _PhotoRequiredHint(label: 'Take a Before photo to unlock navigation'),
           ],
         ];
 
@@ -402,7 +405,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           ),
           if (_afterPhoto == null) ...[
             const SizedBox(height: 8),
-            _PhotoRequiredHint(label: 'Take an After photo to complete pickup'),
+            const _PhotoRequiredHint(label: 'Take an After photo to complete pickup'),
           ],
         ];
 
@@ -799,7 +802,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                 child: const Icon(PhosphorIconsFill.warning, color: AppColors.danger, size: 20),
               ),
               const SizedBox(width: 14),
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Report Exception', style: AppTextStyles.h3),

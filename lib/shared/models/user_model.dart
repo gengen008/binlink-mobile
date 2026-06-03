@@ -16,6 +16,8 @@ class UserModel {
   final String? memberSince;
   final int ecoPoints;
   final double totalKgRecycled;
+  final double currentLoadKg;
+  final double maxCapacityKg;
 
   const UserModel({
     required this.id,
@@ -35,6 +37,8 @@ class UserModel {
     this.memberSince,
     this.ecoPoints = 0,
     this.totalKgRecycled = 0.0,
+    this.currentLoadKg = 0.0,
+    this.maxCapacityKg = 500.0,
   });
 
   bool get isHousehold => role == 'HOUSEHOLD';
@@ -61,6 +65,8 @@ class UserModel {
       memberSince:      json['createdAt'] as String?,
       ecoPoints:        json['ecoPoints'] as int? ?? 0,
       totalKgRecycled:  (json['totalKgRecycled'] as num?)?.toDouble() ?? 0.0,
+      currentLoadKg:    (json['currentLoadKg'] as num?)?.toDouble() ?? 0.0,
+      maxCapacityKg:    (json['maxCapacityKg'] as num?)?.toDouble() ?? 500.0,
     );
   }
 
@@ -76,19 +82,26 @@ class UserModel {
     String? phone, String? email, String? fullName, String? address,
     bool? isOnline, String? vehicleType, String? vehiclePlate,
     double? lastLat, double? lastLng,
+    double? currentLoadKg, double? maxCapacityKg,
+    int? ecoPoints, double? totalKgRecycled,
   }) {
     return UserModel(
       id: id, role: role, status: status,
       rating: rating, totalPickups: totalPickups,
-      phone:       phone       ?? this.phone,
-      email:       email       ?? this.email,
-      fullName:    fullName    ?? this.fullName,
-      address:     address     ?? this.address,
-      isOnline:    isOnline    ?? this.isOnline,
-      vehicleType: vehicleType ?? this.vehicleType,
-      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
-      lastLat: lastLat ?? this.lastLat,
-      lastLng: lastLng ?? this.lastLng,
+      memberSince: memberSince,
+      phone:          phone          ?? this.phone,
+      email:          email          ?? this.email,
+      fullName:       fullName       ?? this.fullName,
+      address:        address        ?? this.address,
+      isOnline:       isOnline       ?? this.isOnline,
+      vehicleType:    vehicleType    ?? this.vehicleType,
+      vehiclePlate:   vehiclePlate   ?? this.vehiclePlate,
+      lastLat:        lastLat        ?? this.lastLat,
+      lastLng:        lastLng        ?? this.lastLng,
+      currentLoadKg:  currentLoadKg  ?? this.currentLoadKg,
+      maxCapacityKg:  maxCapacityKg  ?? this.maxCapacityKg,
+      ecoPoints:      ecoPoints      ?? this.ecoPoints,
+      totalKgRecycled: totalKgRecycled ?? this.totalKgRecycled,
     );
   }
 }

@@ -27,7 +27,6 @@ class ReceiptService {
 
     final basePrice  = _basePrice(binSize);
     final extraPrice = extra * 6.0;
-    final serviceFee = 2.0;
 
     doc.addPage(
       pw.Page(
@@ -110,7 +109,6 @@ class ReceiptService {
             _amountRow('Base Price (${_binLabel(binSize)})', basePrice),
             if (extra > 0)
               _amountRow('Extra Bags (${extra}x GHC 6)', extraPrice),
-            _amountRow('Service Fee', serviceFee),
 
             pw.SizedBox(height: 8),
             pw.Divider(color: PdfColors.grey300),

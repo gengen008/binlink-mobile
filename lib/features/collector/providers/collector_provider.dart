@@ -6,7 +6,7 @@ import '../../../core/network/socket_service.dart';
 import '../../../core/services/location_service.dart';
 
 class CollectorProvider extends ChangeNotifier {
-  List<Map<String, dynamic>> _pendingRequests = [];
+  final List<Map<String, dynamic>> _pendingRequests = [];
   List<Map<String, dynamic>> _activePickups   = [];
   List<Map<String, dynamic>> _completedPickups = [];
   bool _isOnline = false;
@@ -14,6 +14,7 @@ class CollectorProvider extends ChangeNotifier {
   String? _error;
 
   StreamSubscription? _locationSub;
+  bool _listeningForBookings = false;
 
   List<Map<String, dynamic>> get pendingRequests  => _pendingRequests;
   List<Map<String, dynamic>> get activePickups    => _activePickups;
@@ -26,13 +27,16 @@ class CollectorProvider extends ChangeNotifier {
       _activePickups.isNotEmpty ? _activePickups.first : null;
 
   // Earnings helpers
+  // Platform takes 10%; collector earns 90% of totalAmount
+  static const _collectorRate = 0.9;
+
   double get todayEarnings => _completedPickups.where((b) {
     final d = DateTime.tryParse(b['completedAt'] as String? ?? '');
     return d != null &&
         d.day == DateTime.now().day &&
         d.month == DateTime.now().month &&
         d.year == DateTime.now().year;
-  }).fold(0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0));
+  }).fold(0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * _collectorRate);
 
   int get todayPickups => _completedPickups.where((b) {
     final d = DateTime.tryParse(b['completedAt'] as String? ?? '');
@@ -76,6 +80,8 @@ class CollectorProvider extends ChangeNotifier {
   }
 
   void _listenForNewBookings() {
+    if (_listeningForBookings) return;
+    _listeningForBookings = true;
     SocketService.on('booking:new', (data) {
       final booking = Map<String, dynamic>.from(data as Map);
       if (!_pendingRequests.any((r) => r['id'] == booking['id'])) {
@@ -211,8 +217,12 @@ class CollectorProvider extends ChangeNotifier {
 
       // Merge: deduplicate by id
       final merged = <String, Map<String, dynamic>>{};
-      for (final b in mine) merged[b['id'] as String] = b;
-      for (final b in available) merged.putIfAbsent(b['id'] as String, () => b);
+      for (final b in mine) {
+        merged[b['id'] as String] = b;
+      }
+      for (final b in available) {
+        merged.putIfAbsent(b['id'] as String, () => b);
+      }
       _allJobs = merged.values.toList()
         ..sort((a, b) => (b['createdAt'] as String? ?? '').compareTo(a['createdAt'] as String? ?? ''));
     } catch (_) {}
@@ -278,6 +288,7 @@ class CollectorProvider extends ChangeNotifier {
     _locationSub?.cancel();
     SocketService.off('booking:new');
     SocketService.off('booking:taken');
+    _listeningForBookings = false;
     super.dispose();
   }
 }
