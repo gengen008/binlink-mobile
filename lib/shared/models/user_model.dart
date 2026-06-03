@@ -13,6 +13,9 @@ class UserModel {
   final String? vehiclePlate;
   final double? lastLat;
   final double? lastLng;
+  final String? memberSince;
+  final int ecoPoints;
+  final double totalKgRecycled;
 
   const UserModel({
     required this.id,
@@ -29,6 +32,9 @@ class UserModel {
     this.vehiclePlate,
     this.lastLat,
     this.lastLng,
+    this.memberSince,
+    this.ecoPoints = 0,
+    this.totalKgRecycled = 0.0,
   });
 
   bool get isHousehold => role == 'HOUSEHOLD';
@@ -48,10 +54,13 @@ class UserModel {
       isOnline:     json['isOnline'] as bool? ?? false,
       rating:       (json['rating'] as num?)?.toDouble() ?? 5.0,
       totalPickups: json['totalPickups'] as int? ?? 0,
-      vehicleType:  json['vehicleType'] as String?,
-      vehiclePlate: json['vehiclePlate'] as String?,
-      lastLat:      (json['lastLat'] as num?)?.toDouble(),
-      lastLng:      (json['lastLng'] as num?)?.toDouble(),
+      vehicleType:      json['vehicleType'] as String?,
+      vehiclePlate:     json['vehiclePlate'] as String?,
+      lastLat:          (json['lastLat'] as num?)?.toDouble(),
+      lastLng:          (json['lastLng'] as num?)?.toDouble(),
+      memberSince:      json['createdAt'] as String?,
+      ecoPoints:        json['ecoPoints'] as int? ?? 0,
+      totalKgRecycled:  (json['totalKgRecycled'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

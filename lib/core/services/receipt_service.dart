@@ -1,0 +1,246 @@
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
+
+class ReceiptService {
+  ReceiptService._();
+
+  static Future<void> shareReceipt(Map<String, dynamic> booking) async {
+    final doc = pw.Document();
+
+    final bookingId = booking['id'] as String? ?? 'N/A';
+    final status    = booking['status'] as String? ?? '';
+    final binSize   = booking['binSize'] as String? ?? '';
+    final amount    = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final extra     = (booking['extraBags'] as num?)?.toInt() ?? 0;
+    final address   = booking['pickupAddress'] as String? ?? '';
+    final method    = booking['paymentMethod'] as String? ?? '';
+    final category  = booking['wasteCategory'] as String?;
+    final date      = booking['createdAt'] as String?;
+    final collector = (booking['collector'] as Map<String, dynamic>?)?['fullName'] as String?;
+
+    final dateStr = date != null
+        ? _formatDate(date)
+        : DateTime.now().toString().substring(0, 10);
+
+    final basePrice  = _basePrice(binSize);
+    final extraPrice = extra * 6.0;
+    final serviceFee = 2.0;
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        build: (ctx) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('BinLink Eco',
+                        style: pw.TextStyle(
+                          fontSize: 24, fontWeight: pw.FontWeight.bold,
+                        )),
+                    pw.Text('On-Demand Waste Collection',
+                        style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('RECEIPT',
+                        style: pw.TextStyle(
+                          fontSize: 20, fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.blue800,
+                        )),
+                    pw.Text('Status: ${status.toUpperCase()}',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  ],
+                ),
+              ],
+            ),
+
+            pw.Divider(height: 40, color: PdfColors.grey300),
+
+            // Ref + Date
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                _labelValue('Reference', bookingId.substring(0, 8).toUpperCase()),
+                _labelValue('Date', dateStr, align: pw.TextAlign.right),
+              ],
+            ),
+
+            pw.SizedBox(height: 24),
+
+            // Pickup details
+            pw.Text('PICKUP DETAILS',
+                style: pw.TextStyle(
+                  fontSize: 10, fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey600, letterSpacing: 1.5,
+                )),
+            pw.SizedBox(height: 10),
+
+            _rowItem('Address', address),
+            if (category != null)
+              _rowItem('Waste Category', category.replaceAll('_', ' ')),
+            _rowItem('Bin Size', _binLabel(binSize)),
+            if (collector != null)
+              _rowItem('Collector', collector),
+            _rowItem('Payment Method', _methodLabel(method)),
+
+            pw.SizedBox(height: 24),
+            pw.Divider(color: PdfColors.grey200),
+            pw.SizedBox(height: 16),
+
+            // Price breakdown
+            pw.Text('AMOUNT BREAKDOWN',
+                style: pw.TextStyle(
+                  fontSize: 10, fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey600, letterSpacing: 1.5,
+                )),
+            pw.SizedBox(height: 10),
+
+            _amountRow('Base Price (${_binLabel(binSize)})', basePrice),
+            if (extra > 0)
+              _amountRow('Extra Bags (${extra}x GHC 6)', extraPrice),
+            _amountRow('Service Fee', serviceFee),
+
+            pw.SizedBox(height: 8),
+            pw.Divider(color: PdfColors.grey300),
+            pw.SizedBox(height: 8),
+
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('TOTAL PAID',
+                    style: pw.TextStyle(
+                      fontSize: 14, fontWeight: pw.FontWeight.bold,
+                    )),
+                pw.Text('GHC ${amount.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                      fontSize: 18, fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue800,
+                    )),
+              ],
+            ),
+
+            pw.Spacer(),
+
+            // Footer
+            pw.Divider(color: PdfColors.grey200),
+            pw.SizedBox(height: 8),
+            pw.Center(
+              child: pw.Text(
+                'Thank you for choosing BinLink Eco. Together we keep Ghana clean.',
+                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                textAlign: pw.TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final dir  = await getTemporaryDirectory();
+    final file = File('${dir.path}/binlink_receipt_${bookingId.substring(0, 8)}.pdf');
+    await file.writeAsBytes(await doc.save());
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      subject: 'BinLink Pickup Receipt',
+    );
+  }
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  static pw.Widget _labelValue(String label, String value,
+      {pw.TextAlign align = pw.TextAlign.left}) {
+    return pw.Column(
+      crossAxisAlignment: align == pw.TextAlign.right
+          ? pw.CrossAxisAlignment.end
+          : pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(label,
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+        pw.Text(value,
+            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+      ],
+    );
+  }
+
+  static pw.Widget _rowItem(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 140,
+            child: pw.Text(label,
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+          ),
+          pw.Expanded(
+            child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _amountRow(String label, double amount) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+          pw.Text('GHC ${amount.toStringAsFixed(2)}',
+              style: const pw.TextStyle(fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  static double _basePrice(String size) {
+    switch (size.toUpperCase()) {
+      case 'SMALL':  return 30.0;
+      case 'MEDIUM': return 40.0;
+      case 'LARGE':  return 50.0;
+      default:       return 30.0;
+    }
+  }
+
+  static String _binLabel(String size) {
+    switch (size.toUpperCase()) {
+      case 'SMALL':  return 'Small (≤120L) — GHC 30';
+      case 'MEDIUM': return 'Medium (180L) — GHC 40';
+      case 'LARGE':  return 'Large (240L) — GHC 50';
+      default:       return size;
+    }
+  }
+
+  static String _methodLabel(String method) {
+    switch (method.toUpperCase()) {
+      case 'MTN_MOMO':      return 'MTN MoMo';
+      case 'VODAFONE_CASH': return 'Telecel Cash';
+      case 'AIRTELTIGO':    return 'AirtelTigo Money';
+      case 'CASH':          return 'Cash on Pickup';
+      default:              return method;
+    }
+  }
+
+  static String _formatDate(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return iso;
+    const m = ['Jan','Feb','Mar','Apr','May','Jun',
+                'Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${dt.day} ${m[dt.month - 1]} ${dt.year}';
+  }
+}

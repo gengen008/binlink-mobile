@@ -34,6 +34,9 @@ class ApiClient {
   static Future<Response> put(String path, [Map<String, dynamic>? data]) =>
       instance.put(path, data: data);
 
+  static Future<Response> patch(String path, [Map<String, dynamic>? data]) =>
+      instance.patch(path, data: data);
+
   static Future<Response> delete(String path) => instance.delete(path);
 }
 

@@ -1,20 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/models/user_model.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/stats_row.dart';
 import 'active_pickup_screen.dart';
 import 'earnings_screen.dart';
+import 'pickups_screen.dart';
+import 'vehicle_details_screen.dart';
+import '../../household/screens/notifications_screen.dart';
+import '../../household/screens/help_screen.dart';
+import '../../household/screens/privacy_screen.dart';
+import '../../household/screens/edit_profile_screen.dart';
 
 class CollectorMapScreen extends StatefulWidget {
   const CollectorMapScreen({super.key});
@@ -46,22 +52,106 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
         index: _tab,
         children: [
           _MapTab(pos: _pos),
+          const PickupsScreen(),
           const EarningsScreen(),
           _ProfileTab(),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.deepOcean,
-          border: Border(top: BorderSide(color: AppColors.border)),
+      bottomNavigationBar: _BottomNav(
+        current: _tab,
+        onTap: (i) => setState(() => _tab = i),
+      ),
+    );
+  }
+}
+
+// ── Bottom navigation ─────────────────────────────────────────────────────────
+
+class _BottomNav extends StatelessWidget {
+  const _BottomNav({required this.current, required this.onTap});
+  final int current;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.deepOcean,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            _NavItem(
+              icon: PhosphorIconsRegular.mapTrifold,
+              iconFill: PhosphorIconsFill.mapTrifold,
+              label: 'Map',      index: 0, current: current, onTap: onTap,
+            ),
+            _NavItem(
+              icon: PhosphorIconsRegular.clipboardText,
+              iconFill: PhosphorIconsFill.clipboardText,
+              label: 'Pickups',  index: 1, current: current, onTap: onTap,
+            ),
+            _NavItem(
+              icon: PhosphorIconsRegular.coins,
+              iconFill: PhosphorIconsFill.coins,
+              label: 'Earnings', index: 2, current: current, onTap: onTap,
+            ),
+            _NavItem(
+              icon: PhosphorIconsRegular.user,
+              iconFill: PhosphorIconsFill.user,
+              label: 'Profile',  index: 3, current: current, onTap: onTap,
+            ),
+          ],
         ),
-        child: SafeArea(
-          top: false,
-          child: Row(
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon, required this.iconFill, required this.label,
+    required this.index, required this.current, required this.onTap,
+  });
+  final IconData icon;
+  final IconData iconFill;
+  final String label;
+  final int index;
+  final int current;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final sel = current == index;
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onTap(index),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _NavItem(icon: PhosphorIconsRegular.mapTrifold, label: 'Map',      index: 0, current: _tab, onTap: (i) => setState(() => _tab = i)),
-              _NavItem(icon: PhosphorIconsRegular.coins,      label: 'Earnings', index: 1, current: _tab, onTap: (i) => setState(() => _tab = i)),
-              _NavItem(icon: PhosphorIconsRegular.user,       label: 'Profile',  index: 2, current: _tab, onTap: (i) => setState(() => _tab = i)),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: sel ? 36 : 0, height: sel ? 4 : 0,
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Icon(sel ? iconFill : icon,
+                  color: sel ? AppColors.steelBlue : AppColors.muted, size: 22),
+              const SizedBox(height: 3),
+              Text(label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: sel ? AppColors.steelBlue : AppColors.muted,
+                    fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 10,
+                  )),
             ],
           ),
         ),
@@ -69,6 +159,8 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
     );
   }
 }
+
+// ── MAP TAB ───────────────────────────────────────────────────────────────────
 
 class _MapTab extends StatefulWidget {
   const _MapTab({required this.pos});
@@ -81,24 +173,25 @@ class _MapTab extends StatefulWidget {
 class _MapTabState extends State<_MapTab> {
   final Completer<GoogleMapController> _mapCtrl = Completer();
 
-  void _onMapCreated(GoogleMapController ctrl) {
-    if (!_mapCtrl.isCompleted) _mapCtrl.complete(ctrl);
+  Future<void> _locateMe() async {
+    HapticFeedback.lightImpact();
+    final ctrl = await _mapCtrl.future;
+    ctrl.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: widget.pos, zoom: 15.5)));
   }
 
   @override
   void didUpdateWidget(_MapTab old) {
     super.didUpdateWidget(old);
     if (old.pos != widget.pos) {
-      _mapCtrl.future.then((ctrl) {
-        ctrl.animateCamera(CameraUpdate.newLatLng(widget.pos));
-      });
+      _mapCtrl.future.then(
+          (c) => c.animateCamera(CameraUpdate.newLatLng(widget.pos)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<CollectorProvider>();
-    final auth = context.watch<AuthProvider>();
+    final prov   = context.watch<CollectorProvider>();
     final active = prov.currentActivePickup;
 
     final markers = <Marker>{
@@ -106,147 +199,249 @@ class _MapTabState extends State<_MapTab> {
         markerId: const MarkerId('me'),
         position: widget.pos,
         icon: BitmapDescriptor.defaultMarkerWithHue(
-          prov.isOnline ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueRed,
+          prov.isOnline
+              ? BitmapDescriptor.hueGreen
+              : BitmapDescriptor.hueRed,
         ),
         infoWindow: InfoWindow(title: prov.isOnline ? 'Online' : 'Offline'),
       ),
     };
 
-    return Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-      child: Stack(
-        children: [
-          // Google Map (full screen)
-          GoogleMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: widget.pos,
-              zoom: 14,
-            ),
-            style: kDarkMapStyle,
-            markers: markers,
-            mapType: MapType.normal,
-            zoomControlsEnabled: false,
-            compassEnabled: false,
-            mapToolbarEnabled: false,
-            myLocationButtonEnabled: false,
-          ),
+    return Stack(
+      children: [
+        // Full-screen map
+        GoogleMap(
+          onMapCreated: (c) {
+            if (!_mapCtrl.isCompleted) _mapCtrl.complete(c);
+          },
+          initialCameraPosition:
+              CameraPosition(target: widget.pos, zoom: 14),
+          style: kDarkMapStyle,
+          markers: markers,
+          mapType: MapType.normal,
+          zoomControlsEnabled: false,
+          compassEnabled: false,
+          mapToolbarEnabled: false,
+          myLocationButtonEnabled: false,
+        ),
 
-          // UI overlay
-          SafeArea(
-            child: Column(
-              children: [
-                // Top bar
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.deepOcean,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(PhosphorIconsRegular.user, color: AppColors.skyBlue, size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  auth.user?.fullName ?? 'Collector',
-                                  style: AppTextStyles.bodyMedium,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      // Online toggle
-                      GestureDetector(
-                        onTap: () => prov.toggleOnline(),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: prov.isOnline
-                                ? AppColors.success.withAlpha(25)
-                                : AppColors.muted.withAlpha(25),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: prov.isOnline ? AppColors.success : AppColors.muted,
-                            ),
-                          ),
-                          child: Text(
-                            prov.isOnline ? 'Online' : 'Offline',
-                            style: AppTextStyles.label.copyWith(
-                              color: prov.isOnline ? AppColors.success : AppColors.muted,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Active pickup banner
-                if (active != null) ...[
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => ActivePickupScreen(booking: active))),
+        // Top UI overlay
+        SafeArea(
+          bottom: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Status bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
+                          color: AppColors.deepOcean.withAlpha(230),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(50),
+                              blurRadius: 12,
+                            ),
+                          ],
                         ),
                         child: Row(
                           children: [
-                            const Icon(PhosphorIconsFill.truck, color: AppColors.white, size: 22),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Active Pickup', style: AppTextStyles.h4.copyWith(color: AppColors.white)),
-                                  Text(
-                                    active['pickupAddress'] as String? ?? '',
-                                    style: AppTextStyles.caption.copyWith(color: AppColors.iceBlue),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
+                            // Online status dot
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 8, height: 8,
+                              decoration: BoxDecoration(
+                                color: prov.isOnline
+                                    ? AppColors.success
+                                    : AppColors.muted,
+                                shape: BoxShape.circle,
+                                boxShadow: prov.isOnline
+                                    ? [
+                                        BoxShadow(
+                                          color:
+                                              AppColors.success.withAlpha(80),
+                                          blurRadius: 6,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                             ),
-                            const Icon(PhosphorIconsRegular.arrowRight, color: AppColors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              prov.isOnline ? 'Online — Accepting jobs' : 'Offline',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontSize: 13,
+                                color: prov.isOnline
+                                    ? AppColors.success
+                                    : AppColors.muted,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(width: 10),
+                    // Online toggle
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        prov.toggleOnline();
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: 56, height: 44,
+                        decoration: BoxDecoration(
+                          gradient: prov.isOnline
+                              ? const LinearGradient(
+                                  colors: [Color(0xFF16A34A), AppColors.success],
+                                )
+                              : null,
+                          color: prov.isOnline
+                              ? null
+                              : AppColors.card,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: prov.isOnline
+                                ? AppColors.success
+                                : AppColors.border,
+                          ),
+                          boxShadow: prov.isOnline
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.success.withAlpha(60),
+                                    blurRadius: 12,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            prov.isOnline
+                                ? PhosphorIconsFill.power
+                                : PhosphorIconsRegular.power,
+                            color: prov.isOnline
+                                ? AppColors.white
+                                : AppColors.muted,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Active pickup banner
+              if (active != null) ...[
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => ActivePickupScreen(booking: active),
+                        )),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.steelBlue.withAlpha(80),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40, height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(PhosphorIconsFill.truck,
+                                color: AppColors.white, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Active Pickup',
+                                    style: AppTextStyles.h4.copyWith(
+                                      color: AppColors.white,
+                                    )),
+                                Text(
+                                  active['pickupAddress'] as String? ?? '',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.iceBlue,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(PhosphorIconsRegular.arrowRight,
+                              color: AppColors.white, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Locate-me FAB
+        Positioned(
+          right: 16,
+          bottom: prov.pendingRequests.isNotEmpty ? 216 : 80,
+          child: GestureDetector(
+            onTap: _locateMe,
+            child: Container(
+              width: 48, height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.deepOcean,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(60),
+                    blurRadius: 12,
                   ),
                 ],
-
-                const Spacer(),
-
-                // Pending requests
-                if (prov.pendingRequests.isNotEmpty && prov.isOnline)
-                  _PendingRequestsList(requests: prov.pendingRequests),
-
-                const SizedBox(height: 16),
-              ],
+              ),
+              child: const Icon(PhosphorIconsRegular.crosshair,
+                  color: AppColors.skyBlue, size: 22),
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Pending request cards (with countdown)
+        if (prov.pendingRequests.isNotEmpty && prov.isOnline)
+          Positioned(
+            left: 0, right: 0, bottom: 16,
+            child: _PendingRequestsList(requests: prov.pendingRequests),
+          ),
+      ],
     );
   }
 }
+
+// ── Pending request card with countdown timer ─────────────────────────────────
 
 class _PendingRequestsList extends StatelessWidget {
   const _PendingRequestsList({required this.requests});
@@ -255,100 +450,233 @@ class _PendingRequestsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 180,
+      height: 192,
       child: PageView.builder(
         padEnds: false,
         controller: PageController(viewportFraction: 0.9),
         itemCount: requests.length,
-        itemBuilder: (_, i) {
-          final req = requests[i];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: _RequestCard(booking: req),
-          );
-        },
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: _RequestCard(booking: requests[i]),
+        ),
       ),
     );
   }
 }
 
-class _RequestCard extends StatelessWidget {
+class _RequestCard extends StatefulWidget {
   const _RequestCard({required this.booking});
   final Map<String, dynamic> booking;
 
   @override
+  State<_RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends State<_RequestCard> {
+  static const _kCountdown = 30;
+  int _remaining = _kCountdown;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _remaining--);
+      if (_remaining <= 0) {
+        _timer?.cancel();
+        final prov = context.read<CollectorProvider>();
+        prov.declineRequest(widget.booking['id'] as String);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Request expired'),
+              backgroundColor: AppColors.card,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final prov = context.read<CollectorProvider>();
-    final binSize = booking['binSize'] as String? ?? '';
-    final address = booking['pickupAddress'] as String? ?? '';
-    final amount  = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final prov    = context.read<CollectorProvider>();
+    final binSize = widget.booking['binSize'] as String? ?? '';
+    final address = widget.booking['pickupAddress'] as String? ?? '';
+    final amount  = (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final cat     = widget.booking['wasteCategory'] as String?;
+    final progress = _remaining / _kCountdown;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.deepOcean,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.deepOcean.withAlpha(240),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(60),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row
           Row(
             children: [
+              // New request label
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.steelBlue.withAlpha(25),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
                 ),
-                child: Text(Fmt.binSizeLabel(binSize), style: AppTextStyles.label.copyWith(color: AppColors.steelBlue)),
+                child: Text('New Request',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.steelBlue,
+                      fontWeight: FontWeight.w700,
+                    )),
               ),
               const Spacer(),
-              Text(Fmt.currency(amount), style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(PhosphorIconsRegular.mapPin, color: AppColors.skyBlue, size: 14),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  address,
-                  style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              Text(Fmt.currency(amount),
+                  style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
+              const SizedBox(width: 12),
+              // Countdown ring
+              SizedBox(
+                width: 36, height: 36,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 3,
+                      color: progress > 0.4
+                          ? AppColors.steelBlue
+                          : AppColors.danger,
+                      backgroundColor: AppColors.border,
+                    ),
+                    Text(
+                      '$_remaining',
+                      style: AppTextStyles.caption.copyWith(
+                        color: progress > 0.4
+                            ? AppColors.white
+                            : AppColors.danger,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Address
+          Row(
+            children: [
+              const Icon(PhosphorIconsRegular.mapPin,
+                  color: AppColors.muted, size: 13),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(address,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Chips
+          Row(
+            children: [
+              _SmallChip(label: Fmt.binSizeLabel(binSize).split(' ').first),
+              if (cat != null) ...[
+                const SizedBox(width: 6),
+                _SmallChip(label: cat.replaceAll('_', ' ')),
+              ],
             ],
           ),
           const Spacer(),
+
+          // Accept / Decline
           Row(
             children: [
               Expanded(
-                child: AppButton(
-                  label: 'Decline',
-                  variant: AppButtonVariant.danger,
-                  height: 40,
-                  onPressed: () => prov.declineRequest(booking['id'] as String),
+                child: GestureDetector(
+                  onTap: () => prov.declineRequest(
+                      widget.booking['id'] as String),
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withAlpha(15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: AppColors.danger.withAlpha(60)),
+                    ),
+                    child: Center(
+                      child: Text('Decline',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.danger,
+                            fontSize: 13,
+                          )),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: AppButton(
-                  label: 'Accept',
-                  height: 40,
-                  onPressed: () async {
-                    final ok = await prov.acceptRequest(booking['id'] as String);
+                flex: 2,
+                child: GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.mediumImpact();
+                    _timer?.cancel();
+                    final ok = await prov
+                        .acceptRequest(widget.booking['id'] as String);
                     if (ok && context.mounted) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ActivePickupScreen(booking: prov.currentActivePickup!),
-                        ),
-                      );
+                      Navigator.push(context,
+                          MaterialPageRoute(
+                            builder: (_) => ActivePickupScreen(
+                                booking: prov.currentActivePickup!),
+                          ));
                     }
                   },
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.steelBlue.withAlpha(80),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text('Accept Pickup',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.white,
+                            fontSize: 13,
+                          )),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -359,143 +687,115 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
-class _ProfileTab extends StatefulWidget {
-  @override
-  State<_ProfileTab> createState() => _ProfileTabState();
-}
+// ── PROFILE TAB ───────────────────────────────────────────────────────────────
 
-class _ProfileTabState extends State<_ProfileTab> {
-  Future<void> _editPhone(BuildContext context, AuthProvider auth) async {
-    final ctrl = TextEditingController(text: auth.user?.phone ?? '');
-    final formKey = GlobalKey<FormState>();
-    bool saving = false;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          backgroundColor: AppColors.card,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            auth.user?.phone == null ? 'Add Phone Number' : 'Edit Phone Number',
-            style: AppTextStyles.h3,
-          ),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: ctrl,
-              keyboardType: TextInputType.phone,
-              style: AppTextStyles.body.copyWith(color: AppColors.white),
-              decoration: InputDecoration(
-                hintText: '+233 XX XXX XXXX',
-                hintStyle: AppTextStyles.body.copyWith(color: AppColors.muted),
-                prefixIcon: const Icon(PhosphorIconsRegular.phone, color: AppColors.muted, size: 20),
-                filled: true,
-                fillColor: AppColors.deepOcean,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-              ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Phone number required';
-                final cleaned = v.replaceAll(RegExp(r'[\s\-()]'), '');
-                if (!RegExp(r'^\+?[0-9]{9,15}$').hasMatch(cleaned)) return 'Enter a valid phone number';
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.muted)),
-            ),
-            TextButton(
-              onPressed: saving ? null : () async {
-                if (!formKey.currentState!.validate()) return;
-                setS(() => saving = true);
-                try {
-                  final res = await ApiClient.put('/api/profile', {'phone': ctrl.text.trim()});
-                  final updated = UserModel.fromJson(res.data['data']);
-                  auth.updateUser(updated);
-                } catch (_) {} finally {
-                  if (ctx.mounted) Navigator.pop(ctx);
-                }
-              },
-              child: Text('Save', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.steelBlue)),
-            ),
-          ],
-        ),
-      ),
-    );
-    ctrl.dispose();
-  }
-
+class _ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final prov = context.watch<CollectorProvider>();
     final user = auth.user;
+
+    // Collector stats
+    final earned = prov.completedPickups.fold<double>(
+        0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * 0.8);
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
           child: Column(
             children: [
-              const SizedBox(height: 20),
-              Container(
-                width: 80, height: 80,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: AppColors.steelBlue.withAlpha(60), blurRadius: 20)],
-                ),
-                child: Center(
-                  child: Text(
-                    Fmt.initials(user?.fullName),
-                    style: AppTextStyles.h2.copyWith(fontSize: 26),
+              // Avatar + name
+              Stack(
+                children: [
+                  Container(
+                    width: 88, height: 88,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.steelBlue.withAlpha(80),
+                          blurRadius: 28,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        Fmt.initials(user?.fullName),
+                        style: AppTextStyles.h2.copyWith(fontSize: 28),
+                      ),
+                    ),
                   ),
-                ),
+                  // Online status ring
+                  Positioned(
+                    bottom: 2, right: 2,
+                    child: Container(
+                      width: 22, height: 22,
+                      decoration: BoxDecoration(
+                        color: prov.isOnline
+                            ? AppColors.success
+                            : AppColors.muted,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppColors.deepOcean, width: 2),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text(user?.fullName ?? 'Collector', style: AppTextStyles.h3),
               if (user?.email != null) ...[
                 const SizedBox(height: 4),
-                Text(user!.email!, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+                Text(user!.email!,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
+                    )),
               ],
+              const SizedBox(height: 8),
 
-              if (user?.vehicleType != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(PhosphorIconsRegular.truck, color: AppColors.skyBlue, size: 16),
-                      const SizedBox(width: 6),
-                      Text('${user?.vehicleType} • ${user?.vehiclePlate}', style: AppTextStyles.label),
-                    ],
-                  ),
+              // Rating row
+              if (user != null && user.rating > 0)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ...List.generate(5, (i) => Icon(
+                          i < user.rating.floor()
+                              ? PhosphorIconsFill.star
+                              : PhosphorIconsRegular.star,
+                          color: AppColors.warning,
+                          size: 16,
+                        )),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${user.rating.toStringAsFixed(1)} (${user.totalPickups} jobs)',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
 
               const SizedBox(height: 24),
 
-              // Phone row — tappable edit
-              GestureDetector(
-                onTap: () => _editPhone(context, auth),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              // Stats row
+              StatsRow(
+                totalPickups: prov.totalPickups,
+                totalSpent: earned,
+                kgRecycled: prov.totalPickups * 18.0,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Vehicle chip
+              if (user?.vehicleType != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(14),
@@ -503,79 +803,154 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(PhosphorIconsRegular.phone, color: AppColors.skyBlue, size: 20),
-                      const SizedBox(width: 12),
+                      const Icon(PhosphorIconsFill.truck,
+                          color: AppColors.skyBlue, size: 18),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Phone Number', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
-                            const SizedBox(height: 2),
+                            Text('Vehicle',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.muted,
+                                )),
                             Text(
-                              user?.phone ?? 'Tap to add',
-                              style: AppTextStyles.body.copyWith(
-                                color: user?.phone != null ? AppColors.white : AppColors.muted,
-                              ),
+                              '${user!.vehicleType!.replaceAll('_', ' ')} • ${user.vehiclePlate ?? 'No plate'}',
+                              style: AppTextStyles.bodyMedium,
                             ),
                           ],
                         ),
                       ),
-                      const Icon(PhosphorIconsRegular.pencilSimple, color: AppColors.muted, size: 18),
+                      GestureDetector(
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                              builder: (_) => const VehicleDetailsScreen(),
+                            )),
+                        child: const Icon(PhosphorIconsRegular.pencilSimple,
+                            color: AppColors.muted, size: 16),
+                      ),
                     ],
                   ),
                 ),
-              ),
 
               const SizedBox(height: 16),
 
-              GestureDetector(
-                onTap: () async {
-                  final ok = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: AppColors.card,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      title: const Text('Sign Out', style: AppTextStyles.h3),
-                      content: Text(
-                        'You will be signed out.',
-                        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text('Cancel', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.muted)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text('Sign Out', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (ok == true && context.mounted) {
-                    await context.read<AuthProvider>().signOut();
-                    if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
-                  }
-                },
-                child: Container(
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: AppColors.danger.withAlpha(15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.danger.withAlpha(60)),
+              // Menu
+              _MenuSection(
+                title: 'Account',
+                items: [
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.userCircle,
+                    label: 'Edit Profile',
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfileScreen(),
+                        )),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(PhosphorIconsRegular.signOut, color: AppColors.danger, size: 20),
-                      const SizedBox(width: 10),
-                      Text('Sign Out', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
-                    ],
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.truck,
+                    label: 'Vehicle Details',
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => const VehicleDetailsScreen(),
+                        )),
                   ),
-                ),
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.coins,
+                    label: 'Earnings & Wallet',
+                    onTap: () {/* navigate to earnings screen */},
+                  ),
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.bell,
+                    label: 'Notifications',
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        )),
+                  ),
+                ],
               ),
-              const Spacer(),
-              Text('BinLink Collector v2.0.0', style: AppTextStyles.caption),
+
+              const SizedBox(height: 12),
+
+              _MenuSection(
+                title: 'Support',
+                items: [
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.headset,
+                    label: 'Help & Support',
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => const HelpScreen(),
+                        )),
+                  ),
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.shieldCheck,
+                    label: 'Privacy Policy',
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivacyScreen(),
+                        )),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              _MenuSection(
+                title: 'App',
+                items: [
+                  _MenuItem(
+                    icon: PhosphorIconsRegular.signOut,
+                    label: 'Sign Out',
+                    color: AppColors.danger,
+                    onTap: () async {
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppColors.card,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24)),
+                          title: const Text('Sign Out',
+                              style: AppTextStyles.h3),
+                          content: Text(
+                            'Are you sure you want to sign out?',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text('Cancel',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.muted,
+                                  )),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: Text('Sign Out',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.danger,
+                                  )),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (ok == true && context.mounted) {
+                        await context.read<AuthProvider>().signOut();
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+              Text('BinLink Collector v3.0.0',
+                  style: AppTextStyles.caption),
             ],
           ),
         ),
@@ -584,39 +959,117 @@ class _ProfileTabState extends State<_ProfileTab> {
   }
 }
 
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon, required this.label,
-    required this.index, required this.current, required this.onTap,
+// ── Shared profile widgets ────────────────────────────────────────────────────
+
+class _MenuItem {
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
   });
   final IconData icon;
   final String label;
-  final int index;
-  final int current;
-  final ValueChanged<int> onTap;
+  final VoidCallback onTap;
+  final Color? color;
+}
+
+class _MenuSection extends StatelessWidget {
+  const _MenuSection({required this.title, required this.items});
+  final String title;
+  final List<_MenuItem> items;
 
   @override
   Widget build(BuildContext context) {
-    final selected = current == index;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(index),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: selected ? AppColors.steelBlue : AppColors.muted, size: 24),
-              const SizedBox(height: 4),
-              Text(label, style: AppTextStyles.caption.copyWith(
-                color: selected ? AppColors.steelBlue : AppColors.muted,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(title,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.muted,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
               )),
-            ],
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: List.generate(items.length, (i) {
+              final item   = items[i];
+              final isLast = i == items.length - 1;
+              return Column(
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: item.onTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              color: (item.color ?? AppColors.skyBlue)
+                                  .withAlpha(20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(item.icon,
+                                color: item.color ?? AppColors.skyBlue,
+                                size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(item.label,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: item.color ?? AppColors.textPrimary,
+                                )),
+                          ),
+                          Icon(PhosphorIconsRegular.caretRight,
+                              color: AppColors.muted, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (!isLast)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Divider(height: 1, color: AppColors.border),
+                    ),
+                ],
+              );
+            }),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _SmallChip extends StatelessWidget {
+  const _SmallChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.steelBlue.withAlpha(20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.steelBlue.withAlpha(40)),
       ),
+      child: Text(label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.steelBlue,
+            fontSize: 11,
+          )),
     );
   }
 }

@@ -172,6 +172,77 @@ class CollectorProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // ── Jobs for PickupsScreen ──────────────────────────────────────────────────
+  List<Map<String, dynamic>> _allJobs  = [];
+  bool _loadingJobs = false;
+
+  List<Map<String, dynamic>> get assignedJobs =>
+      _allJobs.where((b) => ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(b['status'])).toList();
+  List<Map<String, dynamic>> get pendingJobs =>
+      _allJobs.where((b) => b['status'] == 'PENDING').toList();
+  List<Map<String, dynamic>> get completedJobs =>
+      _allJobs.where((b) => b['status'] == 'COMPLETED').toList();
+  bool get loadingJobs => _loadingJobs;
+
+  Future<void> loadJobs() async {
+    _loadingJobs = true;
+    notifyListeners();
+    try {
+      final res = await ApiClient.get('/api/bookings');
+      _allJobs = List<Map<String, dynamic>>.from(res.data['data'] as List? ?? []);
+    } catch (_) {}
+    _loadingJobs = false;
+    notifyListeners();
+  }
+
+  // ── Wallet / Payout ────────────────────────────────────────────────────────
+  Map<String, dynamic>? _wallet;
+  bool _loadingWallet = false;
+
+  double get walletAvailable    => (_wallet?['available']     as num?)?.toDouble() ?? 0;
+  double get walletPending      => (_wallet?['pending']       as num?)?.toDouble() ?? 0;
+  double get walletWithdrawn    => (_wallet?['totalWithdrawn'] as num?)?.toDouble() ?? 0;
+  List<Map<String, dynamic>> get walletTransactions =>
+      List<Map<String, dynamic>>.from(_wallet?['transactions'] as List? ?? []);
+  bool get loadingWallet => _loadingWallet;
+
+  Future<void> loadWallet() async {
+    _loadingWallet = true;
+    notifyListeners();
+    try {
+      final res = await ApiClient.get('/api/collector/wallet');
+      _wallet = Map<String, dynamic>.from(res.data['data'] as Map);
+    } catch (_) {}
+    _loadingWallet = false;
+    notifyListeners();
+  }
+
+  Future<bool> requestPayout(String momoNumber, double amount) async {
+    try {
+      await ApiClient.post('/api/collector/payout', {
+        'momoNumber': momoNumber,
+        'amount': amount,
+      });
+      await loadWallet();
+      return true;
+    } on DioException catch (e) {
+      _error = e.response?.data?['error'] ?? 'Payout request failed';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ── Exception / photo reporting stubs ──────────────────────────────────────
+  Future<void> reportException(
+      String bookingId, String reason, String? note) async {
+    try {
+      await ApiClient.patch('/api/bookings/$bookingId/exception', {
+        'reason': reason,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+    } catch (_) {}
+  }
+
   void _setLoading(bool v) {
     _loading = v;
     notifyListeners();

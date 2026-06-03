@@ -61,6 +61,13 @@ class SocketService {
     } catch (_) {}
   }
 
+  // Remove a specific handler (not all handlers for the event)
+  static void offHandler(String event, void Function(dynamic) handler) {
+    try {
+      _socket?.off(event, handler);
+    } catch (_) {}
+  }
+
   static void joinBookingRoom(String bookingId) {
     emit('booking:join', {'bookingId': bookingId});
   }

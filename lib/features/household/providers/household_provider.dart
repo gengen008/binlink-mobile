@@ -59,7 +59,12 @@ class HouseholdProvider extends ChangeNotifier {
     required double pickupLat,
     required double pickupLng,
     required String paymentMethod,
+    String? wasteCategory,
+    String? timePreference,
+    double? estimatedWeightKg,
+    String? addressNotes,
     DateTime? scheduledDate,
+    String? frequency,
   }) async {
     _setLoading(true);
     try {
@@ -70,7 +75,12 @@ class HouseholdProvider extends ChangeNotifier {
         'pickupLat': pickupLat,
         'pickupLng': pickupLng,
         'paymentMethod': paymentMethod,
+        if (wasteCategory != null) 'wasteCategory': wasteCategory,
+        if (timePreference != null) 'timePreference': timePreference,
+        if (estimatedWeightKg != null) 'estimatedWeightKg': estimatedWeightKg,
+        if (addressNotes != null && addressNotes.isNotEmpty) 'addressNotes': addressNotes,
         if (scheduledDate != null) 'scheduledDate': scheduledDate.toIso8601String(),
+        if (frequency != null) 'frequency': frequency,
       });
       final booking = Map<String, dynamic>.from(res.data['data'] as Map);
       _bookings.insert(0, booking);
@@ -134,6 +144,54 @@ class HouseholdProvider extends ChangeNotifier {
     SocketService.off('collector:location');
     _collectorLat = null;
     _collectorLng = null;
+  }
+
+  // ── Saved Addresses ────────────────────────────────────────────────────────
+  List<Map<String, dynamic>> _savedAddresses = [];
+
+  List<Map<String, dynamic>> get savedAddresses => _savedAddresses;
+
+  Future<void> loadSavedAddresses() async {
+    try {
+      final res = await ApiClient.get('/api/profile/addresses');
+      _savedAddresses = List<Map<String, dynamic>>.from(
+          res.data['data'] as List? ?? []);
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> addSavedAddress({
+    required String label,
+    required String address,
+    double? lat,
+    double? lng,
+    String? gateNotes,
+  }) async {
+    try {
+      final res = await ApiClient.post('/api/profile/addresses', {
+        'label': label,
+        'address': address,
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
+        if (gateNotes != null && gateNotes.isNotEmpty) 'gateNotes': gateNotes,
+      });
+      final added = Map<String, dynamic>.from(res.data['data'] as Map);
+      _savedAddresses.insert(0, added);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> deleteSavedAddress(String id) async {
+    _savedAddresses.removeWhere((a) => a['id'] == id);
+    notifyListeners();
+    try {
+      await ApiClient.delete('/api/profile/addresses/$id');
+    } catch (_) {
+      await loadSavedAddresses();
+    }
   }
 
   Future<bool> initiatePayment(String bookingId, String momoPhone) async {

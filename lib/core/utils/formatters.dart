@@ -57,10 +57,20 @@ class Fmt {
   static String paymentMethodLabel(String method) {
     switch (method.toUpperCase()) {
       case 'MTN_MOMO':       return 'MTN MoMo';
-      case 'VODAFONE_CASH':  return 'Vodafone Cash';
+      case 'VODAFONE_CASH':  return 'Telecel Cash';
       case 'AIRTELTIGO':     return 'AirtelTigo Money';
       case 'CASH':           return 'Cash on Pickup';
       default:               return method;
     }
+  }
+
+  /// Formats an ISO date string to "12 Jan 2026" style.
+  static String shortDate(String? iso) {
+    if (iso == null) return '';
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }
