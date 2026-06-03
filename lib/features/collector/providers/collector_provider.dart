@@ -117,6 +117,9 @@ class CollectorProvider extends ChangeNotifier {
       }
     } catch (e) {
       _isOnline = !newState;
+      _error = e is DioException
+          ? (e.response?.data?['error'] ?? 'Failed to go ${newState ? 'online' : 'offline'}')
+          : 'Network error — check connection';
       notifyListeners();
     }
   }

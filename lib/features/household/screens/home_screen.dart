@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/strings.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -738,17 +739,20 @@ class _SplitCta extends StatelessWidget {
 // ── HISTORY TAB ───────────────────────────────────────────────────────────────
 
 class _HistoryTab extends StatelessWidget {
+  static const _cancellable = {'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'};
+
   @override
   Widget build(BuildContext context) {
     final prov          = context.watch<HouseholdProvider>();
-    final bookings      = prov.completedBookings;
+    final allBookings   = prov.allBookings;
+    final completed     = prov.completedBookings;
     final subscriptions = prov.subscriptionBookings;
 
     // Stats
-    final totalSpent = bookings.fold<double>(
+    final totalSpent = completed.fold<double>(
         0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0));
-    const kgPerPickup = 15.0; // estimate per booking
-    final kgRecycled  = bookings.length * kgPerPickup;
+    const kgPerPickup = 15.0;
+    final kgRecycled  = completed.length * kgPerPickup;
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
@@ -764,9 +768,8 @@ class _HistoryTab extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('History',
-                          style: AppTextStyles.h2),
-                      Text('${bookings.length} completed pickups',
+                      const Text('History', style: AppTextStyles.h2),
+                      Text('${allBookings.length} total pickups',
                           style: AppTextStyles.caption),
                     ],
                   ),
@@ -783,18 +786,18 @@ class _HistoryTab extends StatelessWidget {
             ),
 
             // Stats row + Impact
-            if (bookings.isNotEmpty) ...[
+            if (completed.isNotEmpty) ...[
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: StatsRow(
-                  totalPickups: bookings.length,
+                  totalPickups: completed.length,
                   totalSpent: totalSpent,
                   kgRecycled: kgRecycled,
                 ),
               ),
               const SizedBox(height: 12),
-              _ImpactCard(kgRecycled: kgRecycled, bookings: bookings),
+              _ImpactCard(kgRecycled: kgRecycled, bookings: completed),
             ],
 
             const SizedBox(height: 16),
@@ -814,31 +817,70 @@ class _HistoryTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text('Completed Pickups', style: AppTextStyles.h4),
-                    const SizedBox(height: 10),
                   ],
 
-                  // ── Completed bookings ────────────────────────────
-                  if (bookings.isEmpty)
+                  // ── All bookings list ─────────────────────────────
+                  if (allBookings.isEmpty)
                     const _EmptyState(
                       icon: PhosphorIconsRegular.clockCounterClockwise,
                       title: 'No pickups yet',
                       subtitle: 'Your completed pickups will appear here',
                     )
-                  else
-                    ...List.generate(bookings.length, (i) {
-                      final b = bookings[i];
+                  else ...[
+                    const Text('All Bookings', style: AppTextStyles.h4),
+                    const SizedBox(height: 10),
+                    ...List.generate(allBookings.length, (i) {
+                      final b = allBookings[i];
+                      final status = b['status'] as String? ?? '';
+                      final canCancel = _cancellable.contains(status);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: GestureDetector(
-                          onTap: () => _showBookingDetail(context, b),
-                          child: BookingCard(
-                            booking: b,
-                            showCollector: true,
-                          ),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _showBookingDetail(context, b),
+                              child: BookingCard(
+                                booking: b,
+                                showCollector: true,
+                              ),
+                            ),
+                            if (canCancel) ...[
+                              const SizedBox(height: 4),
+                              GestureDetector(
+                                onTap: () => _showCancelDialog(context, b),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.danger.withAlpha(12),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: AppColors.danger.withAlpha(50)),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                          PhosphorIconsRegular.xCircle,
+                                          color: AppColors.danger,
+                                          size: 16),
+                                      const SizedBox(width: 6),
+                                      Text('Cancel Booking',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.danger,
+                                            fontWeight: FontWeight.w600,
+                                          )),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       );
                     }),
+                  ],
                 ],
               ),
             ),
@@ -846,6 +888,116 @@ class _HistoryTab extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static const _cancelReasons = [
+    'I no longer need it',
+    'Collector taking too long',
+    'Found another solution',
+    'Wrong address entered',
+    'Other',
+  ];
+
+  Future<void> _showCancelDialog(
+      BuildContext context, Map<String, dynamic> booking) async {
+    String? selectedReason;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Cancel Booking?', style: AppTextStyles.h3),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tell us why — this helps us improve.',
+                style: AppTextStyles.body.copyWith(
+                    color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ..._cancelReasons.map((reason) {
+                final sel = reason == selectedReason;
+                return GestureDetector(
+                  onTap: () => setDialogState(() => selectedReason = reason),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: sel
+                          ? AppColors.danger.withAlpha(15)
+                          : AppColors.deepOcean,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: sel ? AppColors.danger : AppColors.border,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(reason,
+                              style: AppTextStyles.body.copyWith(
+                                color: sel
+                                    ? AppColors.danger
+                                    : AppColors.textPrimary,
+                                fontSize: 13,
+                              )),
+                        ),
+                        if (sel)
+                          const Icon(PhosphorIconsFill.checkCircle,
+                              color: AppColors.danger, size: 16),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Keep It',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.muted)),
+            ),
+            TextButton(
+              onPressed: selectedReason != null
+                  ? () => Navigator.pop(ctx, true)
+                  : null,
+              child: Text('Yes, Cancel',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: selectedReason != null
+                        ? AppColors.danger
+                        : AppColors.muted,
+                  )),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final prov = context.read<HouseholdProvider>();
+      final ok = await prov.cancelBooking(
+        booking['id'] as String,
+        reason: selectedReason,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? 'Booking cancelled'
+                : 'Could not cancel — please try again'),
+            backgroundColor: ok ? AppColors.success : AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showBookingDetail(
@@ -1606,53 +1758,26 @@ class _ProfileTab extends StatefulWidget {
 }
 
 class _ProfileTabState extends State<_ProfileTab> {
-  bool _darkMode = false;
-  String _language = 'English';
-
-  static const _languages = ['English', 'Twi', 'Hausa', 'Ewe', 'Ga'];
+  static const _languages = ['English', 'Français'];
 
   @override
   void initState() {
     super.initState();
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _darkMode  = prefs.getBool('darkMode')     ?? false;
-        _language  = prefs.getString('language')   ?? 'English';
-      });
-    }
-  }
-
-  Future<void> _setDarkMode(bool v) async {
-    setState(() => _darkMode = v);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', v);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${v ? 'Dark' : 'Light'} mode will apply on next launch'),
-          backgroundColor: AppColors.card,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   Future<void> _pickLanguage(BuildContext context) async {
+    final sp = context.read<AppStringsProvider>();
+    final current = sp.langCode;
     final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Language', style: AppTextStyles.h3),
+        title: const Text('Language / Langue', style: AppTextStyles.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _languages.map((lang) {
-            final sel = lang == _language;
+            final sel = lang == current;
             return GestureDetector(
               onTap: () => Navigator.pop(ctx, lang),
               child: AnimatedContainer(
@@ -1685,10 +1810,8 @@ class _ProfileTabState extends State<_ProfileTab> {
         ),
       ),
     );
-    if (picked != null && picked != _language) {
-      setState(() => _language = picked);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('language', picked);
+    if (picked != null && picked != current) {
+      await sp.setLanguage(picked);
     }
   }
 
@@ -1900,14 +2023,16 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 child: Text('Dark Mode',
                                     style: AppTextStyles.bodyMedium),
                               ),
-                              Switch(
-                                value: _darkMode,
-                                onChanged: _setDarkMode,
-                                activeThumbColor: AppColors.steelBlue,
-                                activeTrackColor: AppColors.steelBlue.withAlpha(80),
-                                inactiveTrackColor: AppColors.border,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
+                              Consumer<ThemeProvider>(
+                                builder: (_, tp, __) => Switch(
+                                  value: tp.isDark,
+                                  onChanged: tp.setDark,
+                                  activeThumbColor: AppColors.steelBlue,
+                                  activeTrackColor: AppColors.steelBlue.withAlpha(80),
+                                  inactiveTrackColor: AppColors.border,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
                               ),
                             ],
                           ),
@@ -1939,7 +2064,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                                   child: Text('Language',
                                       style: AppTextStyles.bodyMedium),
                                 ),
-                                Text(_language,
+                                Text(context.watch<AppStringsProvider>().langCode,
                                     style: AppTextStyles.body.copyWith(
                                       color: AppColors.muted,
                                       fontSize: 13,

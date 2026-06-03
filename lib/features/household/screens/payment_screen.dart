@@ -109,8 +109,13 @@ class _PaymentScreenState extends State<PaymentScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.midnightNavy,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: child,
+        ),
         child: _confirmed ? _buildSuccess() : _buildPaymentForm(),
       ),
     );
@@ -122,8 +127,9 @@ class _PaymentScreenState extends State<PaymentScreen>
     final amount =
         (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
 
-    return Container(
+    return SizedBox.expand(
       key: const ValueKey('form'),
+      child: Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
       child: SafeArea(
         child: Column(
@@ -284,7 +290,7 @@ class _PaymentScreenState extends State<PaymentScreen>
           ],
         ),
       ),
-    );
+    ));
   }
 
   // ── Success screen ─────────────────────────────────────────────────────────
@@ -298,8 +304,9 @@ class _PaymentScreenState extends State<PaymentScreen>
         : bookingId.toUpperCase();
     final isNow     = (widget.booking['scheduledDate'] as String?) == null;
 
-    return Container(
+    return SizedBox.expand(
       key: const ValueKey('success'),
+      child: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -500,6 +507,6 @@ class _PaymentScreenState extends State<PaymentScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 }

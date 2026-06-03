@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/config/app_flavor.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
+import 'core/l10n/strings.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -23,6 +25,16 @@ class BinLinkApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) {
+          final tp = ThemeProvider();
+          tp.load();
+          return tp;
+        }),
+        ChangeNotifierProvider(create: (_) {
+          final sp = AppStringsProvider();
+          sp.load();
+          return sp;
+        }),
         // Only instantiate the provider relevant to this flavor —
         // prevents household and collector state from cross-contaminating
         if (!isCollector)
@@ -30,21 +42,25 @@ class BinLinkApp extends StatelessWidget {
         if (isCollector)
           ChangeNotifierProvider(create: (_) => CollectorProvider()),
       ],
-      child: MaterialApp(
-        title: FlavorConfig.appName,
-        debugShowCheckedModeBanner: false,
-        // Household → steelBlue theme | Collector → amber/driver theme
-        theme: isCollector ? AppTheme.collectorDark : AppTheme.dark,
-        initialRoute: '/splash',
-        routes: {
-          '/splash':          (_) => const SplashScreen(),
-          '/onboarding':      (_) => const OnboardingScreen(),
-          '/login':           (_) => const LoginScreen(),
-          '/register':        (_) => const RegisterScreen(),
-          '/forgot-password': (_) => const ForgotPasswordScreen(),
-          '/household':       (_) => const HouseholdHomeScreen(),
-          '/collector':       (_) => const CollectorMapScreen(),
-        },
+      child: Consumer<ThemeProvider>(
+        builder: (_, themeProv, __) => MaterialApp(
+          title: FlavorConfig.appName,
+          debugShowCheckedModeBanner: false,
+          // Household → steelBlue theme | Collector → amber/driver theme
+          theme: isCollector ? AppTheme.collectorLight : AppTheme.light,
+          darkTheme: isCollector ? AppTheme.collectorDark : AppTheme.dark,
+          themeMode: themeProv.themeMode,
+          initialRoute: '/splash',
+          routes: {
+            '/splash':          (_) => const SplashScreen(),
+            '/onboarding':      (_) => const OnboardingScreen(),
+            '/login':           (_) => const LoginScreen(),
+            '/register':        (_) => const RegisterScreen(),
+            '/forgot-password': (_) => const ForgotPasswordScreen(),
+            '/household':       (_) => const HouseholdHomeScreen(),
+            '/collector':       (_) => const CollectorMapScreen(),
+          },
+        ),
       ),
     );
   }
