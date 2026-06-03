@@ -252,7 +252,7 @@ class CollectorProvider extends ChangeNotifier {
     _loadingWallet = true;
     notifyListeners();
     try {
-      final res = await ApiClient.get('/api/collector/wallet');
+      final res = await ApiClient.get('/api/collectors/wallet');
       _wallet = Map<String, dynamic>.from(res.data['data'] as Map);
     } catch (_) {}
     _loadingWallet = false;
@@ -261,7 +261,7 @@ class CollectorProvider extends ChangeNotifier {
 
   Future<bool> requestPayout(String momoNumber, double amount) async {
     try {
-      await ApiClient.post('/api/collector/payout', {
+      await ApiClient.post('/api/collectors/payout', {
         'momoNumber': momoNumber,
         'amount': amount,
       });
