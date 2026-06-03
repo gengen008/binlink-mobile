@@ -10,7 +10,7 @@ import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/network/api_client.dart';
-import '../../../core/services/routing_service.dart';
+import '../../../core/routing/routing_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../core/l10n/strings.dart';
@@ -139,7 +139,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       LatLng(oLat, oLng),
       _pickupLatLng,
     );
-    if (result != null && result.points.isNotEmpty && mounted) {
+    if (result.points.isNotEmpty && mounted) {
       setState(() => _routePoints = result.points);
     }
   }
