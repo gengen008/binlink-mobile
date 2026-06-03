@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/socket_service.dart';
+import '../../../core/gps/kalman_filter.dart';
 
 class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _bookings = [];
@@ -11,9 +12,10 @@ class HouseholdProvider extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
-  // Live collector GPS during tracking
+  // Live collector GPS during tracking (Kalman-smoothed)
   double? _collectorLat;
   double? _collectorLng;
+  final _gpsSmoother = GpsSmoother();
 
   List<Map<String, dynamic>> get bookings => _bookings;
   List<Map<String, dynamic>> get onlineCollectors => _onlineCollectors;
@@ -142,9 +144,15 @@ class HouseholdProvider extends ChangeNotifier {
 
     SocketService.on('collector:location', (data) {
       final d = data as Map<String, dynamic>;
-      _collectorLat = (d['lat'] as num).toDouble();
-      _collectorLng = (d['lng'] as num).toDouble();
-      notifyListeners();
+      final rawLat = (d['lat'] as num).toDouble();
+      final rawLng = (d['lng'] as num).toDouble();
+      // Apply Kalman filter — rejects teleport glitches, smooths Ghana 3G noise
+      final smooth = _gpsSmoother.process(rawLat, rawLng);
+      if (smooth != null) {
+        _collectorLat = smooth.lat;
+        _collectorLng = smooth.lng;
+        notifyListeners();
+      }
     });
   }
 
@@ -154,6 +162,7 @@ class HouseholdProvider extends ChangeNotifier {
     SocketService.off('collector:location');
     _collectorLat = null;
     _collectorLng = null;
+    _gpsSmoother.reset();
   }
 
   // ── Saved Addresses ────────────────────────────────────────────────────────
