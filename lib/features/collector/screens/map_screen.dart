@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -32,6 +33,7 @@ class CollectorMapScreen extends StatefulWidget {
 class _CollectorMapScreenState extends State<CollectorMapScreen> {
   LatLng _pos = const LatLng(5.6037, -0.1870);
   int _tab = 0;
+  StreamSubscription<Position>? _posSub;
 
   @override
   void initState() {
@@ -39,10 +41,31 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
     _init();
   }
 
+  @override
+  void dispose() {
+    _posSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> _init() async {
+    // Fast first pin — last known position is instant (no GPS wait)
+    final last = await LocationService.getLastKnownPosition();
+    if (last != null && mounted) {
+      setState(() => _pos = LatLng(last.latitude, last.longitude));
+    }
+
+    // Accurate fix — runs in parallel, updates marker when ready
     final pos = await LocationService.getCurrentPosition();
-    if (pos != null && mounted) setState(() => _pos = LatLng(pos.latitude, pos.longitude));
+    if (pos != null && mounted) {
+      setState(() => _pos = LatLng(pos.latitude, pos.longitude));
+    }
+
     if (mounted) await context.read<CollectorProvider>().loadDashboard();
+
+    // Live updates — keep truck marker in sync as collector moves
+    _posSub = LocationService.getPositionStream().listen((p) {
+      if (mounted) setState(() => _pos = LatLng(p.latitude, p.longitude));
+    });
   }
 
   @override
@@ -498,7 +521,13 @@ class _MapTabState extends State<_MapTab> {
         if (prov.pendingRequests.isNotEmpty && prov.isOnline)
           Positioned(
             left: 0, right: 0, bottom: 16,
-            child: _PendingRequestsList(requests: prov.pendingRequests),
+            child: _PendingRequestsList(
+              requests: prov.pendingRequests,
+              onAccepted: (booking) => Navigator.push(context,
+                  MaterialPageRoute(
+                    builder: (_) => ActivePickupScreen(booking: booking),
+                  )),
+            ),
           ),
       ],
     );
@@ -508,8 +537,12 @@ class _MapTabState extends State<_MapTab> {
 // ── Pending request card with countdown timer ─────────────────────────────────
 
 class _PendingRequestsList extends StatelessWidget {
-  const _PendingRequestsList({required this.requests});
+  const _PendingRequestsList({
+    required this.requests,
+    required this.onAccepted,
+  });
   final List<Map<String, dynamic>> requests;
+  final ValueChanged<Map<String, dynamic>> onAccepted;
 
   @override
   Widget build(BuildContext context) {
@@ -521,7 +554,7 @@ class _PendingRequestsList extends StatelessWidget {
         itemCount: requests.length,
         itemBuilder: (_, i) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _RequestCard(booking: requests[i]),
+          child: _RequestCard(booking: requests[i], onAccepted: onAccepted),
         ),
       ),
     );
@@ -529,8 +562,9 @@ class _PendingRequestsList extends StatelessWidget {
 }
 
 class _RequestCard extends StatefulWidget {
-  const _RequestCard({required this.booking});
+  const _RequestCard({required this.booking, required this.onAccepted});
   final Map<String, dynamic> booking;
+  final ValueChanged<Map<String, dynamic>> onAccepted;
 
   @override
   State<_RequestCard> createState() => _RequestCardState();
@@ -710,14 +744,12 @@ class _RequestCardState extends State<_RequestCard> {
                   onTap: () async {
                     HapticFeedback.mediumImpact();
                     _timer?.cancel();
+                    final prov = context.read<CollectorProvider>();
                     final ok = await prov
                         .acceptRequest(widget.booking['id'] as String);
-                    if (ok && context.mounted) {
-                      Navigator.push(context,
-                          MaterialPageRoute(
-                            builder: (_) => ActivePickupScreen(
-                                booking: prov.currentActivePickup!),
-                          ));
+                    if (ok) {
+                      final pickup = prov.currentActivePickup;
+                      if (pickup != null) widget.onAccepted(pickup);
                     }
                   },
                   child: Container(

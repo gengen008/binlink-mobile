@@ -12,6 +12,14 @@ class LocationService {
         perm == LocationPermission.whileInUse;
   }
 
+  static Future<Position?> getLastKnownPosition() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<Position?> getCurrentPosition() async {
     final hasPermission = await requestPermission();
     if (!hasPermission) return null;
@@ -19,7 +27,7 @@ class LocationService {
     try {
       return await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+        timeLimit: const Duration(seconds: 30),
       );
     } catch (_) {
       return null;
