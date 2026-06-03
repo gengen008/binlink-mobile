@@ -12,11 +12,16 @@ class ApiClient {
     return _instance!;
   }
 
+  // Per-request timeout overrides — pass via Options(extra: {...})
+  // Default timeouts tuned for Ghana 3G: fast connect, generous receive
+  static const _connectTimeout = Duration(seconds: 10);
+  static const _receiveTimeout = Duration(seconds: 30); // longer for list endpoints on slow networks
+
   static Dio _build() {
     final dio = Dio(BaseOptions(
       baseUrl: Env.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
+      connectTimeout: _connectTimeout,
+      receiveTimeout: _receiveTimeout,
       headers: {'Content-Type': 'application/json'},
     ));
 
@@ -27,6 +32,17 @@ class ApiClient {
   // Auth helpers
   static Future<Response> post(String path, Map<String, dynamic> data) =>
       instance.post(path, data: data);
+
+  /// Multipart file upload — uses a longer receive timeout (60s) for photo uploads on Ghana 3G.
+  static Future<Response> upload(String path, FormData formData) =>
+      instance.post(
+        path,
+        data: formData,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 60),
+          contentType: 'multipart/form-data',
+        ),
+      );
 
   static Future<Response> get(String path, {Map<String, dynamic>? params}) =>
       instance.get(path, queryParameters: params);
