@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:provider/provider.dart';
-import '../providers/household_provider.dart';
 import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import 'tracking_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -21,8 +18,6 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen>
     with SingleTickerProviderStateMixin {
-  final _momoCtrl = TextEditingController();
-  bool _paying    = false;
   bool _confirmed = false; // true → show success screen
 
   late final AnimationController _successAnim;
@@ -31,7 +26,6 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   String get _paymentMethod =>
       widget.booking['paymentMethod'] as String? ?? 'CASH';
-  bool get _isMoMo => _paymentMethod != 'CASH';
 
   @override
   void initState() {
@@ -48,44 +42,8 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   @override
   void dispose() {
-    _momoCtrl.dispose();
     _successAnim.dispose();
     super.dispose();
-  }
-
-  Future<void> _pay() async {
-    if (_isMoMo && _momoCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter your MoMo number'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _paying = true);
-
-    final prov = context.read<HouseholdProvider>();
-    final ok = await prov.initiatePayment(
-      widget.booking['id'] as String,
-      _momoCtrl.text.trim(),
-    );
-
-    if (!mounted) return;
-    setState(() => _paying = false);
-
-    if (ok) {
-      _showSuccess();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Payment failed. Please check your MoMo number and try again.'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-    }
   }
 
   void _showSuccess() {
@@ -187,103 +145,45 @@ class _PaymentScreenState extends State<PaymentScreen>
 
                     const SizedBox(height: 32),
 
-                    if (_isMoMo) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.warning.withAlpha(15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: AppColors.warning.withAlpha(60)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(15),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: AppColors.success.withAlpha(60)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(PhosphorIconsFill.money,
+                              color: AppColors.success, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(PhosphorIconsRegular.info,
-                                    color: AppColors.warning, size: 18),
-                                const SizedBox(width: 8),
-                                Text(S.of(context).howToPay,
-                                    style: AppTextStyles.label
-                                        .copyWith(color: AppColors.warning)),
+                                Text(S.of(context).payInCash,
+                                    style: AppTextStyles.h4
+                                        .copyWith(color: AppColors.success)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
+                                  style: AppTextStyles.caption
+                                      .copyWith(color: AppColors.success),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '1. Enter your ${Fmt.paymentMethodLabel(_paymentMethod)} number below\n'
-                              '2. Tap "Pay Now" — you\'ll receive a USSD prompt\n'
-                              '3. Approve the payment on your phone',
-                              style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.warning, height: 1.7),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-
-                      const SizedBox(height: 20),
-
-                      AppTextField(
-                        controller: _momoCtrl,
-                        label:
-                            '${Fmt.paymentMethodLabel(_paymentMethod)} Number',
-                        hint: '024 XXX XXXX',
-                        keyboardType: TextInputType.phone,
-                        prefixIcon: const Icon(
-                            PhosphorIconsRegular.deviceMobile,
-                            color: AppColors.muted,
-                            size: 20),
-                      ),
-
-                      const SizedBox(height: 24),
-                      AppButton(
-                        label: S.of(context).payNow,
-                        loading: _paying,
-                        onPressed: _pay,
-                        icon: const Icon(PhosphorIconsRegular.arrowRight,
-                            color: AppColors.white, size: 20),
-                      ),
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withAlpha(15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: AppColors.success.withAlpha(60)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(PhosphorIconsFill.money,
-                                color: AppColors.success, size: 28),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(S.of(context).payInCash,
-                                      style: AppTextStyles.h4
-                                          .copyWith(color: AppColors.success)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
-                                    style: AppTextStyles.caption
-                                        .copyWith(color: AppColors.success),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      AppButton(
-                        label: S.of(context).confirmBooking,
-                        onPressed: _showSuccess,
-                        icon: const Icon(PhosphorIconsRegular.checkCircle,
-                            color: AppColors.white, size: 20),
-                      ),
-                    ],
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: S.of(context).confirmBooking,
+                      onPressed: _showSuccess,
+                      icon: const Icon(PhosphorIconsRegular.checkCircle,
+                          color: AppColors.white, size: 20),
+                    ),
                   ],
                 ),
               ),

@@ -159,8 +159,7 @@ class _BookScreenState extends State<BookScreen>
   bool   _locating    = false;
 
   // Step 6 — Payment
-  String _payMethod = 'MTN_MOMO';
-  final _momoCtrl   = TextEditingController();
+  final String _payMethod = 'CASH';
 
   double get _base      => _kBinPrices[_binSize] ?? 30;
   double get _extrasAmt => _extraBags * _kBagPrice;
@@ -183,7 +182,6 @@ class _BookScreenState extends State<BookScreen>
     _anim.dispose();
     _addressCtrl.dispose();
     _notesCtrl.dispose();
-    _momoCtrl.dispose();
     super.dispose();
   }
 
@@ -413,8 +411,6 @@ class _BookScreenState extends State<BookScreen>
                       extrasAmt: _extrasAmt,
                       total: _total,
                       payMethod: _payMethod,
-                      momoCtrl: _momoCtrl,
-                      onPayMethod: (m) => setState(() => _payMethod = m),
                       fade: _fade,
                     ),
                   ],
@@ -1665,8 +1661,6 @@ class _Step5Review extends StatelessWidget {
     required this.extrasAmt,
     required this.total,
     required this.payMethod,
-    required this.momoCtrl,
-    required this.onPayMethod,
     required this.fade,
   });
 
@@ -1682,15 +1676,10 @@ class _Step5Review extends StatelessWidget {
   final double extrasAmt;
   final double total;
   final String payMethod;
-  final TextEditingController momoCtrl;
-  final ValueChanged<String> onPayMethod;
   final Animation<double> fade;
 
   static const _payOptions = [
-    {'key': 'MTN_MOMO',       'label': 'MTN Mobile Money',  'color': Color(0xFFFFCC00)},
-    {'key': 'VODAFONE_CASH',  'label': 'Telecel Cash',      'color': Color(0xFFE60026)},
-    {'key': 'AIRTELTIGO',     'label': 'AirtelTigo Money',  'color': Color(0xFFE63030)},
-    {'key': 'CASH',           'label': 'Cash on Arrival',   'color': AppColors.success},
+    {'key': 'CASH', 'label': 'Cash on Arrival', 'color': AppColors.success},
   ];
 
   String _dateLabel() {
@@ -1817,12 +1806,7 @@ class _Step5Review extends StatelessWidget {
             ..._payOptions.map((p) {
               final sel = payMethod == p['key'];
               final color = p['color'] as Color;
-              return GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onPayMethod(p['key'] as String);
-                },
-                child: AnimatedContainer(
+              return AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.symmetric(
@@ -1843,27 +1827,23 @@ class _Step5Review extends StatelessWidget {
                           color: color.withAlpha(25),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          p['key'] == 'CASH'
-                              ? PhosphorIconsRegular.money
-                              : PhosphorIconsRegular.deviceMobile,
-                          color: color, size: 18,
+                        child: const Icon(
+                          PhosphorIconsRegular.money,
+                          color: AppColors.success, size: 18,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(p['label'] as String,
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: sel ? color : AppColors.textPrimary,
+                              color: AppColors.success,
                             )),
                       ),
-                      if (sel)
-                        Icon(PhosphorIconsFill.checkCircle,
-                            color: color, size: 20),
+                      const Icon(PhosphorIconsFill.checkCircle,
+                          color: AppColors.success, size: 20),
                     ],
                   ),
-                ),
-              );
+                );
             }),
           ],
         ),

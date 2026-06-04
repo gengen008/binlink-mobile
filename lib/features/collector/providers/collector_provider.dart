@@ -136,7 +136,7 @@ class CollectorProvider extends ChangeNotifier {
 
       // Broadcast to any active booking rooms
       for (final pickup in _activePickups) {
-        if (pickup['status'] == 'EN_ROUTE') {
+        if (['EN_ROUTE', 'ON_THE_WAY', 'ARRIVED', 'COLLECTING'].contains(pickup['status'])) {
           SocketService.broadcastLocation(
             pickup['id'] as String,
             pos.latitude,
