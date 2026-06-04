@@ -3,14 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'carto_provider.dart';
 import 'map_provider.dart';
 import 'mapbox_provider.dart';
-import 'smartmaps_provider.dart';
 
 /// Singleton map service.
 ///
 /// Priority order:
-///   1. SmartMaps (proxied through Railway — best quality, Ghana optimised)
-///   2. Carto Voyager (free fallback, reliable on Ghana 3G)
-///   3. Mapbox Streets  (final fallback — needs MAPBOX_TOKEN)
+///   1. Carto Voyager (free, no key, reliable on Ghana 3G)
+///   2. Mapbox Streets  (fallback — needs MAPBOX_TOKEN)
 ///
 /// Health monitoring:
 ///   - On init, probes the primary provider.
@@ -25,7 +23,6 @@ class MapService extends ChangeNotifier {
   static const _recheckInterval = Duration(minutes: 5);
 
   static const List<MapTileProvider> _providers = [
-    SmartMapsProvider(),
     CartoProvider(),
     MapboxProvider(),
   ];
