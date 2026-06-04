@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'routing_provider.dart';
-import 'server_routing_provider.dart';
-import 'straight_line_provider.dart';
 import 'tomtom_routing_provider.dart';
+import 'osrm_routing_provider.dart';
+import 'straight_line_provider.dart';
 
 export 'routing_provider.dart' show RouteResult;
 
 /// Routing service with cascade fallback:
-///   1. BinLink server proxy (Google Directions — server-side key, no exposure)
-///   2. TomTom Routing API   (requires TOMTOM_API_KEY in .env)
+///   1. TomTom Routing API   (requires TOMTOM_API_KEY in .env)
+///   2. OSRM                 (public demo or OSRM_BASE_URL — no key required)
 ///   3. Straight-line        (always available, offline-safe)
 ///
 /// All providers implement [RoutingProvider] and are tried in order until
@@ -18,8 +18,8 @@ class RoutingService {
   RoutingService._();
 
   static final List<RoutingProvider> _providers = [
-    const ServerRoutingProvider(),
     TomTomRoutingProvider(),
+    OsrmRoutingProvider(),
     const StraightLineProvider(),
   ];
 
@@ -35,7 +35,6 @@ class RoutingService {
       }
     }
     // Straight-line is always isAvailable=true, so this should never be reached.
-    // Return a minimal result to prevent null crashes.
     return RouteResult(
       points:         [origin, dest],
       travelTimeSec:  0,

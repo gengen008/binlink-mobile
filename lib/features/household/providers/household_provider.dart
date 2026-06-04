@@ -215,6 +215,82 @@ class HouseholdProvider extends ChangeNotifier {
     }
   }
 
+  // ── Subscriptions ──────────────────────────────────────────────────────────
+  List<Map<String, dynamic>> _subscriptions = [];
+
+  List<Map<String, dynamic>> get subscriptions => _subscriptions;
+
+  Future<void> loadSubscriptions() async {
+    try {
+      final res = await ApiClient.get('/api/subscriptions/mine');
+      _subscriptions = List<Map<String, dynamic>>.from(
+          res.data['data'] as List? ?? []);
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<Map<String, dynamic>?> createSubscription({
+    required String plan,
+    required String binSize,
+    required String pickupAddress,
+    required double pickupLat,
+    required double pickupLng,
+    int? pickupDay,
+    String? pickupTime,
+    String? wasteType,
+    String? addressNotes,
+  }) async {
+    try {
+      final res = await ApiClient.post('/api/subscriptions', {
+        'plan': plan,
+        'binSize': binSize,
+        'pickupAddress': pickupAddress,
+        'pickupLat': pickupLat,
+        'pickupLng': pickupLng,
+        if (pickupDay != null) 'pickupDay': pickupDay,
+        if (pickupTime != null) 'pickupTime': pickupTime,
+        if (wasteType != null && wasteType.isNotEmpty) 'wasteType': wasteType,
+        if (addressNotes != null && addressNotes.isNotEmpty)
+          'addressNotes': addressNotes,
+      });
+      final sub = Map<String, dynamic>.from(res.data['data'] as Map);
+      _subscriptions.insert(0, sub);
+      notifyListeners();
+      return sub;
+    } on DioException catch (e) {
+      _error = e.response?.data?['error'] ?? 'Failed to create subscription';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> updateSubscription(String id, Map<String, dynamic> data) async {
+    try {
+      final res = await ApiClient.patch('/api/subscriptions/$id', data);
+      final updated = Map<String, dynamic>.from(res.data['data'] as Map);
+      final idx = _subscriptions.indexWhere((s) => s['id'] == id);
+      if (idx >= 0) _subscriptions[idx] = updated;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> cancelSubscription(String id) async {
+    try {
+      await ApiClient.delete('/api/subscriptions/$id');
+      final idx = _subscriptions.indexWhere((s) => s['id'] == id);
+      if (idx >= 0) {
+        _subscriptions[idx] = {..._subscriptions[idx], 'status': 'CANCELLED'};
+      }
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> initiatePayment(String bookingId, String momoPhone) async {
     try {
       final res = await ApiClient.post('/api/payments/initiate', {

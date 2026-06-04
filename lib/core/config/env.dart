@@ -9,15 +9,14 @@ class Env {
   static String get socketUrl =>
       dotenv.env['SOCKET_URL'] ?? 'http://10.0.2.2:3000';
 
-  static String get mapsApiKey =>
-      dotenv.env['MAPS_API_KEY'] ?? '';
-
   static String get tomtomApiKey =>
       dotenv.env['TOMTOM_API_KEY'] ?? '';
 
-  static String get mapboxToken =>
-      dotenv.env['MAPBOX_TOKEN'] ?? '';
-
   static String get smartmapsApiKey =>
       dotenv.env['SMARTMAPS_API_KEY'] ?? '';
+
+  /// OSRM self-hosted instance URL. Defaults to the public demo server.
+  /// Set OSRM_BASE_URL in .env to override (recommended for production).
+  static String get osrmBaseUrl =>
+      dotenv.env['OSRM_BASE_URL'] ?? 'http://router.project-osrm.org';
 }
