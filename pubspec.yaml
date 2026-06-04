@@ -25,9 +25,8 @@ dependencies:
   # Real-time
   socket_io_client: ^2.0.3+1
 
-  # Maps (flutter_map + free Carto Dark tiles, no API key)
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  # Maps — MapLibre GL (SmartMaps vector tiles or OpenFreeMap fallback; no flutter_map)
+  maplibre_gl: ^0.26.1
 
   # Location services
   geolocator: ^12.0.0

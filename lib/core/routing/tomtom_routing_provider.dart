@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import '../config/env.dart';
 import 'routing_provider.dart';
 

@@ -40,11 +40,10 @@ jobs:
       # ── 4. Inject all secrets ────────────────────────────────────────
       - name: Inject mobile .env
         run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"         > .env
-          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"            >> .env
-          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}"        >> .env
-          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}"    >> .env
-          echo "MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}"        >> .env
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"                 > .env
+          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"                >> .env
+          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}"        >> .env
+          echo "SMARTMAPS_API_KEY=${{ secrets.SMARTMAPS_API_KEY }}"  >> .env
           echo "[CI] .env written"
 
       - name: Inject household google-services.json

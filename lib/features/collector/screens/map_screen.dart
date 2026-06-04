@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
@@ -197,21 +196,45 @@ class _MapTab extends StatefulWidget {
 }
 
 class _MapTabState extends State<_MapTab> {
-  final MapController _mapCtrl = MapController();
+  MapLibreMapController? _mapCtrl;
+  Circle? _posCircle;
+  bool _styleLoaded = false;
+  bool _lastIsOnline = false;
 
-  Future<void> _locateMe() async {
-    HapticFeedback.lightImpact();
-    _mapCtrl.move(widget.pos, 15.5);
+  @override
+  void dispose() {
+    _mapCtrl?.dispose();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(_MapTab old) {
     super.didUpdateWidget(old);
-    if (old.pos != widget.pos) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _mapCtrl.move(widget.pos, 14.0);
-      });
+    if (old.pos != widget.pos && _posCircle != null) {
+      _mapCtrl?.updateCircle(_posCircle!, CircleOptions(geometry: widget.pos));
+      _mapCtrl?.animateCamera(CameraUpdate.newLatLng(widget.pos));
     }
+  }
+
+  Future<void> _onStyleLoaded() async {
+    if (_mapCtrl == null) return;
+    _styleLoaded = true;
+    final isOnline = context.read<CollectorProvider>().isOnline;
+    _lastIsOnline = isOnline;
+    _posCircle = await _mapCtrl!.addCircle(CircleOptions(
+      geometry: widget.pos,
+      circleRadius: 18,
+      circleColor: isOnline ? '#22C55E' : '#EF4444',
+      circleOpacity: 0.9,
+      circleStrokeWidth: 3,
+      circleStrokeColor: '#FFFFFF',
+      circleStrokeOpacity: 1.0,
+    ));
+  }
+
+  void _locateMe() {
+    HapticFeedback.lightImpact();
+    _mapCtrl?.animateCamera(CameraUpdate.newLatLngZoom(widget.pos, 15.5));
   }
 
   @override
@@ -222,55 +245,33 @@ class _MapTabState extends State<_MapTab> {
     final maxCapacity  = user?.maxCapacityKg ?? 500.0;
     final active       = prov.currentActivePickup;
 
-    final mapMarkers = [
-      Marker(
-        point: widget.pos,
-        width: 48,
-        height: 48,
-        child: Container(
-          decoration: BoxDecoration(
-            color: (prov.isOnline ? AppColors.success : AppColors.danger)
-                .withAlpha(50),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: prov.isOnline ? AppColors.success : AppColors.danger,
-              width: 2.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (prov.isOnline ? AppColors.success : AppColors.danger)
-                    .withAlpha(80),
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: const Icon(
-            PhosphorIconsFill.truck,
-            color: AppColors.white,
-            size: 24,
-          ),
-        ),
-      ),
-    ];
+    // Update circle colour when online status changes
+    if (_styleLoaded && _posCircle != null && prov.isOnline != _lastIsOnline) {
+      _lastIsOnline = prov.isOnline;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_posCircle != null) {
+          _mapCtrl?.updateCircle(_posCircle!, CircleOptions(
+            circleColor: prov.isOnline ? '#22C55E' : '#EF4444',
+          ));
+        }
+      });
+    }
 
     return Stack(
       children: [
         // Full-screen map
-        FlutterMap(
-          mapController: _mapCtrl,
-          options: MapOptions(
-            initialCenter: widget.pos,
-            initialZoom: 14.0,
+        MapLibreMap(
+          styleString: kMapStyleUrl,
+          initialCameraPosition: CameraPosition(
+            target: widget.pos,
+            zoom: 14.0,
           ),
-          children: [
-            TileLayer(
-              urlTemplate: kMapTileUrl,
-              subdomains: kMapTileSubdomains,
-              userAgentPackageName: 'com.binlink.collector',
-              maxZoom: 20,
-            ),
-            MarkerLayer(markers: mapMarkers),
-          ],
+          onMapCreated: (c) => _mapCtrl = c,
+          onStyleLoadedCallback: _onStyleLoaded,
+          myLocationEnabled: false,
+          compassEnabled: false,
+          rotateGesturesEnabled: false,
+          tiltGesturesEnabled: false,
         ),
 
         // Top UI overlay — Positioned so it only takes natural height, never covers map

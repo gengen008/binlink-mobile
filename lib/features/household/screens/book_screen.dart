@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -1315,7 +1314,9 @@ class _Step4AddressState extends State<_Step4Address> {
 
   @override
   Widget build(BuildContext context) {
-    final target = LatLng(widget.lat, widget.lng);
+    // target used by _StaticMapPin — kept as named val for readability
+    final targetLat = widget.lat;
+    final targetLng = widget.lng;
 
     return FadeTransition(
       opacity: widget.fade,
@@ -1418,41 +1419,7 @@ class _Step4AddressState extends State<_Step4Address> {
                   height: 180,
                   child: Stack(
                     children: [
-                      FlutterMap(
-                        options: MapOptions(
-                          initialCenter: target,
-                          initialZoom: 15.0,
-                          interactionOptions: const InteractionOptions(
-                            flags: InteractiveFlag.none,
-                          ),
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate: kMapTileUrl,
-                            subdomains: kMapTileSubdomains,
-                            userAgentPackageName: 'com.binlink.eco',
-                            maxZoom: 20,
-                          ),
-                          MarkerLayer(markers: [
-                            Marker(
-                              point: target,
-                              width: 44,
-                              height: 44,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.steelBlue.withAlpha(50),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: AppColors.steelBlue,
-                                      width: 2.5),
-                                ),
-                                child: const Icon(PhosphorIconsFill.mapPin,
-                                    color: AppColors.white, size: 22),
-                              ),
-                            ),
-                          ]),
-                        ],
-                      ),
+                      _StaticMapPin(lat: targetLat, lng: targetLng),
                       // Tap overlay hint
                       Positioned(
                         top: 10, right: 10,
@@ -1969,6 +1936,76 @@ class _SummaryLine extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _StaticMapPin — non-interactive MapLibre preview with a single pin circle
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StaticMapPin extends StatefulWidget {
+  const _StaticMapPin({required this.lat, required this.lng});
+  final double lat;
+  final double lng;
+
+  @override
+  State<_StaticMapPin> createState() => _StaticMapPinState();
+}
+
+class _StaticMapPinState extends State<_StaticMapPin> {
+  MapLibreMapController? _ctrl;
+  Circle? _pin;
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_StaticMapPin old) {
+    super.didUpdateWidget(old);
+    if (_pin != null &&
+        (old.lat != widget.lat || old.lng != widget.lng)) {
+      _ctrl?.updateCircle(
+        _pin!,
+        CircleOptions(geometry: LatLng(widget.lat, widget.lng)),
+      );
+      _ctrl?.animateCamera(CameraUpdate.newLatLng(LatLng(widget.lat, widget.lng)));
+    }
+  }
+
+  Future<void> _onStyleLoaded() async {
+    if (_ctrl == null) return;
+    _pin = await _ctrl!.addCircle(CircleOptions(
+      geometry: LatLng(widget.lat, widget.lng),
+      circleRadius: 14,
+      circleColor: '#5483B3',
+      circleOpacity: 0.9,
+      circleStrokeWidth: 3,
+      circleStrokeColor: '#C1E8FF',
+      circleStrokeOpacity: 1.0,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MapLibreMap(
+      styleString: kMapStyleUrl,
+      initialCameraPosition: CameraPosition(
+        target: LatLng(widget.lat, widget.lng),
+        zoom: 15.0,
+      ),
+      onMapCreated: (c) => _ctrl = c,
+      onStyleLoadedCallback: _onStyleLoaded,
+      scrollGesturesEnabled: false,
+      zoomGesturesEnabled: false,
+      rotateGesturesEnabled: false,
+      tiltGesturesEnabled: false,
+      doubleClickZoomEnabled: false,
+      myLocationEnabled: false,
+      compassEnabled: false,
     );
   }
 }

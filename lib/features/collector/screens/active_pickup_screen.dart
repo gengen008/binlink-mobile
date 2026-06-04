@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +36,8 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   late String _currentStatus;
   final _weightCtrl = TextEditingController();
 
+  MapLibreMapController? _mapCtrl;
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +47,21 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   @override
   void dispose() {
     _weightCtrl.dispose();
+    _mapCtrl?.dispose();
     super.dispose();
+  }
+
+  Future<void> _onMapStyleLoaded() async {
+    if (_mapCtrl == null) return;
+    await _mapCtrl!.addCircle(CircleOptions(
+      geometry: _pickupPos,
+      circleRadius: 14,
+      circleColor: '#7DA0CA',
+      circleOpacity: 0.95,
+      circleStrokeWidth: 3,
+      circleStrokeColor: '#C1E8FF',
+      circleStrokeOpacity: 1.0,
+    ));
   }
 
   LatLng get _pickupPos => LatLng(
@@ -246,39 +261,21 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             // ── Map ──
             SizedBox(
               height: 200,
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: _pickupPos,
-                  initialZoom: 15.0,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.none,
-                  ),
+              child: MapLibreMap(
+                styleString: kMapStyleUrl,
+                initialCameraPosition: CameraPosition(
+                  target: _pickupPos,
+                  zoom: 15.0,
                 ),
-                children: [
-                  TileLayer(
-                    urlTemplate: kMapTileUrl,
-                    subdomains: kMapTileSubdomains,
-                    userAgentPackageName: 'com.binlink.collector',
-                    maxZoom: 20,
-                  ),
-                  MarkerLayer(markers: [
-                    Marker(
-                      point: _pickupPos,
-                      width: 44,
-                      height: 44,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.iceBlue.withAlpha(50),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: AppColors.iceBlue, width: 2.5),
-                        ),
-                        child: const Icon(PhosphorIconsFill.mapPin,
-                            color: AppColors.white, size: 22),
-                      ),
-                    ),
-                  ]),
-                ],
+                onMapCreated: (c) => _mapCtrl = c,
+                onStyleLoadedCallback: _onMapStyleLoaded,
+                scrollGesturesEnabled: false,
+                zoomGesturesEnabled: false,
+                rotateGesturesEnabled: false,
+                tiltGesturesEnabled: false,
+                doubleClickZoomEnabled: false,
+                myLocationEnabled: false,
+                compassEnabled: false,
               ),
             ),
 

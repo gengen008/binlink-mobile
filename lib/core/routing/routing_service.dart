@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'routing_provider.dart';
 import 'server_routing_provider.dart';
 import 'straight_line_provider.dart';

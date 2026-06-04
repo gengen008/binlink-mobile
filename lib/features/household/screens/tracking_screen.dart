@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,7 +18,6 @@ import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 
-// Haversine distance in km
 double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   const r = 6371.0;
   final dLat = (lat2 - lat1) * pi / 180;
@@ -28,7 +28,6 @@ double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   return r * 2 * atan2(sqrt(a), sqrt(1 - a));
 }
 
-// Bearing in degrees from [from] to [to]
 double _bearingDeg(LatLng from, LatLng to) {
   final dLng = (to.longitude - from.longitude) * pi / 180;
   final lat1 = from.latitude  * pi / 180;
@@ -36,6 +35,50 @@ double _bearingDeg(LatLng from, LatLng to) {
   final y = sin(dLng) * cos(lat2);
   final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLng);
   return (atan2(y, x) * 180 / pi + 360) % 360;
+}
+
+/// Renders a directional arrow icon (vehicle heading indicator) as a PNG.
+Future<Uint8List> _buildTruckIcon() async {
+  const size = 64.0;
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, size, size));
+
+  // Glow
+  canvas.drawCircle(
+    const Offset(size / 2, size / 2),
+    size / 2 - 1,
+    Paint()
+      ..color = const Color(0x405483B3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+  );
+  // Fill
+  canvas.drawCircle(
+    const Offset(size / 2, size / 2),
+    size / 2 - 5,
+    Paint()..color = const Color(0xFF5483B3),
+  );
+  // Stroke
+  canvas.drawCircle(
+    const Offset(size / 2, size / 2),
+    size / 2 - 5,
+    Paint()
+      ..color = const Color(0xFFC1E8FF)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke,
+  );
+  // Arrow pointing up (maplibre rotates it to face travel direction)
+  final path = Path()
+    ..moveTo(size / 2, 10)
+    ..lineTo(size / 2 - 9, size - 14)
+    ..lineTo(size / 2, size - 20)
+    ..lineTo(size / 2 + 9, size - 14)
+    ..close();
+  canvas.drawPath(path, Paint()..color = Colors.white);
+
+  final picture = recorder.endRecording();
+  final img = await picture.toImage(size.toInt(), size.toInt());
+  final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+  return byteData!.buffer.asUint8List();
 }
 
 class TrackingScreen extends StatefulWidget {
@@ -49,20 +92,26 @@ class TrackingScreen extends StatefulWidget {
 class _TrackingScreenState extends State<TrackingScreen>
     with TickerProviderStateMixin {
 
-  final MapController _mapCtrl = MapController();
+  // MapLibre
+  MapLibreMapController? _mapCtrl;
+  bool _styleLoaded = false;
+  Circle? _pickupCircle;
+  Symbol? _truckSymbol;
+  Line?   _routeLine;
+
+  // Booking data
   Map<String, dynamic>? _booking;
   bool _loading = true;
 
-  // Previous position to detect movement
+  // Collector position tracking
   double? _prevCollectorLat;
   double? _prevCollectorLng;
 
-  // Route polyline
-  List<LatLng>? _routePoints;
+  // Route state
   double? _routeFetchLat;
   double? _routeFetchLng;
 
-  // Animated marker state (Bolt-style smooth movement)
+  // Smooth animation (Bolt-style)
   LatLng? _collectorAnimPos;
   LatLng? _collectorPrevPos;
   LatLng? _collectorTargetPos;
@@ -79,18 +128,77 @@ class _TrackingScreenState extends State<TrackingScreen>
     _loadAndListen();
   }
 
+  @override
+  void dispose() {
+    _markerAnim.dispose();
+    _mapCtrl?.onCircleTapped.remove(_dummy);
+    if (mounted) {
+      try { context.read<HouseholdProvider>().stopListening(); } catch (_) {}
+    }
+    super.dispose();
+  }
+
+  void _dummy(Circle _) {}
+
+  // ── Map lifecycle ──────────────────────────────────────────────────────────
+
+  Future<void> _onStyleLoaded() async {
+    _styleLoaded = true;
+    // Register truck icon
+    final iconBytes = await _buildTruckIcon();
+    await _mapCtrl?.addImage('binlink-truck', iconBytes);
+
+    // Pickup circle
+    _pickupCircle = await _mapCtrl?.addCircle(CircleOptions(
+      geometry:          _pickupLatLng,
+      circleRadius:      11,
+      circleColor:       '#052659',
+      circleStrokeColor: '#C1E8FF',
+      circleStrokeWidth: 3.0,
+      circleOpacity:     0.95,
+    ));
+
+    // Initial camera
+    await _mapCtrl?.animateCamera(
+      CameraUpdate.newLatLngZoom(_pickupLatLng, 15.0),
+    );
+
+    // If collector already has a position, place the truck immediately
+    if (_collectorAnimPos != null && _truckSymbol == null) {
+      await _placeTruckSymbol(_collectorAnimPos!);
+    }
+  }
+
+  Future<void> _placeTruckSymbol(LatLng pos) async {
+    if (_mapCtrl == null) return;
+    _truckSymbol = await _mapCtrl!.addSymbol(SymbolOptions(
+      geometry:   pos,
+      iconImage:  'binlink-truck',
+      iconSize:   1.0,
+      iconRotate: _collectorBearing,
+    ));
+  }
+
+  // ── Animation tick — NO setState, pure imperative ──────────────────────────
+
   void _tickMarker() {
     if (_collectorPrevPos == null || _collectorTargetPos == null) return;
     final t = CurvedAnimation(parent: _markerAnim, curve: Curves.easeOut).value;
-    setState(() {
-      _collectorAnimPos = LatLng(
-        _collectorPrevPos!.latitude  + (_collectorTargetPos!.latitude  - _collectorPrevPos!.latitude)  * t,
-        _collectorPrevPos!.longitude + (_collectorTargetPos!.longitude - _collectorPrevPos!.longitude) * t,
-      );
-    });
+    _collectorAnimPos = LatLng(
+      _collectorPrevPos!.latitude  +
+          (_collectorTargetPos!.latitude  - _collectorPrevPos!.latitude)  * t,
+      _collectorPrevPos!.longitude +
+          (_collectorTargetPos!.longitude - _collectorPrevPos!.longitude) * t,
+    );
+    if (_truckSymbol != null && _mapCtrl != null) {
+      _mapCtrl!.updateSymbol(_truckSymbol!, SymbolOptions(
+        geometry:   _collectorAnimPos!,
+        iconRotate: _collectorBearing,
+      ));
+    }
   }
 
-  void _animateCollectorTo(double lat, double lng) {
+  void _animateCollectorTo(double lat, double lng) async {
     final newPos = LatLng(lat, lng);
     if (_collectorAnimPos != null) {
       _collectorBearing = _bearingDeg(_collectorAnimPos!, newPos);
@@ -98,16 +206,16 @@ class _TrackingScreenState extends State<TrackingScreen>
     _collectorPrevPos   = _collectorAnimPos ?? newPos;
     _collectorTargetPos = newPos;
     _markerAnim.forward(from: 0);
-    // Also move camera
-    _mapCtrl.move(newPos, 15.0);
+    _mapCtrl?.animateCamera(CameraUpdate.newLatLng(newPos));
+
+    // Place truck symbol on first position
+    if (_truckSymbol == null && _styleLoaded) {
+      _collectorAnimPos = newPos;
+      await _placeTruckSymbol(newPos);
+    }
   }
 
-  @override
-  void dispose() {
-    _markerAnim.dispose();
-    context.read<HouseholdProvider>().stopListening();
-    super.dispose();
-  }
+  // ── Data ───────────────────────────────────────────────────────────────────
 
   LatLng get _pickupLatLng => LatLng(
     (_booking?['pickupLat'] as num?)?.toDouble() ?? 5.6037,
@@ -122,9 +230,14 @@ class _TrackingScreenState extends State<TrackingScreen>
           _booking = Map<String, dynamic>.from(res.data['data'] as Map);
           _loading = false;
         });
-        // Move camera to pickup location once we know it
+        // Move camera to pickup once we know it, if style loaded
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _mapCtrl.move(_pickupLatLng, 15.0);
+          if (mounted && _styleLoaded) {
+            _mapCtrl?.animateCamera(
+                CameraUpdate.newLatLngZoom(_pickupLatLng, 15.0));
+            _mapCtrl?.updateCircle(
+                _pickupCircle!, CircleOptions(geometry: _pickupLatLng));
+          }
         });
       }
     } catch (_) {
@@ -139,10 +252,25 @@ class _TrackingScreenState extends State<TrackingScreen>
       LatLng(oLat, oLng),
       _pickupLatLng,
     );
-    if (result.points.isNotEmpty && mounted) {
-      setState(() => _routePoints = result.points);
+    if (!mounted || _mapCtrl == null) return;
+    final points = result.points.isNotEmpty ? result.points : null;
+
+    // Update or create route line
+    if (points != null && points.length > 1) {
+      if (_routeLine != null) {
+        await _mapCtrl!.updateLine(_routeLine!, LineOptions(geometry: points));
+      } else {
+        _routeLine = await _mapCtrl!.addLine(LineOptions(
+          geometry:    points,
+          lineColor:   '#5483B3',
+          lineWidth:   4.0,
+          lineOpacity: 0.85,
+        ));
+      }
     }
   }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +289,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       });
     }
 
-    // Refresh route when collector moves >200 m from last fetch
+    // Refresh route when collector moves > 200 m from last fetch
     if (collectorLat != null && collectorLng != null && _booking != null) {
       final fetchLat = _routeFetchLat;
       final fetchLng = _routeFetchLng;
@@ -175,13 +303,6 @@ class _TrackingScreenState extends State<TrackingScreen>
       }
     }
 
-    // Route polyline: real road route or straight-line fallback
-    final polylinePoints = (_routePoints != null && _routePoints!.length > 1)
-        ? _routePoints!
-        : (collectorLat != null && collectorLng != null)
-            ? [LatLng(collectorLat, collectorLng), _pickupLatLng]
-            : null;
-
     // ETA
     String? etaLabel;
     if (collectorLat != null && collectorLng != null &&
@@ -190,19 +311,14 @@ class _TrackingScreenState extends State<TrackingScreen>
           collectorLat, collectorLng,
           _pickupLatLng.latitude, _pickupLatLng.longitude);
       final minEta = (distKm / 30 * 60).ceil();
-      etaLabel = distKm < 0.1
-          ? '< 1 min away'
-          : '~$minEta min · ${distKm.toStringAsFixed(1)} km';
+      etaLabel = distKm < 0.1 ? '< 1 min away' : '~$minEta min · ${distKm.toStringAsFixed(1)} km';
     }
 
     return Scaffold(
       floatingActionButton: _booking != null
           ? FloatingActionButton(
-              onPressed: () => showChatSheet(
-                context,
-                bookingId: widget.bookingId,
-                myRole: 'HOUSEHOLD',
-              ),
+              onPressed: () => showChatSheet(context,
+                  bookingId: widget.bookingId, myRole: 'HOUSEHOLD'),
               backgroundColor: AppColors.steelBlue,
               child: const Icon(PhosphorIconsFill.chatCircle,
                   color: AppColors.white, size: 24),
@@ -222,8 +338,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
                           color: AppColors.white),
                     ),
-                    Expanded(
-                        child: Text(S.of(context).liveTracking, style: AppTextStyles.h3)),
+                    Expanded(child: Text(S.of(context).liveTracking,
+                        style: AppTextStyles.h3)),
                     if (_booking != null)
                       StatusBadge(status: status, animate: true),
                   ],
@@ -234,86 +350,25 @@ class _TrackingScreenState extends State<TrackingScreen>
             // Map
             Expanded(
               child: _loading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                          color: AppColors.steelBlue))
+                  ? const Center(child: CircularProgressIndicator(
+                      color: AppColors.steelBlue))
                   : Stack(
                       children: [
-                        FlutterMap(
-                          mapController: _mapCtrl,
-                          options: MapOptions(
-                            initialCenter: _pickupLatLng,
-                            initialZoom: 15.0,
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate: kMapTileUrl,
-                              subdomains: kMapTileSubdomains,
-                              userAgentPackageName: 'com.binlink.eco',
-                              maxZoom: 20,
+                        // MapLibre map
+                        Positioned.fill(
+                          child: MapLibreMap(
+                            styleString: kMapStyleUrl,
+                            initialCameraPosition: CameraPosition(
+                              target: _pickupLatLng,
+                              zoom:   15.0,
                             ),
-                            // Route polyline
-                            if (polylinePoints != null)
-                              PolylineLayer(
-                                polylines: [
-                                  Polyline(
-                                    points: polylinePoints,
-                                    color: AppColors.steelBlue.withAlpha(210),
-                                    strokeWidth: 4.0,
-                                    strokeCap: StrokeCap.round,
-                                    strokeJoin: StrokeJoin.round,
-                                  ),
-                                ],
-                              ),
-                            MarkerLayer(markers: [
-                              // Pickup location pin
-                              if (_booking != null)
-                                Marker(
-                                  point: _pickupLatLng,
-                                  width: 44,
-                                  height: 44,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.iceBlue.withAlpha(50),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: AppColors.iceBlue,
-                                          width: 2.5),
-                                    ),
-                                    child: const Icon(PhosphorIconsFill.mapPin,
-                                        color: AppColors.white, size: 22),
-                                  ),
-                                ),
-                              // Animated collector truck
-                              if (_collectorAnimPos != null)
-                                Marker(
-                                  point: _collectorAnimPos!,
-                                  width: 50,
-                                  height: 50,
-                                  child: Transform.rotate(
-                                    angle: _collectorBearing * pi / 180,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.steelBlue.withAlpha(60),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: AppColors.steelBlue,
-                                            width: 2.5),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.steelBlue
-                                                .withAlpha(100),
-                                            blurRadius: 12,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(PhosphorIconsFill.truck,
-                                          color: AppColors.white, size: 26),
-                                    ),
-                                  ),
-                                ),
-                            ]),
-                          ],
+                            onMapCreated: (ctrl) => _mapCtrl = ctrl,
+                            onStyleLoadedCallback: _onStyleLoaded,
+                            myLocationEnabled: false,
+                            compassEnabled:    false,
+                            rotateGesturesEnabled: false,
+                            tiltGesturesEnabled:   false,
+                          ),
                         ),
 
                         // ETA overlay chip
@@ -352,16 +407,14 @@ class _TrackingScreenState extends State<TrackingScreen>
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 decoration: const BoxDecoration(
                   color: AppColors.deepOcean,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
                 child: Column(
                   children: [
                     Center(
                       child: Container(
-                        width: 40,
-                        height: 4,
+                        width: 40, height: 4,
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           color: AppColors.border,
@@ -369,18 +422,15 @@ class _TrackingScreenState extends State<TrackingScreen>
                         ),
                       ),
                     ),
-
                     _StatusMessage(status: status),
                     const SizedBox(height: 16),
-
                     if (_booking!['collector'] != null) ...[
                       const Divider(color: AppColors.border),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 48, height: 48,
                             decoration: const BoxDecoration(
                               gradient: AppColors.primaryGradient,
                               shape: BoxShape.circle,
@@ -400,8 +450,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                               children: [
                                 Text(
                                   _booking!['collector']['fullName']
-                                          as String? ??
-                                      'Collector',
+                                          as String? ?? 'Collector',
                                   style: AppTextStyles.h4,
                                 ),
                                 Row(
@@ -422,7 +471,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                             const Icon(PhosphorIconsFill.checkCircle,
                                 color: AppColors.success, size: 28)
                           else ...[
-                            // Call collector button
                             if (_booking!['collector']['phone'] != null)
                               _ActionCircle(
                                 icon: PhosphorIconsFill.phone,
@@ -431,7 +479,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                                   'tel:${_booking!['collector']['phone']}')),
                               ),
                             const SizedBox(width: 8),
-                            // Navigate to pickup (opens Google Maps / device nav)
                             _ActionCircle(
                               icon: PhosphorIconsFill.navigationArrow,
                               color: AppColors.steelBlue,
@@ -440,7 +487,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 final lng = (_booking!['pickupLng'] as num?)?.toDouble();
                                 if (lat == null || lng == null) return;
                                 launchUrl(Uri.parse(
-                                  'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+                                  'https://www.google.com/maps/dir/?api=1'
+                                  '&destination=$lat,$lng&travelmode=driving',
                                 ), mode: LaunchMode.externalApplication);
                               },
                             ),
@@ -448,7 +496,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                         ],
                       ),
                     ],
-
                     const SizedBox(height: 16),
                     Row(
                       children: [
@@ -475,7 +522,8 @@ class _TrackingScreenState extends State<TrackingScreen>
 }
 
 class _ActionCircle extends StatelessWidget {
-  const _ActionCircle({required this.icon, required this.color, required this.onTap});
+  const _ActionCircle({
+    required this.icon, required this.color, required this.onTap});
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
@@ -511,12 +559,10 @@ class _StatusMessage extends StatelessWidget {
       'COMPLETED' => (PhosphorIconsFill.sparkle,     'Pickup complete — great job!',         AppColors.success),
       _           => (PhosphorIconsRegular.question, status,                                 AppColors.muted),
     };
-
     return Row(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 44, height: 44,
           decoration: BoxDecoration(
             color: color.withAlpha(25),
             shape: BoxShape.circle,

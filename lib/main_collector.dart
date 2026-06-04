@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/config/app_flavor.dart';
-import 'core/maps/map_service.dart';
 import 'app.dart';
 
 void main() {
@@ -31,8 +30,6 @@ Future<void> _appMain() async {
   } catch (_) {
     // Firebase not yet configured — auth will handle gracefully
   }
-
-  MapService.instance.init(); // intentionally not awaited
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

@@ -1,4 +1,4 @@
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import '../config/env.dart';
 import '../network/api_client.dart';
 import 'routing_provider.dart';

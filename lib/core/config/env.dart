@@ -17,4 +17,7 @@ class Env {
 
   static String get mapboxToken =>
       dotenv.env['MAPBOX_TOKEN'] ?? '';
+
+  static String get smartmapsApiKey =>
+      dotenv.env['SMARTMAPS_API_KEY'] ?? '';
 }

@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/strings.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/household_provider.dart';
@@ -180,21 +179,105 @@ class _HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<_HomeTab> {
-  final MapController _mapCtrl = MapController();
+  MapLibreMapController? _mapCtrl;
+  bool _styleLoaded = false;
+  Circle? _myCircle;
+  final Map<String, Circle> _collectorCircles = {};
+  bool _syncing = false;
+  List<Map<String, dynamic>> _lastCollectors = [];
 
   @override
   void didUpdateWidget(_HomeTab old) {
     super.didUpdateWidget(old);
-    if (old.myPos != widget.myPos) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _mapCtrl.move(widget.myPos, 14.0);
-      });
+    if (old.myPos != widget.myPos && _styleLoaded) {
+      _mapCtrl?.animateCamera(CameraUpdate.newLatLng(widget.myPos));
+      if (_myCircle != null) {
+        _mapCtrl?.updateCircle(_myCircle!, CircleOptions(geometry: widget.myPos));
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _mapCtrl?.onCircleTapped.remove(_onCircleTapped);
+    super.dispose();
   }
 
   Future<void> _locateMe() async {
     HapticFeedback.lightImpact();
-    _mapCtrl.move(widget.myPos, 15.5);
+    _mapCtrl?.animateCamera(CameraUpdate.newLatLngZoom(widget.myPos, 15.5));
+  }
+
+  Future<void> _onStyleLoaded() async {
+    _styleLoaded = true;
+    final prov = context.read<HouseholdProvider>();
+    _myCircle = await _mapCtrl?.addCircle(CircleOptions(
+      geometry:           widget.myPos,
+      circleRadius:       10,
+      circleColor:        '#5483B3',
+      circleStrokeColor:  '#C1E8FF',
+      circleStrokeWidth:  2.5,
+      circleOpacity:      0.9,
+    ));
+    await _syncCollectors(prov.onlineCollectors);
+  }
+
+  void _onCircleTapped(Circle circle) {
+    final data = circle.data?['collector'] as Map<String, dynamic>?;
+    if (data == null) return;
+    HapticFeedback.lightImpact();
+    showCollectorSheet(
+      context, data,
+      onRequestPickup: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
+    );
+  }
+
+  Future<void> _syncCollectors(List<Map<String, dynamic>> collectors) async {
+    if (_mapCtrl == null || !_styleLoaded || _syncing) return;
+    _syncing = true;
+    try {
+      // Remove circles for collectors no longer online
+      final newIds = collectors
+          .map((c) => c['id'] as String?)
+          .whereType<String>()
+          .toSet();
+      final toRemove = _collectorCircles.keys
+          .where((id) => !newIds.contains(id))
+          .toList();
+      for (final id in toRemove) {
+        final circle = _collectorCircles.remove(id);
+        if (circle != null) await _mapCtrl!.removeCircle(circle);
+      }
+      // Add / update circles
+      for (final c in collectors) {
+        final id  = c['id'] as String?;
+        final lat = (c['lastLat'] as num?)?.toDouble();
+        final lng = (c['lastLng'] as num?)?.toDouble();
+        if (id == null || lat == null || lng == null) continue;
+        if (_collectorCircles.containsKey(id)) {
+          await _mapCtrl!.updateCircle(
+            _collectorCircles[id]!,
+            CircleOptions(geometry: LatLng(lat, lng)),
+          );
+        } else {
+          final circle = await _mapCtrl!.addCircle(
+            CircleOptions(
+              geometry:          LatLng(lat, lng),
+              circleRadius:      11,
+              circleColor:       '#22C55E',
+              circleStrokeColor: '#FFFFFF',
+              circleStrokeWidth: 2.5,
+              circleOpacity:     0.9,
+            ),
+            {'collector': c},
+          );
+          _collectorCircles[id] = circle;
+        }
+      }
+    } finally {
+      _syncing = false;
+    }
   }
 
   @override
@@ -203,78 +286,35 @@ class _HomeTabState extends State<_HomeTab> {
     final auth   = context.watch<AuthProvider>();
     final active = prov.activeBooking;
 
-    // Build markers for flutter_map
-    final mapMarkers = <Marker>[
-      // My location
-      Marker(
-        point: widget.myPos,
-        width: 44,
-        height: 44,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.steelBlue.withAlpha(50),
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.steelBlue, width: 2.5),
-          ),
-          child: const Icon(PhosphorIconsFill.mapPin,
-              color: AppColors.white, size: 22),
-        ),
-      ),
-      // Online collectors
-      ...prov.onlineCollectors.map((c) {
-        final lat = (c['lastLat'] as num?)?.toDouble();
-        final lng = (c['lastLng'] as num?)?.toDouble();
-        if (lat == null || lng == null) return null;
-        return Marker(
-          point: LatLng(lat, lng),
-          width: 44,
-          height: 44,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              showCollectorSheet(
-                context, c,
-                onRequestPickup: () => Navigator.push(context,
-                    MaterialPageRoute(
-                      builder: (_) => const BookScreen(mode: 'immediate'),
-                    )),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.success.withAlpha(50),
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.success, width: 2.5),
-              ),
-              child: const Icon(PhosphorIconsFill.truck,
-                  color: AppColors.white, size: 22),
-            ),
-          ),
-        );
-      }).whereType<Marker>(),
-    ];
+    // Sync collector markers whenever the list changes
+    if (_styleLoaded && prov.onlineCollectors != _lastCollectors) {
+      _lastCollectors = prov.onlineCollectors;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncCollectors(prov.onlineCollectors);
+      });
+    }
 
     return Container(
       color: AppColors.midnightNavy,
       child: Stack(
         children: [
-          // ── Full-screen map ────────────────────────────────────────
+          // ── Full-screen MapLibre map ───────────────────────────────
           Positioned.fill(
-            child: FlutterMap(
-              mapController: _mapCtrl,
-              options: MapOptions(
-                initialCenter: widget.myPos,
-                initialZoom: 14.0,
+            child: MapLibreMap(
+              styleString: kMapStyleUrl,
+              initialCameraPosition: CameraPosition(
+                target: widget.myPos,
+                zoom:   14.0,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: kMapTileUrl,
-                  subdomains: kMapTileSubdomains,
-                  userAgentPackageName: 'com.binlink.eco',
-                  maxZoom: 20,
-                ),
-                MarkerLayer(markers: mapMarkers),
-              ],
+              onMapCreated: (ctrl) {
+                _mapCtrl = ctrl;
+                ctrl.onCircleTapped.add(_onCircleTapped);
+              },
+              onStyleLoadedCallback: _onStyleLoaded,
+              myLocationEnabled:    false,
+              compassEnabled:       false,
+              rotateGesturesEnabled: false,
+              tiltGesturesEnabled:   false,
             ),
           ),
 
@@ -400,7 +440,10 @@ class _HomeTabState extends State<_HomeTab> {
                         lng: widget.myPos.longitude,
                       );
                       if (result != null && context.mounted) {
-                        _mapCtrl.move(LatLng(result.lat, result.lng), 16.0);
+                        _mapCtrl?.animateCamera(
+                          CameraUpdate.newLatLngZoom(
+                            LatLng(result.lat, result.lng), 16.0),
+                        );
                       }
                     },
                     child: Container(

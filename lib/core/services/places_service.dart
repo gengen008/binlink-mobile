@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import '../config/env.dart';
+import 'smartmaps_service.dart';
 
 class PlacePrediction {
   final String placeId;
   final String mainText;
   final String secondaryText;
   final String fullText;
-  // lat/lng included directly from search results (skip getDetail() call)
   final double? lat;
   final double? lng;
 
@@ -32,10 +32,11 @@ class PlaceDetail {
   });
 }
 
+/// Location intelligence — SmartMaps → TomTom → Nominatim cascade.
 class PlacesService {
   PlacesService._();
 
-  static final _dio = Dio(BaseOptions(
+  static final _ttDio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 8),
     receiveTimeout: const Duration(seconds: 8),
   ));
@@ -45,7 +46,7 @@ class PlacesService {
     connectTimeout: const Duration(seconds: 8),
     receiveTimeout: const Duration(seconds: 8),
     headers: {
-      'User-Agent': 'BinLinkEco/1.0 (support@binlink.eco)',
+      'User-Agent': 'BinLinkEco/2.0 (support@binlink.eco)',
       'Accept-Language': 'en',
     },
   ));
@@ -53,7 +54,7 @@ class PlacesService {
   static String get _ttKey => Env.tomtomApiKey;
   static bool get _hasTomTom => _ttKey.isNotEmpty;
 
-  // ── Autocomplete: TomTom → Nominatim cascade ────────────────────────────────
+  // ── Autocomplete ───────────────────────────────────────────────────────────
 
   static Future<List<PlacePrediction>> autocomplete(
     String input, {
@@ -61,10 +62,29 @@ class PlacesService {
     double lng = -0.1870,
   }) async {
     if (input.trim().length < 2) return [];
+
+    // 1. SmartMaps
+    if (SmartMapsService.isAvailable) {
+      final results = await SmartMapsService.autocomplete(input, lat: lat, lng: lng);
+      if (results.isNotEmpty) {
+        return results.map((r) => PlacePrediction(
+          placeId:       r.placeId,
+          mainText:      r.mainText,
+          secondaryText: r.secondaryText,
+          fullText:      r.fullText,
+          lat:           r.lat,
+          lng:           r.lng,
+        )).toList();
+      }
+    }
+
+    // 2. TomTom
     if (_hasTomTom) {
       final results = await _tomtomSearch(input, lat: lat, lng: lng);
       if (results.isNotEmpty) return results;
     }
+
+    // 3. Nominatim
     return _nominatimSearch(input, lat: lat, lng: lng);
   }
 
@@ -74,7 +94,7 @@ class PlacesService {
     required double lng,
   }) async {
     try {
-      final resp = await _dio.get(
+      final resp = await _ttDio.get(
         'https://api.tomtom.com/search/2/search/${Uri.encodeComponent(query)}.json',
         queryParameters: {
           'key': _ttKey,
@@ -88,27 +108,25 @@ class PlacesService {
       );
       final results = (resp.data['results'] as List?) ?? [];
       return results.map((r) {
-        final addr  = r['address'] as Map<String, dynamic>? ?? {};
-        final pos   = r['position'] as Map<String, dynamic>? ?? {};
+        final addr = r['address'] as Map<String, dynamic>? ?? {};
+        final pos  = r['position'] as Map<String, dynamic>? ?? {};
         final freeform     = addr['freeformAddress'] as String? ?? '';
         final municipality = addr['municipality']   as String? ?? '';
         final country      = addr['country']        as String? ?? 'Ghana';
         final streetName   = addr['streetName']     as String? ?? '';
-        final mainText     = streetName.isNotEmpty ? streetName
+        final mainText = streetName.isNotEmpty ? streetName
             : municipality.isNotEmpty ? municipality
             : freeform;
-        final secondary    = municipality.isNotEmpty && municipality != mainText
+        final secondary = municipality.isNotEmpty && municipality != mainText
             ? '$municipality, $country'
             : country;
-        final pLat = (pos['lat'] as num?)?.toDouble();
-        final pLng = (pos['lon'] as num?)?.toDouble();
         return PlacePrediction(
           placeId:       r['id'] as String? ?? freeform,
           mainText:      mainText,
           secondaryText: secondary,
           fullText:      freeform.isEmpty ? query : freeform,
-          lat:           pLat,
-          lng:           pLng,
+          lat:           (pos['lat'] as num?)?.toDouble(),
+          lng:           (pos['lon'] as num?)?.toDouble(),
         );
       }).where((p) => p.lat != null && p.lat! != 0).toList();
     } catch (_) {
@@ -136,17 +154,13 @@ class PlacesService {
       return items.map((r) {
         final displayName = r['display_name'] as String? ?? '';
         final parts = displayName.split(', ');
-        final mainText  = parts.isNotEmpty ? parts[0] : displayName;
-        final secondary = parts.length > 1 ? parts.skip(1).take(2).join(', ') : '';
-        final pLat = double.tryParse(r['lat'] as String? ?? '');
-        final pLng = double.tryParse(r['lon'] as String? ?? '');
         return PlacePrediction(
           placeId:       r['place_id'].toString(),
-          mainText:      mainText,
-          secondaryText: secondary,
+          mainText:      parts.isNotEmpty ? parts[0] : displayName,
+          secondaryText: parts.length > 1 ? parts.skip(1).take(2).join(', ') : '',
           fullText:      displayName,
-          lat:           pLat,
-          lng:           pLng,
+          lat:           double.tryParse(r['lat'] as String? ?? ''),
+          lng:           double.tryParse(r['lon'] as String? ?? ''),
         );
       }).where((p) => p.lat != null && p.lat! != 0).toList();
     } catch (_) {
@@ -154,20 +168,24 @@ class PlacesService {
     }
   }
 
-  // ── Detail lookup (fallback when prediction has no lat/lng) ────────────────
+  // ── Detail lookup ──────────────────────────────────────────────────────────
 
   static Future<PlaceDetail?> getDetail(String placeId) async {
+    if (SmartMapsService.isAvailable) {
+      final r = await SmartMapsService.geocode(placeId);
+      if (r != null) return PlaceDetail(address: r.address, lat: r.lat, lng: r.lng);
+    }
     if (_hasTomTom) {
       try {
-        final resp = await _dio.get(
+        final resp = await _ttDio.get(
           'https://api.tomtom.com/search/2/geocode/${Uri.encodeComponent(placeId)}.json',
           queryParameters: {'key': _ttKey, 'limit': 1, 'countrySet': 'GH'},
         );
         final results = (resp.data['results'] as List?) ?? [];
         if (results.isNotEmpty) {
-          final r    = results.first as Map<String, dynamic>;
-          final pos  = r['position'] as Map<String, dynamic>? ?? {};
-          final addr = r['address']  as Map<String, dynamic>? ?? {};
+          final r   = results.first as Map<String, dynamic>;
+          final pos = r['position'] as Map<String, dynamic>? ?? {};
+          final addr = r['address'] as Map<String, dynamic>? ?? {};
           return PlaceDetail(
             address: addr['freeformAddress'] as String? ?? placeId,
             lat:     (pos['lat'] as num).toDouble(),
@@ -176,47 +194,45 @@ class PlacesService {
         }
       } catch (_) {}
     }
-    // Nominatim lookup
     try {
       final resp = await _nominatim.get('/reverse', queryParameters: {
-        'place_id':       placeId,
-        'format':         'json',
-        'accept-language':'en',
+        'place_id': placeId, 'format': 'json', 'accept-language': 'en',
       });
       final lat = double.tryParse(resp.data['lat']?.toString() ?? '');
       final lng = double.tryParse(resp.data['lon']?.toString() ?? '');
       if (lat != null && lng != null) {
         return PlaceDetail(
           address: resp.data['display_name'] as String? ?? placeId,
-          lat:     lat,
-          lng:     lng,
+          lat: lat, lng: lng,
         );
       }
     } catch (_) {}
     return null;
   }
 
-  // ── Reverse geocode: TomTom → Nominatim ────────────────────────────────────
+  // ── Reverse geocode ────────────────────────────────────────────────────────
 
   static Future<String?> reverseGeocode(double lat, double lng) async {
+    if (SmartMapsService.isAvailable) {
+      final addr = await SmartMapsService.reverseGeocode(lat, lng);
+      if (addr != null && addr.isNotEmpty) return addr;
+    }
     if (_hasTomTom) {
       try {
-        final resp = await _dio.get(
+        final resp = await _ttDio.get(
           'https://api.tomtom.com/search/2/reverseGeocode/$lat,$lng.json',
           queryParameters: {'key': _ttKey, 'language': 'en-GB'},
         );
         final addresses = (resp.data['addresses'] as List?) ?? [];
         if (addresses.isNotEmpty) {
-          return addresses.first['address']?['freeformAddress'] as String?;
+          final addr = addresses.first['address']?['freeformAddress'] as String?;
+          if (addr != null && addr.isNotEmpty) return addr;
         }
       } catch (_) {}
     }
     try {
       final resp = await _nominatim.get('/reverse', queryParameters: {
-        'lat':            lat,
-        'lon':            lng,
-        'format':         'json',
-        'accept-language':'en',
+        'lat': lat, 'lon': lng, 'format': 'json', 'accept-language': 'en',
       });
       return resp.data['display_name'] as String?;
     } catch (_) {

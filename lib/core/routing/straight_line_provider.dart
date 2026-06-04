@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'routing_provider.dart';
 
 /// Last-resort fallback: straight line between origin and destination.
