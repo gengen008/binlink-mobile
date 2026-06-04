@@ -314,4 +314,19 @@ class HouseholdProvider extends ChangeNotifier {
     _loading = v;
     notifyListeners();
   }
+
+  // ── Test-only setters ───────────────────────────────────────────────────────
+  @visibleForTesting
+  set bookingsForTest(List<Map<String, dynamic>> bookings) {
+    _bookings = bookings;
+    _activeBooking = _bookings.where((b) => [
+      'PENDING', 'SEARCHING', 'ASSIGNED', 'ACCEPTED',
+      'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED', 'COLLECTING', 'COLLECTED',
+    ].contains(b['status'])).firstOrNull;
+  }
+
+  @visibleForTesting
+  set subscriptionsForTest(List<Map<String, dynamic>> subs) {
+    _subscriptions = subs;
+  }
 }

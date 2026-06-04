@@ -52,9 +52,12 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
       setState(() => _myPos = LatLng(pos.latitude, pos.longitude));
     }
     if (!mounted) return;
-    await context.read<HouseholdProvider>().loadBookings();
+    final hp = context.read<HouseholdProvider>();
+    await hp.loadBookings();
     if (!mounted) return;
-    await context.read<HouseholdProvider>().loadOnlineCollectors();
+    await hp.loadOnlineCollectors();
+    if (!mounted) return;
+    await hp.loadSubscriptions();
   }
 
   @override
@@ -937,7 +940,7 @@ class _HistoryTab extends StatelessWidget {
     final prov          = context.watch<HouseholdProvider>();
     final allBookings   = prov.allBookings;
     final completed     = prov.completedBookings;
-    final subscriptions = prov.subscriptionBookings;
+    final subscriptions = prov.subscriptions;
 
     // Stats
     final totalSpent = completed.fold<double>(
@@ -1002,9 +1005,9 @@ class _HistoryTab extends StatelessWidget {
                     Text(S.of(context).activeSubscriptionsTitle, style: AppTextStyles.h4),
                     const SizedBox(height: 10),
                     ...subscriptions.map(
-                      (b) => _SubscriptionCard(
-                        booking: b,
-                        onTap: () => _showBookingDetail(context, b),
+                      (s) => _SubscriptionCard(
+                        subscription: s,
+                        onTap: () => _showSubscriptionDetail(context, s),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -1197,35 +1200,50 @@ class _HistoryTab extends StatelessWidget {
       builder: (_) => _BookingDetailSheet(booking: booking),
     );
   }
+
+  void _showSubscriptionDetail(
+      BuildContext context, Map<String, dynamic> sub) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SubscriptionDetailSheet(subscription: sub),
+    );
+  }
 }
 
 // ── Subscription card ─────────────────────────────────────────────────────
 
 class _SubscriptionCard extends StatelessWidget {
-  const _SubscriptionCard({required this.booking, required this.onTap});
-  final Map<String, dynamic> booking;
+  const _SubscriptionCard({required this.subscription, required this.onTap});
+  final Map<String, dynamic> subscription;
   final VoidCallback onTap;
+
+  static const _planLabels = {
+    'WEEKLY': 'Weekly',
+    'BIWEEKLY': 'Every 2 Weeks',
+    'MONTHLY': 'Monthly',
+  };
+  static const _planIcons = {
+    'WEEKLY': PhosphorIconsRegular.repeat,
+    'BIWEEKLY': PhosphorIconsRegular.arrowsCounterClockwise,
+    'MONTHLY': PhosphorIconsRegular.calendarCheck,
+  };
 
   @override
   Widget build(BuildContext context) {
-    final freq      = booking['frequency'] as String? ?? 'WEEKLY';
-    final status    = booking['status'] as String? ?? 'PENDING';
-    final address   = booking['pickupAddress'] as String? ?? '';
-    final binSize   = booking['binSize'] as String? ?? '';
-    final category  = (booking['wasteCategory'] as String?)?.replaceAll('_', ' ') ?? '';
+    final plan    = subscription['plan'] as String? ?? 'WEEKLY';
+    final status  = subscription['status'] as String? ?? 'ACTIVE';
+    final address = subscription['pickupAddress'] as String? ?? '';
+    final binSize = subscription['binSize'] as String? ?? '';
+    final waste   = (subscription['wasteType'] as String?)?.replaceAll('_', ' ') ?? '';
+    final price   = (subscription['price'] as num?)?.toDouble() ?? 0;
+    final nextDate = subscription['nextPickupDate'] as String?;
 
-    const freqLabels = {
-      'WEEKLY': 'Weekly',
-      'BIWEEKLY': 'Every 2 Weeks',
-      'MONTHLY': 'Monthly',
-    };
-    const freqIcons = {
-      'WEEKLY': PhosphorIconsRegular.repeat,
-      'BIWEEKLY': PhosphorIconsRegular.arrowsCounterClockwise,
-      'MONTHLY': PhosphorIconsRegular.calendarCheck,
-    };
-
-    final isActive = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
+    final isActive   = status == 'ACTIVE';
+    final statusColor = isActive
+        ? AppColors.success
+        : status == 'PAUSED' ? AppColors.warning : AppColors.muted;
 
     return GestureDetector(
       onTap: onTap,
@@ -1249,7 +1267,7 @@ class _SubscriptionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                freqIcons[freq] ?? PhosphorIconsRegular.repeat,
+                _planIcons[plan] ?? PhosphorIconsRegular.repeat,
                 color: AppColors.steelBlue, size: 20,
               ),
             ),
@@ -1261,22 +1279,20 @@ class _SubscriptionCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        freqLabels[freq] ?? freq,
+                        _planLabels[plan] ?? plan,
                         style: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: (isActive ? AppColors.success : AppColors.muted).withAlpha(25),
+                          color: statusColor.withAlpha(25),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          isActive ? 'ACTIVE' : status,
+                          status,
                           style: AppTextStyles.caption.copyWith(
-                            color: isActive ? AppColors.success : AppColors.muted,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
+                            color: statusColor, fontSize: 9, fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -1284,20 +1300,228 @@ class _SubscriptionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '$binSize bin${category.isNotEmpty ? ' · $category' : ''}',
+                    '$binSize bin${waste.isNotEmpty ? ' · $waste' : ''} · ${Fmt.currency(price)}',
                     style: AppTextStyles.caption.copyWith(fontSize: 10),
                   ),
-                  Text(
-                    address,
-                    style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.muted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (nextDate != null)
+                    Text(
+                      'Next: ${Fmt.shortDate(nextDate)}',
+                      style: AppTextStyles.caption.copyWith(
+                          fontSize: 10, color: AppColors.steelBlue),
+                    )
+                  else
+                    Text(
+                      address,
+                      style: AppTextStyles.caption.copyWith(
+                          fontSize: 10, color: AppColors.muted),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
-            const Icon(PhosphorIconsRegular.caretRight,
-                color: AppColors.muted, size: 16),
+            const Icon(PhosphorIconsRegular.caretRight, color: AppColors.muted, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Subscription detail sheet ──────────────────────────────────────────────
+
+class _SubscriptionDetailSheet extends StatefulWidget {
+  const _SubscriptionDetailSheet({required this.subscription});
+  final Map<String, dynamic> subscription;
+
+  @override
+  State<_SubscriptionDetailSheet> createState() => _SubscriptionDetailSheetState();
+}
+
+class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
+  bool _loading = false;
+
+  Future<void> _cancel() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Cancel Subscription', style: AppTextStyles.h3),
+        content: Text(
+          'This will stop future pickups. Are you sure?',
+          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Keep', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Cancel Plan',
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _loading = true);
+    final prov = context.read<HouseholdProvider>();
+    final done = await prov.cancelSubscription(widget.subscription['id'] as String);
+    if (mounted) {
+      setState(() => _loading = false);
+      if (done) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(done ? 'Subscription cancelled' : 'Failed — please try again'),
+        backgroundColor: done ? AppColors.success : AppColors.danger,
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
+  Future<void> _togglePause(String currentStatus) async {
+    setState(() => _loading = true);
+    final prov = context.read<HouseholdProvider>();
+    final newStatus = currentStatus == 'PAUSED' ? 'ACTIVE' : 'PAUSED';
+    final done = await prov.updateSubscription(
+        widget.subscription['id'] as String, {'status': newStatus});
+    if (mounted) setState(() => _loading = false);
+    if (mounted && done) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sub      = widget.subscription;
+    final plan     = sub['plan'] as String? ?? 'WEEKLY';
+    final status   = sub['status'] as String? ?? 'ACTIVE';
+    final address  = sub['pickupAddress'] as String? ?? '';
+    final binSize  = sub['binSize'] as String? ?? '';
+    final waste    = (sub['wasteType'] as String?)?.replaceAll('_', ' ') ?? '';
+    final price    = (sub['price'] as num?)?.toDouble() ?? 0;
+    final nextDate = sub['nextPickupDate'] as String?;
+    final isActive = status == 'ACTIVE';
+    final isPaused = status == 'PAUSED';
+
+    const planLabels = {
+      'WEEKLY': 'Weekly', 'BIWEEKLY': 'Every 2 Weeks', 'MONTHLY': 'Monthly',
+    };
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.55,
+      maxChildSize: 0.85,
+      minChildSize: 0.4,
+      builder: (_, ctrl) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.deepOcean,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: ListView(
+          controller: ctrl,
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+          children: [
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                const Text('Subscription', style: AppTextStyles.h3),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: (isActive ? AppColors.success : AppColors.warning).withAlpha(25),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: (isActive ? AppColors.success : AppColors.warning).withAlpha(80)),
+                  ),
+                  child: Text(status,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isActive ? AppColors.success : AppColors.warning,
+                      fontWeight: FontWeight.w700,
+                    )),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _DetailRow(icon: PhosphorIconsRegular.repeat, label: 'Plan',
+                value: planLabels[plan] ?? plan),
+            _DetailRow(icon: PhosphorIconsRegular.trashSimple, label: 'Bin Size',
+                value: Fmt.binSizeLabel(binSize)),
+            if (waste.isNotEmpty)
+              _DetailRow(icon: PhosphorIconsRegular.recycle, label: 'Waste Type', value: waste),
+            _DetailRow(icon: PhosphorIconsRegular.mapPin, label: 'Pickup Address', value: address),
+            if (nextDate != null)
+              _DetailRow(icon: PhosphorIconsRegular.calendarCheck, label: 'Next Pickup',
+                  value: Fmt.shortDate(nextDate)),
+            const SizedBox(height: 8),
+            const Divider(color: AppColors.border),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Price per pickup', style: AppTextStyles.h4),
+                Text(Fmt.currency(price),
+                    style: AppTextStyles.monoLg.copyWith(color: AppColors.iceBlue)),
+              ],
+            ),
+            const SizedBox(height: 28),
+            if (_loading)
+              const Center(child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.steelBlue))
+            else ...[
+              if (isActive || isPaused)
+                GestureDetector(
+                  onTap: () => _togglePause(status),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(isPaused ? PhosphorIconsRegular.play : PhosphorIconsRegular.pause,
+                            color: AppColors.skyBlue, size: 18),
+                        const SizedBox(width: 8),
+                        Text(isPaused ? 'Resume Subscription' : 'Pause Subscription',
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.skyBlue)),
+                      ],
+                    ),
+                  ),
+                ),
+              if (status != 'CANCELLED') ...[
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: _cancel,
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withAlpha(12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.danger.withAlpha(60)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(PhosphorIconsRegular.xCircle,
+                            color: AppColors.danger, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Cancel Subscription',
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ],
         ),
       ),
