@@ -28,13 +28,6 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get completedBookings =>
       _bookings.where((b) => b['status'] == 'COMPLETED').toList();
 
-  // Recurring bookings (frequency set and not ONE_TIME)
-  List<Map<String, dynamic>> get subscriptionBookings =>
-      _bookings.where((b) {
-        final freq = b['frequency'] as String?;
-        return freq != null && freq.isNotEmpty && freq != 'ONE_TIME';
-      }).toList();
-
   // All bookings (for history + subscriptions display)
   List<Map<String, dynamic>> get allBookings => List.unmodifiable(_bookings);
 
@@ -286,18 +279,6 @@ class HouseholdProvider extends ChangeNotifier {
       }
       notifyListeners();
       return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> initiatePayment(String bookingId, String momoPhone) async {
-    try {
-      final res = await ApiClient.post('/api/payments/initiate', {
-        'bookingId': bookingId,
-        'momoPhone': momoPhone,
-      });
-      return res.data['success'] as bool? ?? false;
     } catch (_) {
       return false;
     }

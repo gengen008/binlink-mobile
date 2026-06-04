@@ -30,13 +30,18 @@ class AppColors {
   // ── Status chip colors ─────────────────────────────────────────
   static Color statusColor(String status) {
     switch (status.toUpperCase()) {
-      case 'PENDING':   return warning;
-      case 'ACCEPTED':  return steelBlue;
-      case 'EN_ROUTE':  return warning;
-      case 'ARRIVED':   return success;
-      case 'COMPLETED': return success;
-      case 'CANCELLED': return danger;
-      default:          return muted;
+      case 'PENDING':    return warning;
+      case 'SEARCHING':  return warning;
+      case 'ASSIGNED':   return steelBlue;
+      case 'ACCEPTED':   return steelBlue;
+      case 'EN_ROUTE':   return warning;
+      case 'ON_THE_WAY': return warning;
+      case 'ARRIVED':    return success;
+      case 'COLLECTING': return success;
+      case 'COLLECTED':  return success;
+      case 'COMPLETED':  return success;
+      case 'CANCELLED':  return danger;
+      default:           return muted;
     }
   }
 

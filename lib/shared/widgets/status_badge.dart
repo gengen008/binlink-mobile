@@ -14,7 +14,9 @@ class StatusBadge extends StatelessWidget {
     final color = AppColors.statusColor(status);
     final label = Fmt.statusLabel(status);
     final isPulsing = animate &&
-        (status == 'EN_ROUTE' || status == 'PENDING');
+        (status == 'EN_ROUTE' || status == 'ON_THE_WAY' ||
+         status == 'PENDING'  || status == 'SEARCHING'  ||
+         status == 'ASSIGNED');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

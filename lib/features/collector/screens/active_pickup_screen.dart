@@ -212,7 +212,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     final prov      = context.watch<CollectorProvider>();
     final bookingId = widget.booking['id'] as String;
     final address   = widget.booking['pickupAddress'] as String? ?? '';
-    final amount    = (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount    = Fmt.toDouble(widget.booking['totalAmount']);
     final hhPhone   = widget.booking['household']?['phone'] as String?;
     final hhName    = widget.booking['household']?['fullName'] as String? ?? 'Household';
     final isActive  = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(_currentStatus);

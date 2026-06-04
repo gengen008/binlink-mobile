@@ -35,14 +35,28 @@ class Fmt {
 
   static String statusLabel(String status) {
     switch (status.toUpperCase()) {
-      case 'PENDING':   return 'Pending';
-      case 'ACCEPTED':  return 'Accepted';
-      case 'EN_ROUTE':  return 'En Route';
-      case 'ARRIVED':   return 'Arrived';
-      case 'COMPLETED': return 'Completed';
-      case 'CANCELLED': return 'Cancelled';
-      default:          return status;
+      case 'PENDING':    return 'Pending';
+      case 'SEARCHING':  return 'Searching';
+      case 'ASSIGNED':   return 'Assigned';
+      case 'ACCEPTED':   return 'Accepted';
+      case 'EN_ROUTE':   return 'En Route';
+      case 'ON_THE_WAY': return 'On the Way';
+      case 'ARRIVED':    return 'Arrived';
+      case 'COLLECTING': return 'Collecting';
+      case 'COLLECTED':  return 'Collected';
+      case 'COMPLETED':  return 'Completed';
+      case 'CANCELLED':  return 'Cancelled';
+      default:           return status;
     }
+  }
+
+  /// Safely converts a dynamic value (num or String) to double.
+  /// Handles Prisma Decimal serialised as "30.00" strings.
+  static double toDouble(dynamic value, [double fallback = 0]) {
+    if (value == null) return fallback;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? fallback;
+    return fallback;
   }
 
   static String binSizeLabel(String size) {

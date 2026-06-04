@@ -1,11 +1,23 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/config/app_flavor.dart';
+import 'core/services/fcm_service.dart';
 import 'app.dart';
 
-void main() async {
+void main() {
+  // runZonedGuarded ensures async errors outside the Flutter tree are also
+  // captured (e.g. futures that throw after runApp returns).
+  runZonedGuarded(_main, (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  });
+}
+
+Future<void> _main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlavorConfig.flavor = AppFlavor.household;
 
@@ -17,8 +29,21 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
+
+    // Route Flutter framework errors to Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Ensure crash reporting is enabled in production
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+    // Request notification permission (Android 13+, iOS) and start FCM token refresh listener
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true, badge: true, sound: true,
+    );
+    FcmService.listenForRefresh();
   } catch (_) {
-    // Firebase not yet configured — auth will handle gracefully
+    // Firebase not configured — fall back to default error presentation
+    FlutterError.onError = FlutterError.presentError;
   }
 
   await SystemChrome.setPreferredOrientations([
@@ -32,11 +57,6 @@ void main() async {
     systemNavigationBarColor: Color(0xFF021024),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
-
-  // Catch any Flutter framework errors and show a clean screen
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-  };
 
   runApp(const BinLinkApp());
 }

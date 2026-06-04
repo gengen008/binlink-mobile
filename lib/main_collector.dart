@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/config/app_flavor.dart';
+import 'core/services/fcm_service.dart';
 import 'app.dart';
 
 void main() {
@@ -13,22 +16,22 @@ void main() {
 Future<void> _appMain() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-  };
-
   FlavorConfig.flavor = AppFlavor.collector;
 
   try {
     await dotenv.load(fileName: '.env');
-  } catch (_) {
-    // .env failed to load — app will use fallback URLs from Env class
-  }
+  } catch (_) {}
 
   try {
     await Firebase.initializeApp();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true, badge: true, sound: true,
+    );
+    FcmService.listenForRefresh();
   } catch (_) {
-    // Firebase not yet configured — auth will handle gracefully
+    FlutterError.onError = FlutterError.presentError;
   }
 
   await SystemChrome.setPreferredOrientations([
@@ -47,6 +50,5 @@ Future<void> _appMain() async {
 }
 
 void _handleError(Object error, StackTrace stack) {
-  // Silently swallow uncaught async errors — app must not crash
-  debugPrint('Unhandled error: $error');
+  FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
 }

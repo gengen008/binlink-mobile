@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/network/socket_service.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../../shared/models/user_model.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
@@ -32,6 +33,7 @@ class AuthProvider extends ChangeNotifier {
         _user = UserModel.fromJson(userData);
         _status = AuthStatus.authenticated;
         await SocketService.connect();
+        FcmService.registerToken();
       } else {
         _status = AuthStatus.unauthenticated;
       }
@@ -214,6 +216,7 @@ class AuthProvider extends ChangeNotifier {
     _status = AuthStatus.authenticated;
     _error = null;
     await SocketService.connect();
+    FcmService.registerToken();
     notifyListeners();
   }
 

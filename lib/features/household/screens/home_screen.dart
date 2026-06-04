@@ -933,7 +933,10 @@ class _SplitCta extends StatelessWidget {
 // ── HISTORY TAB ───────────────────────────────────────────────────────────────
 
 class _HistoryTab extends StatelessWidget {
-  static const _cancellable = {'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'};
+  static const _cancellable = {
+    'PENDING', 'SEARCHING', 'ASSIGNED',
+    'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -944,7 +947,7 @@ class _HistoryTab extends StatelessWidget {
 
     // Stats
     final totalSpent = completed.fold<double>(
-        0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0));
+        0, (s, b) => s + Fmt.toDouble(b['totalAmount']));
     const kgPerPickup = 15.0;
     final kgRecycled  = completed.length * kgPerPickup;
 
@@ -1237,7 +1240,7 @@ class _SubscriptionCard extends StatelessWidget {
     final address = subscription['pickupAddress'] as String? ?? '';
     final binSize = subscription['binSize'] as String? ?? '';
     final waste   = (subscription['wasteType'] as String?)?.replaceAll('_', ' ') ?? '';
-    final price   = (subscription['price'] as num?)?.toDouble() ?? 0;
+    final price   = Fmt.toDouble(subscription['price']);
     final nextDate = subscription['nextPickupDate'] as String?;
 
     final isActive   = status == 'ACTIVE';
@@ -1397,7 +1400,7 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
     final address  = sub['pickupAddress'] as String? ?? '';
     final binSize  = sub['binSize'] as String? ?? '';
     final waste    = (sub['wasteType'] as String?)?.replaceAll('_', ' ') ?? '';
-    final price    = (sub['price'] as num?)?.toDouble() ?? 0;
+    final price    = Fmt.toDouble(sub['price']);
     final nextDate = sub['nextPickupDate'] as String?;
     final isActive = status == 'ACTIVE';
     final isPaused = status == 'PAUSED';
@@ -1699,7 +1702,7 @@ class _BookingDetailSheet extends StatelessWidget {
     final binSize   = booking['binSize'] as String? ?? '';
     final extra     = (booking['extraBags'] as num?)?.toInt() ?? 0;
     final address   = booking['pickupAddress'] as String? ?? '';
-    final amount    = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount    = Fmt.toDouble(booking['totalAmount']);
     final method    = booking['paymentMethod'] as String? ?? '';
     final cat       = booking['wasteCategory'] as String?;
     final collector = booking['collector'] as Map<String, dynamic>?;

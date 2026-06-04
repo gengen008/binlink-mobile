@@ -84,7 +84,7 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   Widget _buildPaymentForm() {
     final amount =
-        (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
+        Fmt.toDouble(widget.booking['totalAmount']);
 
     return SizedBox.expand(
       key: const ValueKey('form'),
@@ -199,7 +199,7 @@ class _PaymentScreenState extends State<PaymentScreen>
   Widget _buildSuccess() {
     final bookingId = widget.booking['id'] as String? ?? '';
     final amount    =
-        (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
+        Fmt.toDouble(widget.booking['totalAmount']);
     final ref       = bookingId.length > 8
         ? bookingId.substring(0, 8).toUpperCase()
         : bookingId.toUpperCase();

@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
+import '../utils/formatters.dart';
 
 class ReceiptService {
   ReceiptService._();
@@ -13,7 +14,7 @@ class ReceiptService {
     final bookingId = booking['id'] as String? ?? 'N/A';
     final status    = booking['status'] as String? ?? '';
     final binSize   = booking['binSize'] as String? ?? '';
-    final amount    = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount    = Fmt.toDouble(booking['totalAmount']);
     final extra     = (booking['extraBags'] as num?)?.toInt() ?? 0;
     final address   = booking['pickupAddress'] as String? ?? '';
     final method    = booking['paymentMethod'] as String? ?? '';

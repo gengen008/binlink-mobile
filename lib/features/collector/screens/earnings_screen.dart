@@ -389,7 +389,7 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type   = tx['type'] as String? ?? 'EARNING';
-    final amount = (tx['amount'] as num?)?.toDouble() ?? 0;
+    final amount = Fmt.toDouble(tx['amount']);
     final date   = tx['date'] as String?;
     final isPayout = type == 'PAYOUT';
 
@@ -470,7 +470,7 @@ class _PickupEarningTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amount  = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount  = Fmt.toDouble(booking['totalAmount']);
     final address = booking['pickupAddress'] as String? ?? '';
     final date    = booking['createdAt'] as String?;
     final earned  = amount * 0.9; // platform takes 10%

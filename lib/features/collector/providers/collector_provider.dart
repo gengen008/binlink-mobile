@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/socket_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/utils/formatters.dart';
 
 class CollectorProvider extends ChangeNotifier {
   final List<Map<String, dynamic>> _pendingRequests = [];
@@ -36,7 +37,7 @@ class CollectorProvider extends ChangeNotifier {
         d.day == DateTime.now().day &&
         d.month == DateTime.now().month &&
         d.year == DateTime.now().year;
-  }).fold(0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * _collectorRate);
+  }).fold(0, (s, b) => s + Fmt.toDouble(b['totalAmount']) * _collectorRate);
 
   int get todayPickups => _completedPickups.where((b) {
     final d = DateTime.tryParse(b['completedAt'] as String? ?? '');
@@ -211,7 +212,8 @@ class CollectorProvider extends ChangeNotifier {
       _allJobs.where((b) => ['ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY',
                               'ARRIVED', 'COLLECTING', 'COLLECTED'].contains(b['status'])).toList();
   List<Map<String, dynamic>> get pendingJobs =>
-      _allJobs.where((b) => b['status'] == 'PENDING').toList();
+      _allJobs.where((b) => ['PENDING', 'SEARCHING', 'ASSIGNED']
+          .contains(b['status'])).toList();
   List<Map<String, dynamic>> get completedJobs =>
       _allJobs.where((b) => b['status'] == 'COMPLETED').toList();
   bool get loadingJobs => _loadingJobs;
@@ -247,9 +249,9 @@ class CollectorProvider extends ChangeNotifier {
   Map<String, dynamic>? _wallet;
   bool _loadingWallet = false;
 
-  double get walletAvailable    => (_wallet?['available']     as num?)?.toDouble() ?? 0;
-  double get walletPending      => (_wallet?['pending']       as num?)?.toDouble() ?? 0;
-  double get walletWithdrawn    => (_wallet?['totalWithdrawn'] as num?)?.toDouble() ?? 0;
+  double get walletAvailable  => Fmt.toDouble(_wallet?['available']);
+  double get walletPending    => Fmt.toDouble(_wallet?['pending']);
+  double get walletWithdrawn  => Fmt.toDouble(_wallet?['totalWithdrawn']);
   List<Map<String, dynamic>> get walletTransactions =>
       List<Map<String, dynamic>>.from(_wallet?['transactions'] as List? ?? []);
   bool get loadingWallet => _loadingWallet;

@@ -613,7 +613,7 @@ class _RequestCardState extends State<_RequestCard> {
     final prov    = context.read<CollectorProvider>();
     final binSize = widget.booking['binSize'] as String? ?? '';
     final address = widget.booking['pickupAddress'] as String? ?? '';
-    final amount  = (widget.booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount  = Fmt.toDouble(widget.booking['totalAmount']);
     final cat     = widget.booking['wasteCategory'] as String?;
     final progress = _remaining / _kCountdown;
 
@@ -858,7 +858,7 @@ class _ProfileTabState extends State<_ProfileTab> {
 
     // Collector stats
     final earned = prov.completedPickups.fold<double>(
-        0, (s, b) => s + ((b['totalAmount'] as num?)?.toDouble() ?? 0) * 0.9);
+        0, (s, b) => s + Fmt.toDouble(b['totalAmount']) * 0.9);
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),

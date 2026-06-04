@@ -22,7 +22,7 @@ class BookingCard extends StatelessWidget {
     final status = booking['status'] as String? ?? 'PENDING';
     final binSize = booking['binSize'] as String? ?? '';
     final address = booking['pickupAddress'] as String? ?? '';
-    final amount  = (booking['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount  = Fmt.toDouble(booking['totalAmount']);
     final createdAt = DateTime.tryParse(booking['createdAt'] as String? ?? '');
 
     return GestureDetector(

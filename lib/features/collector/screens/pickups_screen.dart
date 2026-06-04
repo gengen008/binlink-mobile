@@ -208,7 +208,7 @@ class _JobCard extends StatelessWidget {
     final status   = job['status'] as String? ?? '';
     final binSize  = job['binSize'] as String? ?? '';
     final address  = job['pickupAddress'] as String? ?? '';
-    final amount   = (job['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount   = Fmt.toDouble(job['totalAmount']);
     final category = job['wasteCategory'] as String?;
     final date     = job['createdAt'] as String?;
     final isActive = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
@@ -325,7 +325,7 @@ class _JobCard extends StatelessWidget {
     final status  = job['status'] as String? ?? '';
     final binSize = job['binSize'] as String? ?? '';
     final address = job['pickupAddress'] as String? ?? '';
-    final amount  = (job['totalAmount'] as num?)?.toDouble() ?? 0;
+    final amount  = Fmt.toDouble(job['totalAmount']);
     final hhName  = (job['household'] as Map?)?['fullName'] as String? ??
         'Household';
     final date    = job['createdAt'] as String?;
