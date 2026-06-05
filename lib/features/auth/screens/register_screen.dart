@@ -17,6 +17,8 @@
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -24,6 +26,7 @@ import '../components/auth_header.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/rydr_assets.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -128,17 +131,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'Create Account',
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.midnightNavy,
-                            fontSize: 22,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF1F2421),
+                            fontSize: 18,
                           ),
                         ),
                         const SizedBox(height: 7),
                         Text(
                           FlavorConfig.registerSubtitle,
-                          style: AppTextStyles.body.copyWith(
-                            color: const Color(0xFF6B7280),
-                            fontSize: 13,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.w300,
+                            color: const Color(0xFF1F2421),
+                            fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 30),
@@ -235,9 +240,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: AppTextStyles.body.copyWith(
+                        style: GoogleFonts.montserrat(
                           fontSize: 13,
-                          color: const Color(0xFF6B7280),
+                          color: Colors.black,
                           fontWeight: FontWeight.w300,
                         ),
                       ),
@@ -245,9 +250,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onTap: () => Navigator.pop(context),
                         child: Text(
                           'Sign In',
-                          style: AppTextStyles.body.copyWith(
+                          style: GoogleFonts.montserrat(
                             fontSize: 13,
-                            color: AppColors.midnightNavy,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -265,7 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-// ── Google register button ────────────────────────────────────────────────────
+// ── Google register button — exact Rydr layout ───────────────────────────────
 
 class _GoogleRegisterButton extends StatelessWidget {
   const _GoogleRegisterButton(
@@ -275,78 +280,35 @@ class _GoogleRegisterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final sw = MediaQuery.sizeOf(context).width;
+    return InkWell(
       onTap: loading ? null : onPressed,
       child: Container(
         height: 50,
-        width: double.infinity,
+        width: sw - 60,
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F6F5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFDCE1DE)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: const Color(0xFF90D8FF)),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: CustomPaint(painter: _GLogoPainter()),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Sign up with Google',
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.midnightNavy,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
+        child: Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Continue with Google',
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF212F20),
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 7),
+              SvgPicture.asset(RydrAssets.google),
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-class _GLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r  = size.width / 2;
-    const colours = [
-      Color(0xFF4285F4),
-      Color(0xFF34A853),
-      Color(0xFFFBBC05),
-      Color(0xFFEA4335),
-    ];
-    final p = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.18;
-    const s = -0.2;
-    final sw = [1.65, 1.57, 1.57, 1.57];
-    double st = s;
-    for (int i = 0; i < 4; i++) {
-      p.color = colours[i];
-      canvas.drawArc(
-          Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.72),
-          st, sw[i], false, p);
-      st += sw[i];
-    }
-    canvas.drawRect(
-        Rect.fromLTWH(cx, cy - size.height * 0.18, r, size.height * 0.36),
-        Paint()
-          ..color = const Color(0xFFF5F6F5)
-          ..style = PaintingStyle.fill);
-    canvas.drawRect(
-        Rect.fromLTWH(
-            cx, cy - size.height * 0.18, r * 0.85, size.height * 0.36),
-        Paint()
-          ..color = colours[0]
-          ..style = PaintingStyle.fill);
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
 }

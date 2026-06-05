@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Animated 5-step horizontal progress bar for the booking wizard.
 class StepProgressBar extends StatelessWidget {
@@ -35,25 +34,15 @@ class StepProgressBar extends StatelessWidget {
                       height: isActive ? 32 : 26,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: isDone || isActive
-                            ? AppColors.primaryGradient
-                            : null,
-                        color: isDone || isActive ? null : AppColors.surface,
+                        color: isDone || isActive
+                            ? const Color(0xFF1F2421)
+                            : const Color(0xFFDCE1DE),
                         border: Border.all(
                           color: isDone || isActive
-                              ? AppColors.steelBlue
-                              : AppColors.border,
+                              ? const Color(0xFF1F2421)
+                              : const Color(0xFFDCE1DE),
                           width: isActive ? 2 : 1,
                         ),
-                        boxShadow: isActive
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.steelBlue.withAlpha(80),
-                                  blurRadius: 12,
-                                  spreadRadius: 0,
-                                ),
-                              ]
-                            : null,
                       ),
                       child: Center(
                         child: isDone
@@ -61,10 +50,10 @@ class StepProgressBar extends StatelessWidget {
                                 color: AppColors.white, size: 14)
                             : Text(
                                 '${i + 1}',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: isActive
-                                      ? AppColors.white
-                                      : AppColors.muted,
+                                style: TextStyle(
+                                  color: isDone || isActive
+                                      ? Colors.white
+                                      : const Color(0xFF1F2421),
                                   fontWeight: FontWeight.w700,
                                   fontSize: isActive ? 12 : 11,
                                 ),
@@ -81,10 +70,9 @@ class StepProgressBar extends StatelessWidget {
                     duration: const Duration(milliseconds: 400),
                     height: 2,
                     decoration: BoxDecoration(
-                      gradient: i < currentStep
-                          ? AppColors.primaryGradient
-                          : null,
-                      color: i < currentStep ? null : AppColors.border,
+                      color: i < currentStep
+                          ? const Color(0xFF1F2421)
+                          : const Color(0xFFDCE1DE),
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),

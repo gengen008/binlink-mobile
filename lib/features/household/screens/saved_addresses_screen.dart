@@ -52,9 +52,8 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
           child: Column(
             children: [
               // Header
@@ -65,7 +64,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
+                          color: Color(0xFF1F2421)),
                     ),
                     const Expanded(
                       child: Text('Saved Addresses', style: AppTextStyles.h3),
@@ -75,11 +74,11 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       child: Container(
                         width: 38, height: 38,
                         decoration: const BoxDecoration(
-                          gradient: AppColors.primaryGradient,
+                          color: Color(0xFF1F2421),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(PhosphorIconsRegular.plus,
-                            color: AppColors.white, size: 20),
+                            color: Colors.white, size: 20),
                       ),
                     ),
                   ],
@@ -150,7 +149,6 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -313,17 +311,20 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        gradient: sel ? AppColors.primaryGradient : null,
-                        color: sel ? null : AppColors.card,
+                        color: sel
+                            ? const Color(0xFF1F2421)
+                            : const Color(0xFFDCE1DE),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: sel ? AppColors.steelBlue : AppColors.border,
+                          color: sel
+                              ? const Color(0xFF1F2421)
+                              : const Color(0xFFDCE1DE),
                         ),
                       ),
                       child: Center(
                         child: Text(l,
                             style: AppTextStyles.caption.copyWith(
-                              color: sel ? AppColors.white : AppColors.textPrimary,
+                              color: sel ? Colors.white : const Color(0xFF1F2421),
                               fontWeight: FontWeight.w700,
                             )),
                       ),

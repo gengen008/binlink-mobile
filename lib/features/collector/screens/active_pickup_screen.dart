@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -219,9 +220,8 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     final isActive  = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(_currentStatus);
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: Column(
+      backgroundColor: Colors.white,
+      body: Column(
           children: [
             // ── Header ──
             SafeArea(
@@ -231,9 +231,10 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft, color: AppColors.white),
+                      icon: const Icon(PhosphorIconsRegular.arrowLeft, color: Color(0xFF1F2421)),
                     ),
-                    const Expanded(child: Text('Active Pickup', style: AppTextStyles.h3)),
+                    Expanded(child: Text('Active Pickup', style: GoogleFonts.montserrat(
+                      fontSize: 18, fontWeight: FontWeight.w400, color: const Color(0xFF1F2421)))),
                     StatusBadge(status: _currentStatus, animate: true),
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -318,7 +319,6 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -537,11 +537,12 @@ class _HouseholdCard extends StatelessWidget {
               Container(
                 width: 44, height: 44,
                 decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: Color(0xFFDCE1DE),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(Fmt.initials(hhName), style: AppTextStyles.bodyMedium),
+                  child: Text(Fmt.initials(hhName), style: GoogleFonts.montserrat(
+                    fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1F2421))),
                 ),
               ),
               const SizedBox(width: 12),

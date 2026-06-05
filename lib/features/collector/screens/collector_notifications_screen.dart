@@ -64,9 +64,7 @@ class _CollectorNotificationsScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Notifications'),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: _loading
+      body: _loading
             ? const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.steelBlue, strokeWidth: 2,
@@ -75,7 +73,6 @@ class _CollectorNotificationsScreenState
             : _notifs.isEmpty
                 ? _EmptyState()
                 : _NotifList(notifs: _notifs, onMarkRead: _markRead),
-      ),
     );
   }
 }

@@ -57,21 +57,20 @@ class _DatePickerRowState extends State<DatePickerRow> {
               duration: const Duration(milliseconds: 200),
               width: 58,
               decoration: BoxDecoration(
-                gradient: selected ? AppColors.primaryGradient : null,
-                color: selected ? null : AppColors.card,
+                color: selected ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: selected
-                      ? AppColors.steelBlue
+                      ? const Color(0xFF1F2421)
                       : isToday
-                          ? AppColors.skyBlue.withAlpha(100)
-                          : AppColors.border,
+                          ? const Color(0xFF5483B3).withAlpha(100)
+                          : const Color(0xFFDCE1DE),
                   width: selected ? 1.5 : 1,
                 ),
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: AppColors.steelBlue.withAlpha(60),
+                          color: const Color(0xFF1F2421).withAlpha(60),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),

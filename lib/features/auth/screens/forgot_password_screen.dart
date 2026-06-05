@@ -14,12 +14,12 @@
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../components/auth_header.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -89,18 +89,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Forgot your\npassword?',
-                        style: AppTextStyles.h2.copyWith(
-                          color: AppColors.midnightNavy,
-                          fontSize: 22,
+                        'Forget Password',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1F2421),
+                          fontSize: 18,
                         ),
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        "No worries. We'll send a reset link to your email.",
-                        style: AppTextStyles.body.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontSize: 13,
+                        "Did you forget your password? You can easily retrieve it by entering your email address.",
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.normal,
+                          color: const Color(0xFF1F2421),
+                          fontSize: 10,
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -132,37 +134,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               const SizedBox(height: 20),
                               // Rydr: Container(h:50, sw, br:8, Primarydark, "Submit")
                               AppButton(
-                                label: 'Send Reset Link',
+                                label: 'Submit',
                                 loading: auth.loading,
                                 onPressed: _sendReset,
-                                icon: const Icon(
-                                    PhosphorIconsRegular.paperPlaneTilt,
-                                    color: AppColors.white,
-                                    size: 18),
                               ),
                             ],
                           ),
                         ),
                       ] else ...[
-                        // Success state (BinLink addition — Rydr has no post-send state)
+                        // Success state
                         const SizedBox(height: 10),
                         Center(
                           child: ZoomIn(
                             duration: const Duration(milliseconds: 600),
                             child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withAlpha(20),
+                              width: 80, height: 80,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFDCE1DE),
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: AppColors.success.withAlpha(80),
-                                    width: 2),
                               ),
-                              child: const Icon(
-                                  PhosphorIconsRegular.envelopeOpen,
-                                  color: AppColors.success,
-                                  size: 36),
+                              child: const Center(
+                                child: Icon(Icons.mail_outline,
+                                    color: Color(0xFF1F2421), size: 36),
+                              ),
                             ),
                           ),
                         ),
@@ -170,9 +164,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         Center(
                           child: FadeInUp(
                             duration: const Duration(milliseconds: 500),
-                            child: Text('Link sent!',
-                                style: AppTextStyles.h2.copyWith(
-                                  color: AppColors.midnightNavy,
+                            child: Text('Link Sent!',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1F2421),
                                 ),
                                 textAlign: TextAlign.center),
                           ),
@@ -184,9 +180,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             delay: const Duration(milliseconds: 80),
                             child: Text(
                               'A password reset link has been sent to\n${_emailCtrl.text.trim()}',
-                              style: AppTextStyles.body.copyWith(
-                                  color: const Color(0xFF6B7280),
-                                  fontSize: 13),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w300,
+                                color: const Color(0xFF1F2421),
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),

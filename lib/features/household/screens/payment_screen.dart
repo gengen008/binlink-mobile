@@ -1,10 +1,12 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/services/receipt_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/rydr_assets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
+import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/app_button.dart';
 import 'tracking_screen.dart';
 
@@ -83,115 +85,169 @@ class _PaymentScreenState extends State<PaymentScreen>
   // ── Payment form ───────────────────────────────────────────────────────────
 
   Widget _buildPaymentForm() {
-    final amount =
-        Fmt.toDouble(widget.booking['totalAmount']);
+    final amount = Fmt.toDouble(widget.booking['totalAmount']);
 
     return SizedBox.expand(
       key: const ValueKey('form'),
-      child: Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-      child: SafeArea(
-        child: Column(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppScaffoldBar(title: S.of(context).payment),
+        body: Column(
           children: [
+            const SizedBox(height: 20),
+
+            // Rydr exact: FadeInUp(1800ms) > Container(340×122, Primarydark, paymentbg)
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 20, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                        color: AppColors.white),
-                  ),
-                  Expanded(
-                      child: Text(S.of(context).payment, style: AppTextStyles.h3)),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-
-                    // Amount display
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(28),
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 1800),
+                    child: Container(
+                      width: 340,
+                      height: 122,
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(10),
+                        color: const Color(0xFF1F2421),
+                        image: const DecorationImage(
+                          fit: BoxFit.cover,
+                          image: AssetImage(RydrAssets.paybg),
+                        ),
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Icon(PhosphorIconsFill.wallet,
-                              color: AppColors.white, size: 40),
-                          const SizedBox(height: 12),
+                          Text(
+                            'Amount Due',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFF3F3C1),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
                           Text(
                             Fmt.currency(amount),
-                            style: AppTextStyles.monoLg.copyWith(
-                                fontSize: 32, color: AppColors.white),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'via ${Fmt.paymentMethodLabel(_paymentMethod)}',
-                            style: AppTextStyles.label
-                                .copyWith(color: AppColors.iceBlue),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withAlpha(15),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppColors.success.withAlpha(60)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(PhosphorIconsFill.money,
-                              color: AppColors.success, size: 28),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(S.of(context).payInCash,
-                                    style: AppTextStyles.h4
-                                        .copyWith(color: AppColors.success)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
-                                  style: AppTextStyles.caption
-                                      .copyWith(color: AppColors.success),
-                                ),
-                              ],
+                            style: GoogleFonts.montserrat(
+                              fontSize: 36.0,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFF3F3C1),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    AppButton(
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Payment method section
+            FadeInUp(
+              duration: const Duration(milliseconds: 2000),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Payment Method',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF1F2421),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Cash payment row (Rydr dark row)
+                  Container(
+                    height: 85,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFF1F2421)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(width: 20),
+                            const Icon(PhosphorIconsRegular.money,
+                                color: Color(0xFFF3F3C1), size: 24),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Pay with Cash',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13.0,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFF3F3C1),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            // ignore: deprecated_member_use
+                            Radio<String>(
+                              activeColor: const Color(0xFFF3F3C1),
+                              value: 'cash',
+                              // ignore: deprecated_member_use
+                              onChanged: (_) {},
+                              // ignore: deprecated_member_use
+                              groupValue: 'cash',
+                            ),
+                            const SizedBox(width: 20),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Cash instruction
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCE1DE),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                          color: const Color(0xFF1F2421),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: AppButton(
                       label: S.of(context).confirmBooking,
                       onPressed: _showSuccess,
-                      icon: const Icon(PhosphorIconsRegular.checkCircle,
-                          color: AppColors.white, size: 20),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-    ));
+    );
   }
 
   // ── Success screen ─────────────────────────────────────────────────────────
@@ -207,207 +263,218 @@ class _PaymentScreenState extends State<PaymentScreen>
 
     return SizedBox.expand(
       key: const ValueKey('success'),
-      child: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.midnightNavy, AppColors.deepOcean],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-          child: Column(
-            children: [
-              const Spacer(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppScaffoldBar(title: S.of(context).pickupConfirmed),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+            child: Column(
+              children: [
+                const Spacer(),
 
-              // Animated check circle
-              ScaleTransition(
-                scale: _scalePop,
-                child: FadeTransition(
-                  opacity: _fadePop,
-                  child: Container(
-                    width: 120, height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.success.withAlpha(20),
-                      border: Border.all(
-                          color: AppColors.success.withAlpha(80), width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.success.withAlpha(60),
-                          blurRadius: 40,
-                          spreadRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      PhosphorIconsFill.checkCircle,
-                      color: AppColors.success,
-                      size: 60,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              FadeTransition(
-                opacity: _fadePop,
-                child: Column(
-                  children: [
-                    Text(S.of(context).pickupConfirmed,
-                        style: AppTextStyles.h1.copyWith(
-                          color: AppColors.white,
-                          fontSize: 28,
-                        ),
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 10),
-                    Text(
-                      isNow
-                          ? 'A collector is being assigned.\nExpected arrival: ~15 minutes.'
-                          : 'Your scheduled pickup has been confirmed.',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.6,
+                // Animated check circle
+                ScaleTransition(
+                  scale: _scalePop,
+                  child: FadeTransition(
+                    opacity: _fadePop,
+                    child: Container(
+                      width: 120, height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF1F2421).withAlpha(20),
+                        border: Border.all(
+                            color: const Color(0xFF1F2421).withAlpha(80), width: 2),
                       ),
-                      textAlign: TextAlign.center,
+                      child: const Center(
+                        child: Icon(
+                          Icons.check_circle_outline,
+                          color: Color(0xFF1F2421),
+                          size: 60,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Booking reference card
-              FadeTransition(
-                opacity: _fadePop,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border),
                   ),
+                ),
+
+                const SizedBox(height: 32),
+
+                FadeTransition(
+                  opacity: _fadePop,
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(S.of(context).bookingRef,
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.muted)),
-                          Text(
-                            '#$ref',
-                            style: AppTextStyles.mono.copyWith(
-                              color: AppColors.iceBlue,
-                              fontWeight: FontWeight.w700,
-                            ),
+                      Text(S.of(context).pickupConfirmed,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1F2421),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(color: AppColors.border, height: 1),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(S.of(context).amountPaid,
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.muted)),
-                          Text(
-                            Fmt.currency(amount),
-                            style: AppTextStyles.monoLg.copyWith(
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(color: AppColors.border, height: 1),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Payment',
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.muted)),
-                          Text(
-                            Fmt.paymentMethodLabel(_paymentMethod),
-                            style: AppTextStyles.bodyMedium,
-                          ),
-                        ],
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 10),
+                      Text(
+                        isNow
+                            ? 'A collector is being assigned.\nExpected arrival: ~15 minutes.'
+                            : 'Your scheduled pickup has been confirmed.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                          color: const Color(0xFF1F2421),
+                          height: 1.6,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
-              ),
 
-              const Spacer(),
+                const SizedBox(height: 32),
 
-              // Action buttons
-              FadeTransition(
-                opacity: _fadePop,
-                child: Column(
-                  children: [
-                    AppButton(
-                      label: S.of(context).trackPickup,
-                      onPressed: _trackPickup,
-                      icon: const Icon(PhosphorIconsRegular.mapPin,
-                          color: AppColors.white, size: 20),
+                // Booking reference card
+                FadeTransition(
+                  opacity: _fadePop,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCE1DE),
+                      borderRadius: BorderRadius.circular(15),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // Download Receipt
-                    GestureDetector(
-                      onTap: () => ReceiptService.shareReceipt(widget.booking),
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppColors.card,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(PhosphorIconsRegular.downloadSimple,
-                                color: AppColors.skyBlue, size: 18),
-                            const SizedBox(width: 8),
-                            Text(S.of(context).downloadReceipt,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.skyBlue,
+                            Text(S.of(context).bookingRef,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w300,
+                                  color: const Color(0xFF1F2421),
                                 )),
+                            Text(
+                              '#$ref',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1F2421),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        Container(height: 1, color: const Color(0xFF1F2421).withAlpha(40)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(S.of(context).amountPaid,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w300,
+                                  color: const Color(0xFF1F2421),
+                                )),
+                            Text(
+                              Fmt.currency(amount),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1F2421),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(height: 1, color: const Color(0xFF1F2421).withAlpha(40)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Payment',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w300,
+                                  color: const Color(0xFF1F2421),
+                                )),
+                            Text(
+                              Fmt.paymentMethodLabel(_paymentMethod),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1F2421),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
+                  ),
+                ),
 
-                    const SizedBox(height: 12),
+                const Spacer(),
 
-                    // Back to Home
-                    GestureDetector(
-                      onTap: _backToHome,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          S.of(context).backToHome,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.muted,
+                // Action buttons
+                FadeTransition(
+                  opacity: _fadePop,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                        child: AppButton(
+                          label: S.of(context).trackPickup,
+                          onPressed: _trackPickup,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Download Receipt
+                      GestureDetector(
+                        onTap: () => ReceiptService.shareReceipt(widget.booking),
+                        child: Container(
+                          height: 50,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF90D8FF)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(S.of(context).downloadReceipt,
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFF212F20),
+                                    fontWeight: FontWeight.w400,
+                                  )),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 12),
+
+                      // Back to Home
+                      GestureDetector(
+                        onTap: _backToHome,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            S.of(context).backToHome,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w300,
+                              color: const Color(0xFF1F2421),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

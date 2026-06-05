@@ -76,6 +76,9 @@ dependencies:
   # Animations — FadeIn, FadeInUp, FadeInDown (Rydr design pattern)
   animate_do: ^3.3.2
 
+  # SVG rendering (Rydr uses SVG icons throughout)
+  flutter_svg: ^2.0.10+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -87,6 +90,7 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/svg/
 
   fonts:
     - family: PlusJakartaSans

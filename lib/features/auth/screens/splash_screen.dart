@@ -1,10 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/rydr_assets.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -45,7 +44,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Rydr: white background, minimal — FadeIn(1500ms) logo, Spacer, FadeInUp(500ms) pulse ring
+    // Rydr exact: white bg, Spacer, FadeIn(1500ms) logo 106×33, Spacer,
+    // FadeInUp(500ms) Ripple.gif 83×83, SizedBox(40)
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -54,33 +54,18 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           const Spacer(),
 
-          // Rydr: FadeIn(1500ms) > Center(Container(w:105, h:33, alignment:center, logo image))
-          // BinLink: same 105×33 dimensions, BL icon as logo
+          // Rydr: FadeIn(1500ms) > Align(center) > Container(w:106,h:33) logo
           FadeIn(
             duration: const Duration(milliseconds: 1500),
-            child: Center(
+            child: Align(
+              alignment: Alignment.center,
               child: Container(
-                width: 105,
+                width: 106,
                 height: 33,
-                alignment: Alignment.center,
-                child: Container(
-                  width: 33,
-                  height: 33,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'BL',
-                      style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: AssetImage(RydrAssets.splash),
                   ),
                 ),
               ),
@@ -89,24 +74,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
           const Spacer(),
 
-          // ── Eco-pulse ring (Rydr: FadeInUp 500ms, 83×83 ripple image) ────────
+          // Rydr: FadeInUp(500ms) > Align(center) > Container(w:83,h:83) Ripple.gif
           FadeInUp(
             duration: const Duration(milliseconds: 500),
-            child: Container(
-              width: 83,
-              height: 83,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.steelBlue.withAlpha(120),
-                  width: 2,
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 83,
+                height: 83,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: AssetImage(RydrAssets.ripple),
+                  ),
                 ),
-                color: AppColors.steelBlue.withAlpha(12),
-              ),
-              child: const Icon(
-                PhosphorIconsRegular.recycle,
-                color: AppColors.steelBlue,
-                size: 36,
               ),
             ),
           ),

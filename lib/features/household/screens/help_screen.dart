@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_bar.dart';
 
 class HelpScreen extends StatefulWidget {
@@ -55,9 +55,7 @@ class _HelpScreenState extends State<HelpScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Help & Support'),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: Column(
+      body: Column(
           children: [
             Expanded(
                 child: SingleChildScrollView(
@@ -66,8 +64,10 @@ class _HelpScreenState extends State<HelpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Frequently Asked Questions',
-                          style: AppTextStyles.h4.copyWith(
-                            color: AppColors.skyBlue,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1F2421),
                           )),
                       const SizedBox(height: 16),
 
@@ -88,13 +88,13 @@ class _HelpScreenState extends State<HelpScreen> {
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
                                 color: isOpen
-                                    ? AppColors.steelBlue.withAlpha(15)
-                                    : AppColors.card,
-                                borderRadius: BorderRadius.circular(16),
+                                    ? const Color(0xFF5483B3).withAlpha(15)
+                                    : const Color(0xFFDCE1DE),
+                                borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
                                   color: isOpen
-                                      ? AppColors.steelBlue.withAlpha(80)
-                                      : AppColors.border,
+                                      ? const Color(0xFF5483B3).withAlpha(80)
+                                      : const Color(0xFFDCE1DE),
                                 ),
                               ),
                               child: Padding(
@@ -107,7 +107,11 @@ class _HelpScreenState extends State<HelpScreen> {
                                         Expanded(
                                           child: Text(
                                             _faqs[i].q,
-                                            style: AppTextStyles.bodyMedium,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF1F2421),
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -127,8 +131,10 @@ class _HelpScreenState extends State<HelpScreen> {
                                       const SizedBox(height: 12),
                                       Text(
                                         _faqs[i].a,
-                                        style: AppTextStyles.body.copyWith(
-                                          color: AppColors.textSecondary,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w300,
+                                          color: const Color(0xFF1F2421),
                                           height: 1.6,
                                         ),
                                       ),
@@ -145,36 +151,29 @@ class _HelpScreenState extends State<HelpScreen> {
 
                       // Contact support card
                       Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.card,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        margin: const EdgeInsets.symmetric(horizontal: 0),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15),
+                          ),
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 40, height: 40,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.steelBlue.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    PhosphorIconsFill.headset,
-                                    color: AppColors.steelBlue,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Text('Contact Support',
-                                    style: AppTextStyles.h4),
-                              ],
+                            const SizedBox(height: 10),
+                            Text(
+                              'BinLink Support',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1F2421),
+                              ),
                             ),
-                            const SizedBox(height: 16),
-
+                            const SizedBox(height: 15),
                             _ContactRow(
                               icon: PhosphorIconsRegular.phone,
                               label: 'Call us',
@@ -201,7 +200,6 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
             ],
           ),
-        ),
     );
   }
 }
@@ -230,25 +228,29 @@ class _ContactRow extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.skyBlue, size: 18),
+          Icon(icon, color: const Color(0xFF5483B3), size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.muted,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w300,
+                      color: const Color(0xFF1F2421),
                     )),
                 Text(value,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.skyBlue,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1F2421),
                     )),
               ],
             ),
           ),
-          const Icon(PhosphorIconsRegular.arrowUpRight,
-              color: AppColors.muted, size: 16),
+          const Icon(Icons.arrow_forward_ios_outlined,
+              color: Color(0xFF1F2421), size: 10),
         ],
       ),
     );

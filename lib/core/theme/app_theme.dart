@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_text_styles.dart';
@@ -45,7 +46,8 @@ class AppTheme {
               error:     AppColors.danger,
             ),
 
-      fontFamily: 'PlusJakartaSans',
+      // Rydr uses GoogleFonts.montserrat throughout — set as the app default
+      fontFamily: GoogleFonts.montserrat().fontFamily,
 
       textTheme: const TextTheme(
         displayLarge:   AppTextStyles.h1,

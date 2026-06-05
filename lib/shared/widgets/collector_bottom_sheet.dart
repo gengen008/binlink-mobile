@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
@@ -71,20 +72,18 @@ class _CollectorSheet extends StatelessWidget {
                 // Avatar circle
                 Container(
                   width: 64, height: 64,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCE1DE),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.steelBlue.withAlpha(80),
-                        blurRadius: 16,
-                      ),
-                    ],
                   ),
                   child: Center(
                     child: Text(
                       initials,
-                      style: AppTextStyles.h3.copyWith(fontSize: 22),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2421),
+                      ),
                     ),
                   ),
                 ),
@@ -247,15 +246,8 @@ class _CollectorSheet extends StatelessWidget {
                     child: Container(
                       height: 52,
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.steelBlue.withAlpha(80),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: const Color(0xFF1F2421),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

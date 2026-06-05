@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
@@ -83,9 +84,8 @@ class _CollectorEditProfileScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
           child: Column(
             children: [
               Padding(
@@ -95,10 +95,12 @@ class _CollectorEditProfileScreenState
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
+                          color: Color(0xFF1F2421)),
                     ),
-                    const Expanded(
-                      child: Text('Edit Profile', style: AppTextStyles.h3),
+                    Expanded(
+                      child: Text('Edit Profile', style: GoogleFonts.montserrat(
+                        fontSize: 18, fontWeight: FontWeight.w400,
+                        color: const Color(0xFF1F2421))),
                     ),
                   ],
                 ),
@@ -121,23 +123,17 @@ class _CollectorEditProfileScreenState
                                   : (auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [AppColors.warning, Color(0xFFFBBF24)],
-                                  ),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFDCE1DE),
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.warning.withAlpha(80),
-                                      blurRadius: 24,
-                                    ),
-                                  ],
                                 ),
                                 child: Center(
                                   child: Text(
                                     _initials(name),
-                                    style: AppTextStyles.h2.copyWith(
-                                      color: AppColors.midnightNavy,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF1F2421),
                                     ),
                                   ),
                                 ),
@@ -239,7 +235,6 @@ class _CollectorEditProfileScreenState
             ],
           ),
         ),
-      ),
     );
   }
 

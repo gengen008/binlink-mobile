@@ -1,24 +1,15 @@
-// Rydr notificationCard() — literal transplant.
-//
+// Rydr notificationCard() — exact transplant.
 // Rydr source: notifications.dart notificationCard()
-//   Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:screenWidth, br:15,
-//     Primaryfield, NO border) > Row([
-//       Padding(all:7, Image(rydrlogo)),
-//       Column(center, start, [Text(title,10,w600,Primarydark), YMargin(5), Text(body,7,w300,Primarydark)])
-//     ])
-//
-// BinLink replacements only:
-//   - rydrlogo image → Phosphor icon keyed from notification type (same Padding(all:7) wrapper, no circle)
-//   - Primaryfield → AppColors.fieldFill
-//   - Primarydark → AppColors.textPrimary / AppColors.textBody
-//   - real API data (title, body from notification map)
-//
-// NOTE: Rydr has NO circle icon container, NO border, NO Expanded on Column, NO unread dot.
+//   Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:sw, br:15, Primaryfield) > Row([
+//     Padding(all:7, Image(rydrlogo)),
+//     Column(center, start, [Text(title,10,w600), SizedBox(5), Text(body,7,w300)])
+//   ])
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/rydr_assets.dart';
 import '../../core/utils/formatters.dart';
 
 /// Single notification list card — LITERAL Rydr notificationCard() transplant.
@@ -37,58 +28,53 @@ class AppNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title     = notification['title'] as String? ?? 'Notification';
-    final body      = notification['body']  as String? ?? '';
-    final typeStr   = notification['type']  as String? ?? '';
-    final icon      = _iconForType(typeStr);
+    final title = notification['title'] as String? ?? 'Notification';
+    final body  = notification['body']  as String? ?? '';
 
-    // Rydr: Padding(horizontal:20, vertical:5)
+    // Rydr exact: Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:sw, br:15, Primaryfield)
+    //   > Row([Padding(all:7, Image(rydrlogo)), Column([title, YMargin(5), body])])
     return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         child: Container(
-          // Rydr: padding:h10,v5 — height:65 — w:screenWidth — br:15 — Primaryfield — NO border
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.0),
           height: 65,
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(15.0),
             color: const Color(0xFFDCE1DE),
           ),
           child: Row(
             children: [
-              // Rydr: Padding(all:7, Image(rydrlogo)) → plain icon, no circle container
+              // Rydr: Padding(all:7, Image(rydrlogo))
               Padding(
-                padding: const EdgeInsets.all(7),
-                child: Icon(icon, color: AppColors.steelBlue, size: 16),
+                padding: const EdgeInsets.all(7.0),
+                child: Image.asset(RydrAssets.rydrlogo),
               ),
-              // Rydr: Column(mainAxisAlignment:center, crossAxisAlignment:start, [...])
-              // NOTE: NOT Expanded in Rydr
+              // Rydr: Column(center, start, [title, YMargin(5), body])
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rydr: Text(title, montserrat, 10, w600, Primarydark)
                   Text(
                     title,
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 10,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10.0,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.midnightNavy,
+                      color: const Color(0xFF1F2421),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (body.isNotEmpty) ...[
                     const SizedBox(height: 5),
-                    // Rydr: Text(body, montserrat, 7, w300, Primarydark)
                     Text(
                       body,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 7,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 7.0,
                         fontWeight: FontWeight.w300,
-                        color: AppColors.midnightNavy,
+                        color: const Color(0xFF1F2421),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -101,28 +87,6 @@ class AppNotificationCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _iconForType(String type) {
-    switch (type.toUpperCase()) {
-      case 'BOOKING_UPDATE':
-      case 'BOOKING':
-      case 'PICKUP':
-        return PhosphorIconsFill.trashSimple;
-      case 'JOB_UPDATE':
-      case 'NEW_JOB':
-      case 'COLLECTOR':
-        return PhosphorIconsFill.truck;
-      case 'EARNINGS':
-      case 'PAYOUT':
-      case 'PAYMENT':
-      case 'SUBSCRIPTION':
-        return PhosphorIconsFill.wallet;
-      case 'SYSTEM':
-        return PhosphorIconsFill.bell;
-      default:
-        return PhosphorIconsFill.bellSimple;
-    }
   }
 }
 

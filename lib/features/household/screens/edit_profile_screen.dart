@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -74,9 +74,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Edit Profile'),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: Column(
+      body: Column(
           children: [
             Expanded(
                 child: SingleChildScrollView(
@@ -95,20 +93,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   : _initials(auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.primaryGradient,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFDCE1DE),
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.steelBlue.withAlpha(80),
-                                      blurRadius: 24,
-                                    ),
-                                  ],
                                 ),
                                 child: Center(
                                   child: Text(
                                     initials,
-                                    style: AppTextStyles.h2,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF1F2421),
+                                    ),
                                   ),
                                 ),
                               );
@@ -117,11 +113,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
 
                         const SizedBox(height: 32),
-                        const Text('Full Name', style: AppTextStyles.label),
-                        const SizedBox(height: 8),
                         AppTextField(
                           controller: _nameCtrl,
-                          label: '',
+                          label: 'Full Name',
                           hint: 'Your full name',
                           prefixIcon: const Icon(PhosphorIconsRegular.user,
                               color: AppColors.muted, size: 20),
@@ -129,27 +123,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ? 'Name is required'
                               : null,
                           onChanged: (_) => setState(() {}),
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: const Color(0xFF1F2421),
+                          labelColor: const Color(0xFF1F2421),
                         ),
 
-                        const SizedBox(height: 20),
-                        const Text('Primary Address', style: AppTextStyles.label),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         AppTextField(
                           controller: _addressCtrl,
-                          label: '',
+                          label: 'Primary Address',
                           hint: 'Your home address',
                           maxLines: 2,
                           prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
                               color: AppColors.muted, size: 20),
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: const Color(0xFF1F2421),
+                          labelColor: const Color(0xFF1F2421),
                         ),
 
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 30),
                         AppButton(
                           label: 'Save Changes',
                           loading: _saving,
                           onPressed: _save,
-                          icon: const Icon(PhosphorIconsRegular.checkCircle,
-                              color: AppColors.white, size: 20),
                         ),
                       ],
                     ),
@@ -158,7 +154,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ],
           ),
-        ),
     );
   }
 

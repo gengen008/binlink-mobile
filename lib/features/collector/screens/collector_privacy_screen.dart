@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_radius.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../shared/widgets/app_bar.dart';
 
 class CollectorPrivacyScreen extends StatelessWidget {
   const CollectorPrivacyScreen({super.key});
@@ -10,65 +8,14 @@ class CollectorPrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    const Expanded(
-                      child: Text('Privacy Policy', style: AppTextStyles.h3),
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                  children: [
-                    // Header badge
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withAlpha(15),
-                        borderRadius: AppRadius.xlBR,
-                        border: Border.all(
-                            color: AppColors.warning.withAlpha(60)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(PhosphorIconsFill.shieldCheck,
-                              color: AppColors.warning, size: 24),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'This policy applies to BinLink Collector accounts.',
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.warning,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    ..._sections.map((s) => _SectionTile(section: s)),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      backgroundColor: Colors.white,
+      appBar: const AppScaffoldBar(title: 'Privacy Policy'),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          children: [
+            ..._sections.map((s) => _SectionTile(section: s)),
+          ],
         ),
       ),
     );
@@ -140,22 +87,25 @@ class _SectionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: AppRadius.xlBR,
-          border: Border.all(color: AppColors.border),
+          color: const Color(0xFFDCE1DE),
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(section.heading,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.warning,
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F2421),
                 )),
             const SizedBox(height: 10),
             Text(
               section.body,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                fontWeight: FontWeight.w300,
+                color: const Color(0xFF1F2421),
                 height: 1.6,
               ),
             ),

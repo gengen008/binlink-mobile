@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
@@ -89,9 +90,8 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
           child: Column(
             children: [
               Padding(
@@ -101,10 +101,12 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
+                          color: Color(0xFF1F2421)),
                     ),
-                    const Expanded(
-                      child: Text('Vehicle Details', style: AppTextStyles.h3),
+                    Expanded(
+                      child: Text('Vehicle Details', style: GoogleFonts.montserrat(
+                        fontSize: 18, fontWeight: FontWeight.w400,
+                        color: const Color(0xFF1F2421))),
                     ),
                   ],
                 ),
@@ -135,15 +137,14 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 10),
                                 decoration: BoxDecoration(
-                                  gradient: sel
-                                      ? AppColors.primaryGradient
-                                      : null,
-                                  color: sel ? null : AppColors.card,
+                                  color: sel
+                                      ? const Color(0xFF1F2421)
+                                      : const Color(0xFFDCE1DE),
                                   borderRadius: AppRadius.mdBR,
                                   border: Border.all(
                                     color: sel
-                                        ? AppColors.steelBlue
-                                        : AppColors.border,
+                                        ? const Color(0xFF1F2421)
+                                        : const Color(0xFFDCE1DE),
                                   ),
                                 ),
                                 child: Row(
@@ -151,15 +152,15 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                                   children: [
                                     Icon(t['icon'] as IconData,
                                         color: sel
-                                            ? AppColors.white
-                                            : AppColors.muted,
+                                            ? Colors.white
+                                            : const Color(0xFF1F2421),
                                         size: 16),
                                     const SizedBox(width: 6),
                                     Text(t['label'] as String,
                                         style: AppTextStyles.bodyMedium.copyWith(
                                           color: sel
-                                              ? AppColors.white
-                                              : AppColors.textPrimary,
+                                              ? Colors.white
+                                              : const Color(0xFF1F2421),
                                           fontSize: 13,
                                         )),
                                   ],
@@ -258,7 +259,6 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }

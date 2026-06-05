@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_text_styles.dart';
 
 enum AppButtonVariant { primary, secondary, danger, ghost }
 
@@ -29,41 +29,37 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bg, fg, border) = _colors();
 
-    return SizedBox(
-      width: fullWidth ? double.infinity : null,
-      height: height,
-      child: DecoratedBox(
+    return InkWell(
+      onTap: loading ? null : onPressed,
+      borderRadius: AppRadius.smBR,
+      child: Container(
+        width: fullWidth ? double.infinity : null,
+        height: height,
         decoration: BoxDecoration(
-          gradient: variant == AppButtonVariant.primary
-              ? AppColors.primaryGradient
-              : null,
-          color: variant == AppButtonVariant.primary ? null : bg,
+          color: bg,
           borderRadius: AppRadius.smBR,
           border: border != null ? Border.all(color: border) : null,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: loading ? null : onPressed,
-            borderRadius: AppRadius.smBR,
-            child: Center(
-              child: loading
-                  ? SizedBox(
-                      width: 22, height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: fg,
-                      ),
-                    )
-                  : Row(
-                      mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (icon != null) ...[icon!, const SizedBox(width: 8)],
-                        Text(label, style: AppTextStyles.button.copyWith(color: fg)),
-                      ],
-                    ),
-            ),
-          ),
+        child: Center(
+          child: loading
+              ? SizedBox(
+                  width: 22, height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: fg,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                    Text(label,
+                        style: GoogleFonts.poppins(
+                          color: fg,
+                          fontWeight: FontWeight.w500,
+                        )),
+                  ],
+                ),
         ),
       ),
     );
@@ -72,13 +68,14 @@ class AppButton extends StatelessWidget {
   (Color, Color, Color?) _colors() {
     switch (variant) {
       case AppButtonVariant.primary:
-        return (AppColors.steelBlue, AppColors.white, null);
+        // Rydr exact: Secondarygrey (0xFF1F2421) fill, white text
+        return (const Color(0xFF1F2421), Colors.white, null);
       case AppButtonVariant.secondary:
-        return (AppColors.card, AppColors.skyBlue, AppColors.border);
+        return (const Color(0xFFDCE1DE), const Color(0xFF1F2421), const Color(0xFFDCE1DE));
       case AppButtonVariant.danger:
         return (AppColors.danger.withAlpha(20), AppColors.danger, AppColors.danger.withAlpha(80));
       case AppButtonVariant.ghost:
-        return (Colors.transparent, AppColors.skyBlue, null);
+        return (Colors.transparent, const Color(0xFF1F2421), null);
     }
   }
 }

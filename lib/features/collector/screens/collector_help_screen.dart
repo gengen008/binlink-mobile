@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_radius.dart';
+import '../../../shared/widgets/app_bar.dart';
 
 class CollectorHelpScreen extends StatelessWidget {
   const CollectorHelpScreen({super.key});
@@ -11,88 +10,53 @@ class CollectorHelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      appBar: const AppScaffoldBar(title: 'Help & Support'),
+      body: SafeArea(
           child: Column(
             children: [
-              // App bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    const Expanded(
-                      child: Text('Help & Support', style: AppTextStyles.h3),
-                    ),
-                  ],
-                ),
-              ),
-
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                   children: [
-                    // Hero
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.warning, Color(0xFFFBBF24)],
-                        ),
-                        borderRadius: BorderRadius.circular(AppRadius.sheet),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 52, height: 52,
-                            decoration: BoxDecoration(
-                              color: AppColors.midnightNavy.withAlpha(60),
-                              borderRadius: AppRadius.lgBR,
-                            ),
-                            child: const Icon(PhosphorIconsFill.headset,
-                                color: AppColors.midnightNavy, size: 26),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Collector Support',
-                                  style: AppTextStyles.h3.copyWith(
-                                    color: AppColors.midnightNavy,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'We\'re here to help you earn more.',
-                                  style: AppTextStyles.body.copyWith(
-                                    color: AppColors.midnightNavy.withAlpha(180),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 10),
+                    Text(
+                      'Collector Support',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2421),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "We're here to help you earn more.",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        color: const Color(0xFF5483B3),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-                    const SizedBox(height: 28),
-
-                    const Text('Frequently Asked Questions',
-                        style: AppTextStyles.h4),
+                    Text('Frequently Asked Questions',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2421),
+                        )),
                     const SizedBox(height: 12),
 
                     ..._faqs.map((faq) => _FaqTile(faq: faq)),
 
                     const SizedBox(height: 28),
 
-                    const Text('Contact Support', style: AppTextStyles.h4),
+                    Text('Contact Support',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1F2421),
+                        )),
                     const SizedBox(height: 12),
 
                     _ContactCard(
@@ -131,7 +95,6 @@ class CollectorHelpScreen extends StatelessWidget {
               ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -212,13 +175,13 @@ class _FaqTileState extends State<_FaqTile> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _open
-                ? AppColors.warning.withAlpha(12)
-                : AppColors.card,
-            borderRadius: AppRadius.xlBR,
+                ? const Color(0xFF5483B3).withAlpha(15)
+                : const Color(0xFFDCE1DE),
+            borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: _open
-                  ? AppColors.warning.withAlpha(80)
-                  : AppColors.border,
+                  ? const Color(0xFF5483B3).withAlpha(80)
+                  : const Color(0xFFDCE1DE),
             ),
           ),
           child: Column(
@@ -229,26 +192,32 @@ class _FaqTileState extends State<_FaqTile> {
                   Expanded(
                     child: Text(
                       widget.faq.question,
-                      style: AppTextStyles.bodyMedium,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2421),
+                      ),
                     ),
                   ),
                   Icon(
                     _open
                         ? PhosphorIconsRegular.caretUp
                         : PhosphorIconsRegular.caretDown,
-                    color: AppColors.warning,
+                    color: const Color(0xFF5483B3),
                     size: 18,
                   ),
                 ],
               ),
               if (_open) ...[
                 const SizedBox(height: 12),
-                const Divider(color: AppColors.border, height: 1),
+                Container(height: 1, color: const Color(0xFF1F2421).withAlpha(30)),
                 const SizedBox(height: 12),
                 Text(
                   widget.faq.answer,
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.textSecondary,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w300,
+                    color: const Color(0xFF1F2421),
                     height: 1.6,
                   ),
                 ),
@@ -281,36 +250,35 @@ class _ContactCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: AppRadius.xlBR,
-          border: Border.all(color: AppColors.border),
+          color: const Color(0xFFDCE1DE),
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
           children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.warning.withAlpha(20),
-                borderRadius: AppRadius.mdBR,
-              ),
-              child: Icon(icon, color: AppColors.warning, size: 20),
-            ),
+            Icon(icon, color: const Color(0xFF5483B3), size: 20),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppTextStyles.label),
+                  Text(label,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w300,
+                        color: const Color(0xFF1F2421),
+                      )),
                   const SizedBox(height: 2),
                   Text(value,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textSecondary,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2421),
                       )),
                 ],
               ),
             ),
-            const Icon(PhosphorIconsRegular.arrowRight,
-                color: AppColors.muted, size: 18),
+            const Icon(Icons.arrow_forward_ios_outlined,
+                color: Color(0xFF1F2421), size: 10),
           ],
         ),
       ),

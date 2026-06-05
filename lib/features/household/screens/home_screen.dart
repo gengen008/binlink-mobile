@@ -156,7 +156,7 @@ class _NavItem extends StatelessWidget {
                 height: sel ? 4 : 0,
                 margin: const EdgeInsets.only(bottom: 4),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: const Color(0xFF1F2421),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -466,9 +466,8 @@ class _HomeTabState extends State<_HomeTab> {
               child: Container(
                 width: 48, height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.deepOcean,
+                  color: const Color(0xFF1F2421),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withAlpha(60),
@@ -478,7 +477,7 @@ class _HomeTabState extends State<_HomeTab> {
                 ),
                 child: const Icon(
                   PhosphorIconsRegular.crosshair,
-                  color: AppColors.skyBlue,
+                  color: Colors.white,
                   size: 22,
                 ),
               ),
@@ -561,10 +560,10 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
                       decoration: BoxDecoration(
                         color: sel
                             ? AppColors.danger.withAlpha(15)
-                            : AppColors.deepOcean,
+                            : const Color(0xFFDCE1DE),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: sel ? AppColors.danger : AppColors.border,
+                          color: sel ? AppColors.danger : const Color(0xFFDCE1DE),
                         ),
                       ),
                       child: Row(
@@ -1074,7 +1073,7 @@ class _HistoryTab extends StatelessWidget {
     final kgRecycled  = completed.length * kgPerPickup;
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+      color: Colors.white,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1244,10 +1243,10 @@ class _HistoryTab extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: sel
                             ? AppColors.danger.withAlpha(15)
-                            : AppColors.deepOcean,
+                            : const Color(0xFFDCE1DE),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: sel ? AppColors.danger : AppColors.border,
+                          color: sel ? AppColors.danger : const Color(0xFFDCE1DE),
                         ),
                       ),
                       child: Row(
@@ -1976,15 +1975,8 @@ class _BookingDetailSheet extends StatelessWidget {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    color: const Color(0xFF1F2421),
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.steelBlue.withAlpha(60),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -2217,15 +2209,8 @@ class _RatingSheetState extends State<_RatingSheet> {
               width: double.infinity,
               height: 52,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
+                color: const Color(0xFF1F2421),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: _stars > 0 ? [
-                  BoxShadow(
-                    color: AppColors.steelBlue.withAlpha(60),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ] : null,
               ),
               child: Center(
                 child: _submitting
@@ -2358,7 +2343,7 @@ class _ProfileTabState extends State<_ProfileTab> {
     final user = auth.user;
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+      color: Colors.white,
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -2371,20 +2356,17 @@ class _ProfileTabState extends State<_ProfileTab> {
                     children: [
                       Container(
                         width: 88, height: 88,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFDCE1DE),
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.steelBlue.withAlpha(80),
-                              blurRadius: 28,
-                            ),
-                          ],
                         ),
                         child: Center(
                           child: Text(
                             Fmt.initials(user?.fullName),
-                            style: AppTextStyles.h2.copyWith(fontSize: 28),
+                            style: AppTextStyles.h2.copyWith(
+                              fontSize: 28,
+                              color: const Color(0xFF1F2421),
+                            ),
                           ),
                         ),
                       ),
@@ -2397,14 +2379,14 @@ class _ProfileTabState extends State<_ProfileTab> {
                           child: Container(
                             width: 28, height: 28,
                             decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
+                              color: const Color(0xFF1F2421),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: AppColors.deepOcean, width: 2),
+                                  color: Colors.white, width: 2),
                             ),
                             child: const Icon(
                               PhosphorIconsRegular.pencilSimple,
-                              color: AppColors.white,
+                              color: Colors.white,
                               size: 13,
                             ),
                           ),

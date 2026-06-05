@@ -27,6 +27,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -85,13 +86,17 @@ class AppDrawer extends StatelessWidget {
                               width: 110,
                               height: 110,
                               decoration: const BoxDecoration(
-                                gradient: AppColors.primaryGradient,
+                                color: Color(0xFFDCE1DE),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
                                   initials,
-                                  style: AppTextStyles.h2.copyWith(fontSize: 30),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1F2421),
+                                  ),
                                 ),
                               ),
                             ),

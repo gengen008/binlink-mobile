@@ -77,9 +77,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Payments & Plans'),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: prov.loading
+      body: prov.loading
             ? const Center(
                 child: CircularProgressIndicator(
                     color: AppColors.steelBlue, strokeWidth: 2),
@@ -143,7 +141,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ],
                 ),
               ),
-      ),
     );
   }
 }

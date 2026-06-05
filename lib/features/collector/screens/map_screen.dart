@@ -872,7 +872,7 @@ class _ProfileTabState extends State<_ProfileTab> {
         0, (s, b) => s + Fmt.toDouble(b['totalAmount']) * 0.9);
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+      color: Colors.white,
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -883,27 +883,17 @@ class _ProfileTabState extends State<_ProfileTab> {
                 children: [
                   Container(
                     width: 88, height: 88,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withAlpha(160),
-                        ],
-                      ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFDCE1DE),
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).primaryColor.withAlpha(80),
-                          blurRadius: 28,
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: Text(
                         Fmt.initials(user?.fullName),
-                        style: AppTextStyles.h2.copyWith(fontSize: 28),
+                        style: AppTextStyles.h2.copyWith(
+                          fontSize: 28,
+                          color: const Color(0xFF1F2421),
+                        ),
                       ),
                     ),
                   ),
