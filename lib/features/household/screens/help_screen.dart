@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../shared/widgets/app_bar.dart';
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
@@ -52,29 +53,13 @@ class _HelpScreenState extends State<HelpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.midnightNavy,
+      appBar: const AppScaffoldBar(title: 'Help & Support'),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // App bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    const Expanded(
-                      child: Text('Help & Support', style: AppTextStyles.h3),
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
+        child: Column(
+          children: [
+            Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   child: Column(
@@ -217,7 +202,6 @@ class _HelpScreenState extends State<HelpScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }

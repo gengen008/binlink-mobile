@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -99,118 +100,154 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 60),
 
-                  // Logo mark
-                  Container(
-                    width: 56, height: 56,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Text('BL', style: TextStyle(
-                        fontFamily: 'PlusJakartaSans', fontSize: 22,
-                        fontWeight: FontWeight.w800, color: AppColors.white,
-                      )),
+                  // Logo mark + heading — Rydr FadeInDown(1200ms) pattern
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 56, height: 56,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Center(
+                            child: Text('BL', style: TextStyle(
+                              fontFamily: 'PlusJakartaSans', fontSize: 22,
+                              fontWeight: FontWeight.w800, color: AppColors.white,
+                            )),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        const Text('Welcome back', style: AppTextStyles.h1),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Sign in to your BinLink account',
+                          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 28),
-                  const Text('Welcome back', style: AppTextStyles.h1),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sign in to your BinLink account',
-                    style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                  ),
+
                   const SizedBox(height: 40),
 
-                  // Email
-                  AppTextField(
-                    controller: _emailCtrl,
-                    label: 'Email',
-                    hint: 'you@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
-                    validator: Validators.email,
-                    textInputAction: TextInputAction.next,
+                  // Email field
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 150),
+                    child: AppTextField(
+                      controller: _emailCtrl,
+                      label: 'Email',
+                      hint: 'you@example.com',
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                      prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
+                      validator: Validators.email,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
+
                   const SizedBox(height: 16),
 
-                  // Password
-                  AppTextField(
-                    controller: _passCtrl,
-                    label: 'Password',
-                    hint: 'Enter your password',
-                    obscureText: !_showPass,
-                    autofillHints: const [AutofillHints.password],
-                    prefixIcon: const Icon(PhosphorIconsRegular.lock, color: AppColors.muted, size: 20),
-                    suffixIcon: GestureDetector(
-                      onTap: () => setState(() => _showPass = !_showPass),
-                      child: Icon(
-                        _showPass ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
-                        color: AppColors.muted, size: 20,
+                  // Password field
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 250),
+                    child: AppTextField(
+                      controller: _passCtrl,
+                      label: 'Password',
+                      hint: 'Enter your password',
+                      obscureText: !_showPass,
+                      autofillHints: const [AutofillHints.password],
+                      prefixIcon: const Icon(PhosphorIconsRegular.lock, color: AppColors.muted, size: 20),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setState(() => _showPass = !_showPass),
+                        child: Icon(
+                          _showPass ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
+                          color: AppColors.muted, size: 20,
+                        ),
                       ),
+                      validator: Validators.password,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _loginEmail(),
                     ),
-                    validator: Validators.password,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _loginEmail(),
                   ),
 
                   const SizedBox(height: 12),
 
                   // Forgot password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
-                      child: Text(
-                        'Forgot password?',
-                        style: AppTextStyles.label.copyWith(color: AppColors.steelBlue),
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 350),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                        child: Text(
+                          'Forgot password?',
+                          style: AppTextStyles.label.copyWith(color: AppColors.steelBlue),
+                        ),
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  AppButton(
-                    label: 'Sign In',
-                    loading: auth.loading,
-                    onPressed: _loginEmail,
+                  // Sign In button
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 450),
+                    child: AppButton(
+                      label: 'Sign In',
+                      loading: auth.loading,
+                      onPressed: _loginEmail,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Divider
-                  Row(
-                    children: [
-                      const Expanded(child: Divider(color: AppColors.border)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('or', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
-                      ),
-                      const Expanded(child: Divider(color: AppColors.border)),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Google Sign-In
-                  _GoogleButton(
-                    loading: auth.loading,
-                    onPressed: _loginGoogle,
+                  // Divider + Google
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 550),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(child: Divider(color: AppColors.border)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('or', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
+                            ),
+                            const Expanded(child: Divider(color: AppColors.border)),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _GoogleButton(
+                          loading: auth.loading,
+                          onPressed: _loginGoogle,
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 28),
 
                   // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Don't have an account? ", style: AppTextStyles.body.copyWith(color: AppColors.muted)),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/register'),
-                        child: Text('Sign Up', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.steelBlue)),
-                      ),
-                    ],
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 650),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Don't have an account? ", style: AppTextStyles.body.copyWith(color: AppColors.muted)),
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/register'),
+                          child: Text('Sign Up', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.steelBlue)),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 40),
                 ],

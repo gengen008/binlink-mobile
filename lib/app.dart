@@ -12,6 +12,11 @@ import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/onboarding_screen.dart';
 import 'features/household/providers/household_provider.dart';
 import 'features/household/screens/home_screen.dart';
+import 'features/household/screens/notifications_screen.dart';
+import 'features/household/screens/help_screen.dart';
+import 'features/household/screens/privacy_screen.dart';
+import 'features/household/screens/edit_profile_screen.dart';
+import 'features/household/screens/subscriptions_screen.dart';
 import 'features/collector/providers/collector_provider.dart';
 import 'features/collector/screens/map_screen.dart';
 
@@ -59,6 +64,12 @@ class BinLinkApp extends StatelessWidget {
             '/forgot-password': (_) => const ForgotPasswordScreen(),
             '/household':       (_) => const HouseholdHomeScreen(),
             '/collector':       (_) => const CollectorMapScreen(),
+            // Drawer-navigated screens (household only)
+            '/notifications':   (_) => const NotificationsScreen(),
+            '/help':            (_) => const HelpScreen(),
+            '/privacy':         (_) => const PrivacyScreen(),
+            '/edit-profile':    (_) => const EditProfileScreen(),
+            '/payment':         (_) => const SubscriptionsScreen(),
           },
         ),
       ),

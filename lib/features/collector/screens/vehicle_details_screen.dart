@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -138,7 +139,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                                       ? AppColors.primaryGradient
                                       : null,
                                   color: sel ? null : AppColors.card,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: AppRadius.mdBR,
                                   border: Border.all(
                                     color: sel
                                         ? AppColors.steelBlue

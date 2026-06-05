@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/strings.dart';
@@ -165,7 +166,7 @@ class _NavItem extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 4),
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.fullBR,
                 ),
               ),
               Icon(sel ? iconFill : icon,
@@ -293,7 +294,7 @@ class _MapTabState extends State<_MapTab> {
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: AppColors.deepOcean.withAlpha(230),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: AppRadius.xlBR,
                           border: Border.all(color: AppColors.border),
                           boxShadow: [
                             BoxShadow(
@@ -352,7 +353,7 @@ class _MapTabState extends State<_MapTab> {
                                       horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: color.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: AppRadius.smBR,
                                     border: Border.all(
                                         color: color.withAlpha(80)),
                                   ),
@@ -390,7 +391,7 @@ class _MapTabState extends State<_MapTab> {
                           color: prov.isOnline
                               ? null
                               : AppColors.card,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: AppRadius.lgBR,
                           border: Border.all(
                             color: prov.isOnline
                                 ? AppColors.success
@@ -443,7 +444,7 @@ class _MapTabState extends State<_MapTab> {
                             Theme.of(context).primaryColor.withAlpha(180),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppRadius.xlBR,
                         boxShadow: [
                           BoxShadow(
                             color: Theme.of(context).primaryColor.withAlpha(80),
@@ -458,7 +459,7 @@ class _MapTabState extends State<_MapTab> {
                             width: 40, height: 40,
                             decoration: BoxDecoration(
                               color: AppColors.white.withAlpha(20),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsFill.truck,
                                 color: AppColors.white, size: 20),
@@ -506,7 +507,7 @@ class _MapTabState extends State<_MapTab> {
               width: 48, height: 48,
               decoration: BoxDecoration(
                 color: AppColors.deepOcean,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: AppRadius.lgBR,
                 border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
@@ -621,7 +622,7 @@ class _RequestCardState extends State<_RequestCard> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.deepOcean.withAlpha(240),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadius.xxlBR,
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
@@ -641,7 +642,7 @@ class _RequestCardState extends State<_RequestCard> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Theme.of(ctx).primaryColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smBR,
                   border: Border.all(color: Theme.of(ctx).primaryColor.withAlpha(60)),
                 ),
                 child: Text(S.of(ctx).newRequest,
@@ -727,7 +728,7 @@ class _RequestCardState extends State<_RequestCard> {
                     height: 38,
                     decoration: BoxDecoration(
                       color: AppColors.danger.withAlpha(15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.mdBR,
                       border: Border.all(
                           color: AppColors.danger.withAlpha(60)),
                     ),
@@ -765,7 +766,7 @@ class _RequestCardState extends State<_RequestCard> {
                           Theme.of(ctx).primaryColor.withAlpha(200),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.mdBR,
                       boxShadow: [
                         BoxShadow(
                           color: Theme.of(ctx).primaryColor.withAlpha(80),
@@ -809,7 +810,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xxl)),
         title: const Text('Language / Langue', style: AppTextStyles.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -823,7 +824,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: sel ? AppColors.warning.withAlpha(30) : AppColors.deepOcean,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   border: Border.all(color: sel ? AppColors.warning : AppColors.border),
                 ),
                 child: Row(
@@ -965,7 +966,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.card,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppRadius.lgBR,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
@@ -1070,7 +1071,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.card,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.sheet),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
@@ -1092,7 +1093,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                             width: 36, height: 36,
                             decoration: BoxDecoration(
                               color: AppColors.warning.withAlpha(20),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsRegular.moon,
                                 color: AppColors.warning, size: 18),
@@ -1129,7 +1130,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                               width: 36, height: 36,
                               decoration: BoxDecoration(
                                 color: AppColors.skyBlue.withAlpha(20),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: AppRadius.mdBR,
                               ),
                               child: const Icon(PhosphorIconsRegular.globe,
                                   color: AppColors.skyBlue, size: 18),
@@ -1167,7 +1168,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                         builder: (ctx) => AlertDialog(
                           backgroundColor: AppColors.card,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24)),
+                              borderRadius: BorderRadius.circular(AppRadius.xxl)),
                           title: const Text('Sign Out',
                               style: AppTextStyles.h3),
                           content: Text(
@@ -1253,7 +1254,7 @@ class _MenuSection extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppColors.card,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.sheet),
             border: Border.all(color: AppColors.border),
           ),
           child: Column(
@@ -1275,7 +1276,7 @@ class _MenuSection extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: (item.color ?? AppColors.skyBlue)
                                   .withAlpha(20),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: AppRadius.mdBR,
                             ),
                             child: Icon(item.icon,
                                 color: item.color ?? AppColors.skyBlue,
@@ -1319,7 +1320,7 @@ class _SmallChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.steelBlue.withAlpha(20),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smBR,
         border: Border.all(color: AppColors.steelBlue.withAlpha(40)),
       ),
       child: Text(label,

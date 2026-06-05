@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 
 class CollectorHelpScreen extends StatelessWidget {
   const CollectorHelpScreen({super.key});
@@ -43,7 +44,7 @@ class CollectorHelpScreen extends StatelessWidget {
                         gradient: const LinearGradient(
                           colors: [AppColors.warning, Color(0xFFFBBF24)],
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadius.sheet),
                       ),
                       child: Row(
                         children: [
@@ -51,7 +52,7 @@ class CollectorHelpScreen extends StatelessWidget {
                             width: 52, height: 52,
                             decoration: BoxDecoration(
                               color: AppColors.midnightNavy.withAlpha(60),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: AppRadius.lgBR,
                             ),
                             child: const Icon(PhosphorIconsFill.headset,
                                 color: AppColors.midnightNavy, size: 26),
@@ -213,7 +214,7 @@ class _FaqTileState extends State<_FaqTile> {
             color: _open
                 ? AppColors.warning.withAlpha(12)
                 : AppColors.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppRadius.xlBR,
             border: Border.all(
               color: _open
                   ? AppColors.warning.withAlpha(80)
@@ -281,7 +282,7 @@ class _ContactCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.xlBR,
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -290,7 +291,7 @@ class _ContactCard extends StatelessWidget {
               width: 44, height: 44,
               decoration: BoxDecoration(
                 color: AppColors.warning.withAlpha(20),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdBR,
               ),
               child: Icon(icon, color: AppColors.warning, size: 20),
             ),

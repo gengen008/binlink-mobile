@@ -21,6 +21,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/location_search_sheet.dart';
 import 'payment_screen.dart';
+import '../../../core/theme/app_radius.dart';
 
 // ── Pricing constants ─────────────────────────────────────────────────────────
 
@@ -492,7 +493,7 @@ class _Step1Category extends StatelessWidget {
                       color: sel
                           ? cat.color.withAlpha(30)
                           : AppColors.card,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: AppRadius.xlBR,
                       border: Border.all(
                         color: sel ? cat.color : AppColors.border,
                         width: sel ? 1.5 : 1,
@@ -515,7 +516,7 @@ class _Step1Category extends StatelessWidget {
                               width: 36, height: 36,
                               decoration: BoxDecoration(
                                 color: cat.color.withAlpha(sel ? 40 : 20),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: AppRadius.mdBR,
                               ),
                               child: Icon(cat.icon, color: cat.color, size: 18),
                             ),
@@ -526,7 +527,7 @@ class _Step1Category extends StatelessWidget {
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: AppRadius.smBR,
                                 ),
                                 child: Text(
                                   '+10 pts',
@@ -629,7 +630,7 @@ class _Step2Volume extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: sel ? AppColors.primaryGradient : null,
                     color: sel ? null : AppColors.card,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadius.xlBR,
                     border: Border.all(
                       color: sel ? AppColors.steelBlue : AppColors.border,
                       width: sel ? 1.5 : 1,
@@ -652,7 +653,7 @@ class _Step2Volume extends StatelessWidget {
                           color: sel
                               ? AppColors.white.withAlpha(20)
                               : AppColors.steelBlue.withAlpha(20),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: AppRadius.mdBR,
                         ),
                         child: Icon(PhosphorIconsFill.trashSimple,
                             color: sel
@@ -681,7 +682,7 @@ class _Step2Volume extends StatelessWidget {
                                     color: sel
                                         ? AppColors.white.withAlpha(30)
                                         : AppColors.border,
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: AppRadius.xsBR,
                                   ),
                                   child: Text(s['volume'] as String,
                                       style: AppTextStyles.caption.copyWith(
@@ -732,7 +733,7 @@ class _Step2Volume extends StatelessWidget {
                   horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.xlBR,
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -868,7 +869,7 @@ class _Step3Photos extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdBR,
                       child: Image.file(
                         File(photos[i].path),
                         fit: BoxFit.cover,
@@ -905,7 +906,7 @@ class _Step3Photos extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         color: AppColors.card,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppRadius.xlBR,
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
@@ -914,7 +915,7 @@ class _Step3Photos extends StatelessWidget {
                             width: 44, height: 44,
                             decoration: BoxDecoration(
                               color: AppColors.steelBlue.withAlpha(20),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsFill.camera,
                                 color: AppColors.steelBlue, size: 22),
@@ -934,7 +935,7 @@ class _Step3Photos extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         color: AppColors.card,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppRadius.xlBR,
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
@@ -943,7 +944,7 @@ class _Step3Photos extends StatelessWidget {
                             width: 44, height: 44,
                             decoration: BoxDecoration(
                               color: AppColors.skyBlue.withAlpha(20),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsFill.images,
                                 color: AppColors.skyBlue, size: 22),
@@ -965,7 +966,7 @@ class _Step3Photos extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdBR,
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -1053,7 +1054,7 @@ class _Step3Schedule extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.xlBR,
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -1080,7 +1081,7 @@ class _Step3Schedule extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.steelBlue.withAlpha(15),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadius.xlBR,
                   border: Border.all(
                       color: AppColors.steelBlue.withAlpha(60)),
                 ),
@@ -1090,7 +1091,7 @@ class _Step3Schedule extends StatelessWidget {
                       width: 48, height: 48,
                       decoration: BoxDecoration(
                         color: AppColors.steelBlue.withAlpha(25),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: AppRadius.lgBR,
                       ),
                       child: const Icon(PhosphorIconsFill.lightning,
                           color: AppColors.steelBlue, size: 24),
@@ -1146,7 +1147,7 @@ class _Step3Schedule extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: sel ? AppColors.primaryGradient : null,
                         color: sel ? null : AppColors.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadius.mdBR,
                         border: Border.all(
                           color: sel ? AppColors.steelBlue : AppColors.border,
                         ),
@@ -1193,7 +1194,7 @@ class _Step3Schedule extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: sel ? AppColors.primaryGradient : null,
                             color: sel ? null : AppColors.card,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: AppRadius.lgBR,
                             border: Border.all(
                               color: sel
                                   ? AppColors.steelBlue
@@ -1239,7 +1240,7 @@ class _Step3Schedule extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdBR,
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -1365,7 +1366,7 @@ class _Step4AddressState extends State<_Step4Address> {
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: AppColors.steelBlue.withAlpha(20),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: AppRadius.mdBR,
                                   border: Border.all(
                                       color: AppColors.steelBlue.withAlpha(60)),
                                 ),
@@ -1414,7 +1415,7 @@ class _Step4AddressState extends State<_Step4Address> {
                 }
               },
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.sheet),
                 child: SizedBox(
                   height: 180,
                   child: Stack(
@@ -1428,7 +1429,7 @@ class _Step4AddressState extends State<_Step4Address> {
                               horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.deepOcean.withAlpha(220),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.sheet),
                             border: Border.all(color: AppColors.border),
                           ),
                           child: Row(
@@ -1475,7 +1476,7 @@ class _Step4AddressState extends State<_Step4Address> {
                           horizontal: 14, vertical: 11),
                       decoration: BoxDecoration(
                         gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadius.mdBR,
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.steelBlue.withAlpha(50),
@@ -1509,7 +1510,7 @@ class _Step4AddressState extends State<_Step4Address> {
                         horizontal: 14, vertical: 11),
                     decoration: BoxDecoration(
                       color: AppColors.steelBlue.withAlpha(20),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdBR,
                       border: Border.all(
                           color: AppColors.steelBlue.withAlpha(60)),
                     ),
@@ -1559,7 +1560,7 @@ class _Step4AddressState extends State<_Step4Address> {
                     horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: AppColors.card,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   border: Border.all(
                     color: widget.addressCtrl.text.isNotEmpty
                         ? AppColors.steelBlue.withAlpha(100)
@@ -1683,7 +1684,7 @@ class _Step5Review extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.sheet),
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
@@ -1734,7 +1735,7 @@ class _Step5Review extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: AppColors.steelBlue.withAlpha(15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.sheet),
                 border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
               ),
               child: Column(
@@ -1780,7 +1781,7 @@ class _Step5Review extends StatelessWidget {
                       horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: sel ? color.withAlpha(20) : AppColors.card,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppRadius.lgBR,
                     border: Border.all(
                       color: sel ? color : AppColors.border,
                       width: sel ? 1.5 : 1,
@@ -1792,7 +1793,7 @@ class _Step5Review extends StatelessWidget {
                         width: 36, height: 36,
                         decoration: BoxDecoration(
                           color: color.withAlpha(25),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppRadius.mdBR,
                         ),
                         child: const Icon(
                           PhosphorIconsRegular.money,
@@ -1843,7 +1844,7 @@ class _CountBtn extends StatelessWidget {
           color: enabled
               ? AppColors.steelBlue.withAlpha(25)
               : AppColors.border.withAlpha(40),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdBR,
           border: Border.all(
             color: enabled ? AppColors.steelBlue.withAlpha(60) : AppColors.border,
           ),
@@ -1878,7 +1879,7 @@ class _ToggleTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             gradient: selected ? AppColors.primaryGradient : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdBR,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

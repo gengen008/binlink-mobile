@@ -73,6 +73,9 @@ dependencies:
   # Charts (analytics / carbon tracking)
   fl_chart: ^0.70.2
 
+  # Animations — FadeIn, FadeInUp, FadeInDown (Rydr design pattern)
+  animate_do: ^3.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

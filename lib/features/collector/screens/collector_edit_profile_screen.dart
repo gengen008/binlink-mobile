@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -184,7 +185,7 @@ class _CollectorEditProfileScreenState
                         Container(
                           decoration: BoxDecoration(
                             color: AppColors.card,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: AppRadius.lgBR,
                             border: Border.all(color: AppColors.border),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 14),

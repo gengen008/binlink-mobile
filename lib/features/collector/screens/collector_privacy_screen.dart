@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 
 class CollectorPrivacyScreen extends StatelessWidget {
   const CollectorPrivacyScreen({super.key});
@@ -39,7 +40,7 @@ class CollectorPrivacyScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withAlpha(15),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppRadius.xlBR,
                         border: Border.all(
                             color: AppColors.warning.withAlpha(60)),
                       ),
@@ -140,7 +141,7 @@ class _SectionTile extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.xlBR,
           border: Border.all(color: AppColors.border),
         ),
         child: Column(

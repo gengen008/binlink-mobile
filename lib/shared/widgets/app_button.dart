@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_text_styles.dart';
 
 enum AppButtonVariant { primary, secondary, danger, ghost }
@@ -37,14 +38,14 @@ class AppButton extends StatelessWidget {
               ? AppColors.primaryGradient
               : null,
           color: variant == AppButtonVariant.primary ? null : bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.smBR,
           border: border != null ? Border.all(color: border) : null,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: loading ? null : onPressed,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppRadius.smBR,
             child: Center(
               child: loading
                   ? SizedBox(

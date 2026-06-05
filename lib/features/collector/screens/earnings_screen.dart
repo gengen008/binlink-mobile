@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 
@@ -140,7 +141,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
                                 color: AppColors.card,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(AppRadius.sheet),
                                 border: Border.all(color: AppColors.border),
                               ),
                               child: const Column(
@@ -207,7 +208,7 @@ class _WalletCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF1A3A5C), Color(0xFF0D2137)],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
         border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
         boxShadow: [
           BoxShadow(
@@ -272,7 +273,7 @@ class _WalletCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   boxShadow: available > 0 ? [
                     BoxShadow(
                       color: AppColors.steelBlue.withAlpha(60),
@@ -360,7 +361,7 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withAlpha(15),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.sheet),
         border: Border.all(color: color.withAlpha(60)),
       ),
       child: Column(
@@ -398,7 +399,7 @@ class _TransactionTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgBR,
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -448,7 +449,7 @@ class _EmptyTransactions extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgBR,
         border: Border.all(color: AppColors.border),
       ),
       child: const Row(
@@ -480,7 +481,7 @@ class _PickupEarningTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.lgBR,
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -564,7 +565,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.deepOcean,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: AppRadius.sheetBR,
       ),
       padding: EdgeInsets.fromLTRB(
         24, 20, 24,
@@ -582,7 +583,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
                 width: 40, height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.fullBR,
                 ),
               ),
             ),
@@ -698,23 +699,23 @@ class _PayoutSheetState extends State<_PayoutSheet> {
     fillColor: AppColors.card,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgBR,
       borderSide: const BorderSide(color: AppColors.border),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgBR,
       borderSide: const BorderSide(color: AppColors.border),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgBR,
       borderSide: const BorderSide(color: AppColors.steelBlue),
     ),
     errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgBR,
       borderSide: const BorderSide(color: AppColors.danger),
     ),
     focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.lgBR,
       borderSide: const BorderSide(color: AppColors.danger),
     ),
   );

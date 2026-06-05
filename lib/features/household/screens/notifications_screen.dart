@@ -3,6 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../shared/widgets/app_bar.dart';
+import '../../../shared/widgets/app_notification_card.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -44,185 +46,123 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (_) {}
   }
 
-  IconData _typeIcon(String? type) {
-    switch (type) {
-      case 'BOOKING_UPDATE': return PhosphorIconsFill.trashSimple;
-      case 'PAYMENT':        return PhosphorIconsFill.wallet;
-      case 'PROMO':          return PhosphorIconsFill.gift;
-      default:               return PhosphorIconsFill.bell;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.midnightNavy,
+      appBar: const AppScaffoldBar(title: 'Notifications'),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        child: _loading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.steelBlue, strokeWidth: 2,
+                ),
+              )
+            : _notifs.isEmpty
+                ? _EmptyState()
+                : _NotifList(
+                    notifs: _notifs,
+                    onMarkRead: _markRead,
+                  ),
+      ),
+    );
   }
+}
 
-  Color _typeColor(String? type) {
-    switch (type) {
-      case 'BOOKING_UPDATE': return AppColors.steelBlue;
-      case 'PAYMENT':        return AppColors.success;
-      case 'PROMO':          return AppColors.warning;
-      default:               return AppColors.muted;
-    }
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 72, height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(PhosphorIconsRegular.bell,
+                color: AppColors.muted, size: 32),
+          ),
+          const SizedBox(height: 16),
+          Text('No notifications yet',
+              style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
+          const SizedBox(height: 6),
+          const Text("You're all caught up!", style: AppTextStyles.caption),
+        ],
+      ),
+    );
   }
+}
 
-  String _timeAgo(String? createdAt) {
-    if (createdAt == null) return '';
-    final dt   = DateTime.tryParse(createdAt);
-    if (dt == null) return '';
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60)  return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24)    return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+// ── Notification list with date chips (Rydr pattern) ─────────────────────────
+
+class _NotifList extends StatelessWidget {
+  const _NotifList({required this.notifs, required this.onMarkRead});
+  final List<Map<String, dynamic>> notifs;
+  final Future<void> Function(String id, int idx) onMarkRead;
+
+  /// Groups notifications by date so we can insert NotificationDateChip headers.
+  List<_NotifRow> _buildRows() {
+    final rows = <_NotifRow>[];
+    String? lastDateKey;
+
+    for (var i = 0; i < notifs.length; i++) {
+      final n = notifs[i];
+      final createdStr = n['createdAt'] as String?;
+      final dt = createdStr != null ? DateTime.tryParse(createdStr) : null;
+
+      if (dt != null) {
+        final dateKey = '${dt.year}-${dt.month}-${dt.day}';
+        if (dateKey != lastDateKey) {
+          rows.add(_NotifRow.dateChip(dt));
+          lastDateKey = dateKey;
+        }
+      }
+
+      rows.add(_NotifRow.card(n, i));
+    }
+    return rows;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    const Expanded(
-                      child: Text('Notifications', style: AppTextStyles.h3),
-                    ),
-                  ],
-                ),
-              ),
-
-              if (_loading)
-                const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.steelBlue, strokeWidth: 2,
-                    ),
-                  ),
-                )
-              else if (_notifs.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 72, height: 72,
-                          decoration: BoxDecoration(
-                            color: AppColors.card,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: const Icon(PhosphorIconsRegular.bell,
-                              color: AppColors.muted, size: 32),
-                        ),
-                        const SizedBox(height: 16),
-                        Text('No notifications yet',
-                            style: AppTextStyles.h4.copyWith(
-                              color: AppColors.textSecondary,
-                            )),
-                        const SizedBox(height: 6),
-                        const Text("You're all caught up!",
-                            style: AppTextStyles.caption),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                    itemCount: _notifs.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) {
-                      final n     = _notifs[i];
-                      final isRead  = n['isRead'] as bool? ?? false;
-                      final type    = n['type'] as String?;
-                      final color   = _typeColor(type);
-
-                      return GestureDetector(
-                        onTap: isRead ? null : () => _markRead(n['id'] as String, i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isRead
-                                ? AppColors.card
-                                : color.withAlpha(15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isRead
-                                  ? AppColors.border
-                                  : color.withAlpha(80),
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 42, height: 42,
-                                decoration: BoxDecoration(
-                                  color: color.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(_typeIcon(type),
-                                    color: color, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            n['title'] as String? ?? '',
-                                            style: AppTextStyles.bodyMedium,
-                                          ),
-                                        ),
-                                        Text(
-                                          _timeAgo(n['createdAt'] as String?),
-                                          style: AppTextStyles.caption,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      n['body'] as String? ?? '',
-                                      style: AppTextStyles.body.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!isRead) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 8, height: 8,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+    final rows = _buildRows();
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
+      itemCount: rows.length,
+      itemBuilder: (_, i) {
+        final row = rows[i];
+        if (row.isDateChip) {
+          return NotificationDateChip(date: row.date!);
+        }
+        final n = row.notif!;
+        final isRead = n['isRead'] as bool? ?? false;
+        return AppNotificationCard(
+          notification: n,
+          onTap: isRead ? null : () => onMarkRead(n['id'] as String, row.idx!),
+        );
+      },
     );
   }
+}
+
+class _NotifRow {
+  final bool isDateChip;
+  final DateTime? date;
+  final Map<String, dynamic>? notif;
+  final int? idx;
+
+  const _NotifRow._({required this.isDateChip, this.date, this.notif, this.idx});
+
+  factory _NotifRow.dateChip(DateTime d) =>
+      _NotifRow._(isDateChip: true, date: d);
+
+  factory _NotifRow.card(Map<String, dynamic> n, int i) =>
+      _NotifRow._(isDateChip: false, notif: n, idx: i);
 }

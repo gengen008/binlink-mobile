@@ -17,15 +17,14 @@ import '../../../core/services/receipt_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../shared/models/user_model.dart';
+import '../../../shared/widgets/app_bar.dart';
+import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/stats_row.dart';
 import '../../../shared/widgets/collector_bottom_sheet.dart';
 import '../../../shared/widgets/location_search_sheet.dart';
 import 'book_screen.dart';
 import 'tracking_screen.dart';
-import 'edit_profile_screen.dart';
-import 'notifications_screen.dart';
-import 'help_screen.dart';
 import 'privacy_screen.dart';
 import 'saved_addresses_screen.dart';
 
@@ -60,9 +59,13 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     await hp.loadSubscriptions();
   }
 
+  void _switchTab(int i) => setState(() => _tab = i);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Rydr drawer pattern — AppDrawer wired to IndexedStack tab switching
+      drawer: AppDrawer(onTabSwitch: _switchTab),
       body: IndexedStack(
         index: _tab,
         children: [
@@ -350,6 +353,13 @@ class _HomeTabState extends State<_HomeTab> {
                     ),
                     child: Row(
                       children: [
+                        // Rydr DrawerMenuButton — opens AppDrawer
+                        DrawerMenuButton(
+                          onTap: () => Scaffold.of(context).openDrawer(),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Greeting + name
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,6 +380,7 @@ class _HomeTabState extends State<_HomeTab> {
                             ],
                           ),
                         ),
+
                         // Online collectors chip
                         if (prov.onlineCollectors.isNotEmpty)
                           Container(
@@ -405,11 +416,11 @@ class _HomeTabState extends State<_HomeTab> {
                         else
                           const SizedBox(width: 8),
                         const SizedBox(width: 10),
+
                         // Notification bell
                         GestureDetector(
-                          onTap: () => Navigator.push(context,
-                              MaterialPageRoute(
-                                  builder: (_) => const NotificationsScreen())),
+                          onTap: () => Navigator.pushNamed(
+                              context, '/notifications'),
                           child: Container(
                             width: 40, height: 40,
                             decoration: BoxDecoration(
@@ -2270,10 +2281,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                       Positioned(
                         bottom: 0, right: 0,
                         child: GestureDetector(
-                          onTap: () => Navigator.push(context,
-                              MaterialPageRoute(
-                                builder: (_) => const EditProfileScreen(),
-                              )),
+                          onTap: () => Navigator.pushNamed(
+                              context, '/edit-profile'),
                           child: Container(
                             width: 28, height: 28,
                             decoration: BoxDecoration(
@@ -2339,18 +2348,12 @@ class _ProfileTabState extends State<_ProfileTab> {
                   _MenuItem(
                     icon: PhosphorIconsRegular.userCircle,
                     label: S.of(context).editProfile,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const EditProfileScreen(),
-                        )),
+                    onTap: () => Navigator.pushNamed(context, '/edit-profile'),
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.bell,
                     label: S.of(context).notifications,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const NotificationsScreen(),
-                        )),
+                    onTap: () => Navigator.pushNamed(context, '/notifications'),
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.mapPin,
@@ -2371,18 +2374,12 @@ class _ProfileTabState extends State<_ProfileTab> {
                   _MenuItem(
                     icon: PhosphorIconsRegular.headset,
                     label: S.of(context).helpSupport,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const HelpScreen(),
-                        )),
+                    onTap: () => Navigator.pushNamed(context, '/help'),
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.shieldCheck,
                     label: S.of(context).privacyPolicy,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const PrivacyScreen(),
-                        )),
+                    onTap: () => Navigator.pushNamed(context, '/privacy'),
                   ),
                   _MenuItem(
                     icon: PhosphorIconsRegular.files,

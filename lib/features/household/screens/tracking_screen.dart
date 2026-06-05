@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/routing/routing_service.dart';
@@ -380,7 +381,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                                   horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: AppColors.deepOcean.withAlpha(230),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: AppRadius.fullBR,
                                 border: Border.all(
                                     color: AppColors.steelBlue.withAlpha(80)),
                               ),
@@ -407,7 +408,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 decoration: const BoxDecoration(
                   color: AppColors.deepOcean,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: AppRadius.sheetBR,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
                 child: Column(
@@ -418,7 +419,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           color: AppColors.border,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: AppRadius.fullBR,
                         ),
                       ),
                     ),

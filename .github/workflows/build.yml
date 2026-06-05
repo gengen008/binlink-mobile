@@ -24,6 +24,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          # Gradle cache keyed on wrapper + build files — busts on dependency changes
           cache: gradle
 
       # ── 3. Flutter ───────────────────────────────────────────────────
@@ -32,18 +33,31 @@ jobs:
         with:
           flutter-version: '3.38.1'
           channel: stable
+          # Flutter SDK cache keyed on version — always correct SDK
           cache: true
+          cache-key: flutter-3.38.1-${{ runner.os }}
 
       - name: Flutter version info
-        run: flutter --version
+        run: flutter --version --suppress-analytics
 
-      # ── 4. Inject all secrets ────────────────────────────────────────
+      # ── 4. Pub cache — keyed on pubspec.lock for exact reproducibility ─
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      # ── 5. Inject all secrets ────────────────────────────────────────
       - name: Inject mobile .env
         run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"                 > .env
-          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"                >> .env
-          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}"        >> .env
-          echo "SMARTMAPS_API_KEY=${{ secrets.SMARTMAPS_API_KEY }}"  >> .env
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"                > .env
+          echo "SOCKET_URL=${{ secrets.SOCKET_URL }}"                  >> .env
+          echo "TOMTOM_API_KEY=${{ secrets.TOMTOM_API_KEY }}"          >> .env
+          echo "SMARTMAPS_API_KEY=${{ secrets.SMARTMAPS_API_KEY }}"    >> .env
           echo "[CI] .env written"
 
       - name: Inject household google-services.json
@@ -71,20 +85,24 @@ jobs:
             echo "[CI] KEYSTORE_BASE64 not set — APK will use debug signing (Google Sign-In will not work)"
           fi
 
-      # ── 5. Dependencies ──────────────────────────────────────────────
+      # ── 6. Clean + Dependencies ──────────────────────────────────────
+      - name: Flutter clean (fresh build, no stale artifacts)
+        run: flutter clean --suppress-analytics
+
       - name: Flutter pub get
-        run: flutter pub get
+        run: flutter pub get --suppress-analytics
 
       - name: Flutter analyze (blocking — 0 issues required)
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos --suppress-analytics
 
-      # ── 6. Build Household APK ───────────────────────────────────────
+      # ── 7. Build Household APK ───────────────────────────────────────
       - name: Build BinLink-Eco (Household) APK
         run: |
           flutter build apk \
             --flavor household \
             --target lib/main_household.dart \
             --release \
+            --suppress-analytics \
             --verbose
         env:
           JAVA_TOOL_OPTIONS: "-Xmx4g"
@@ -97,13 +115,14 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/app-household-release.apk
           echo "[CI] Household APK size: $(du -sh build/app/outputs/flutter-apk/app-household-release.apk | cut -f1)"
 
-      # ── 7. Build Collector APK ───────────────────────────────────────
+      # ── 8. Build Collector APK ───────────────────────────────────────
       - name: Build BinLink-Collector APK
         run: |
           flutter build apk \
             --flavor collector \
             --target lib/main_collector.dart \
             --release \
+            --suppress-analytics \
             --verbose
         env:
           JAVA_TOOL_OPTIONS: "-Xmx4g"
@@ -116,7 +135,7 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/app-collector-release.apk
           echo "[CI] Collector APK size: $(du -sh build/app/outputs/flutter-apk/app-collector-release.apk | cut -f1)"
 
-      # ── 8. Rename APKs ───────────────────────────────────────────────
+      # ── 9. Rename APKs ───────────────────────────────────────────────
       - name: Rename APKs for release
         run: |
           cp build/app/outputs/flutter-apk/app-household-release.apk BinLink-Eco-v2.apk
@@ -124,7 +143,7 @@ jobs:
           echo "[CI] APKs renamed:"
           ls -lh BinLink-*.apk
 
-      # ── 9. Publish GitHub Release ────────────────────────────────────
+      # ── 10. Publish GitHub Release ────────────────────────────────────
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,7 +180,7 @@ jobs:
 
           echo "[CI] Release published → https://github.com/${{ github.repository }}/releases/latest"
 
-      # ── 10. Job summary ──────────────────────────────────────────────
+      # ── 11. Job summary ──────────────────────────────────────────────
       - name: Build summary
         if: always()
         run: |

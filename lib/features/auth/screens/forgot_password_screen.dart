@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -70,32 +71,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
-                        const Text('Reset password', style: AppTextStyles.h2),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Enter your email and we\'ll send you a link to reset your password.',
-                          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 32),
 
-                        AppTextField(
-                          controller: _emailCtrl,
-                          label: 'Email',
-                          hint: 'you@example.com',
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
-                          validator: Validators.email,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _sendReset(),
+                        // Heading — Rydr FadeInDown pattern
+                        FadeInDown(
+                          duration: const Duration(milliseconds: 600),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Reset password', style: AppTextStyles.h2),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Enter your email and we\'ll send you a link to reset your password.',
+                                style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
                         ),
 
                         const SizedBox(height: 32),
 
-                        AppButton(
-                          label: 'Send Reset Link',
-                          loading: auth.loading,
-                          onPressed: _sendReset,
+                        // Email field
+                        FadeInDown(
+                          duration: const Duration(milliseconds: 600),
+                          delay: const Duration(milliseconds: 200),
+                          child: AppTextField(
+                            controller: _emailCtrl,
+                            label: 'Email',
+                            hint: 'you@example.com',
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
+                            validator: Validators.email,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _sendReset(),
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Send button
+                        FadeInDown(
+                          duration: const Duration(milliseconds: 600),
+                          delay: const Duration(milliseconds: 350),
+                          child: AppButton(
+                            label: 'Send Reset Link',
+                            loading: auth.loading,
+                            onPressed: _sendReset,
+                          ),
                         ),
                       ],
                     ),

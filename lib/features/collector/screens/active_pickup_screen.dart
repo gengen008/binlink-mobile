@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/collector_provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
@@ -412,7 +413,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: AppRadius.lgBR,
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
@@ -441,15 +442,15 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     fillColor: AppColors.deepOcean,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.mdBR,
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.mdBR,
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.mdBR,
                       borderSide: const BorderSide(color: AppColors.steelBlue),
                     ),
                   ),
@@ -481,7 +482,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.success.withAlpha(15),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.xlBR,
               border: Border.all(color: AppColors.success.withAlpha(60)),
             ),
             child: const Row(
@@ -526,7 +527,7 @@ class _HouseholdCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.sheet),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -640,7 +641,7 @@ class _PhotoTile extends StatelessWidget {
               : isActive
                   ? AppColors.steelBlue.withAlpha(20)
                   : AppColors.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.xlBR,
           border: Border.all(
             color: hasTaken
                 ? AppColors.success.withAlpha(120)
@@ -655,7 +656,7 @@ class _PhotoTile extends StatelessWidget {
             // Photo thumbnail or placeholder icon
             if (hasTaken)
               ClipRRect(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 child: Image.file(
                   File(photo!.path),
                   width: double.infinity,
@@ -696,7 +697,7 @@ class _PhotoTile extends StatelessWidget {
                   color: hasTaken
                       ? AppColors.success.withAlpha(200)
                       : AppColors.midnightNavy.withAlpha(180),
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.lg)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -745,7 +746,7 @@ class _PhotoRequiredHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.warning.withAlpha(15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdBR,
         border: Border.all(color: AppColors.warning.withAlpha(60)),
       ),
       child: Row(
@@ -777,7 +778,7 @@ class _ExceptionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.danger.withAlpha(12),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadius.lgBR,
           border: Border.all(color: AppColors.danger.withAlpha(80)),
         ),
         child: const Row(
@@ -833,7 +834,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.deepOcean,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: AppRadius.sheetBR,
       ),
       padding: EdgeInsets.fromLTRB(
         24, 20, 24,
@@ -849,7 +850,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
               width: 40, height: 4,
               decoration: BoxDecoration(
                 color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: AppRadius.fullBR,
               ),
             ),
           ),
@@ -895,7 +896,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                   color: isSelected
                       ? AppColors.danger.withAlpha(20)
                       : AppColors.card,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   border: Border.all(
                     color: isSelected
                         ? AppColors.danger.withAlpha(140)
@@ -936,15 +937,15 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                 fillColor: AppColors.card,
                 contentPadding: const EdgeInsets.all(14),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   borderSide: const BorderSide(color: AppColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   borderSide: const BorderSide(color: AppColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   borderSide: const BorderSide(color: AppColors.steelBlue),
                 ),
               ),
@@ -975,7 +976,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                 color: _selectedReason != null
                     ? AppColors.danger
                     : AppColors.card,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.xlBR,
                 border: Border.all(
                   color: _selectedReason != null
                       ? AppColors.danger
@@ -1030,7 +1031,7 @@ class _InfoChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           color: color.withAlpha(20),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppRadius.mdBR,
           border: Border.all(color: color.withAlpha(60)),
         ),
         child: Column(

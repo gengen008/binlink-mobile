@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -56,7 +57,7 @@ class StepProgressBar extends StatelessWidget {
                       ),
                       child: Center(
                         child: isDone
-                            ? const Icon(Icons.check_rounded,
+                            ? const Icon(PhosphorIconsBold.check,
                                 color: AppColors.white, size: 14)
                             : Text(
                                 '${i + 1}',

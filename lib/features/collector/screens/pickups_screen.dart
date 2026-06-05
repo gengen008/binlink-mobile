@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/status_badge.dart';
@@ -86,14 +87,14 @@ class _PickupsScreenState extends State<PickupsScreen>
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: AppColors.card,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppRadius.lgBR,
                   border: Border.all(color: AppColors.border),
                 ),
                 child: TabBar(
                   controller: _tab,
                   indicator: BoxDecoration(
                     gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.mdBR,
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
                   labelStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
@@ -230,7 +231,7 @@ class _JobCard extends StatelessWidget {
           color: isActive
               ? AppColors.steelBlue.withAlpha(15)
               : AppColors.card,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: AppRadius.xlBR,
           border: Border.all(
             color: isActive
                 ? AppColors.steelBlue.withAlpha(80)
@@ -298,7 +299,7 @@ class _JobCard extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.mdBR,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -336,7 +337,7 @@ class _JobCard extends StatelessWidget {
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: AppColors.deepOcean,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: AppRadius.sheetBR,
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
         child: Column(
@@ -344,7 +345,7 @@ class _JobCard extends StatelessWidget {
           children: [
             Container(width: 40, height: 4,
                 decoration: BoxDecoration(color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2))),
+                    borderRadius: AppRadius.fullBR)),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -384,7 +385,7 @@ class _Chip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.border.withAlpha(60),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smBR,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 
 class CollectorNotificationsScreen extends StatefulWidget {
   const CollectorNotificationsScreen({super.key});
@@ -162,7 +163,7 @@ class _CollectorNotificationsScreenState
                             color: isRead
                                 ? AppColors.card
                                 : color.withAlpha(15),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: AppRadius.xlBR,
                             border: Border.all(
                               color: isRead
                                   ? AppColors.border
@@ -176,7 +177,7 @@ class _CollectorNotificationsScreenState
                                 width: 42, height: 42,
                                 decoration: BoxDecoration(
                                   color: color.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: AppRadius.mdBR,
                                 ),
                                 child: Icon(_typeIcon(type),
                                     color: color, size: 20),
