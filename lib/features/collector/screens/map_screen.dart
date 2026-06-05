@@ -275,159 +275,139 @@ class _MapTabState extends State<_MapTab> {
           tiltGesturesEnabled: false,
         ),
 
-        // Top UI overlay — Positioned so it only takes natural height, never covers map
+        // ── AppBar (Rydr: solid dark Material bar — greeting left, toggle right) ──
         Positioned(
           top: 0, left: 0, right: 0,
-          child: SafeArea(
-          bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Status bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.deepOcean.withAlpha(230),
-                          borderRadius: AppRadius.xlBR,
-                          border: Border.all(color: AppColors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(50),
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Online status dot
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 8, height: 8,
-                              decoration: BoxDecoration(
-                                color: prov.isOnline
-                                    ? AppColors.success
-                                    : AppColors.muted,
-                                shape: BoxShape.circle,
-                                boxShadow: prov.isOnline
-                                    ? [
-                                        BoxShadow(
-                                          color:
-                                              AppColors.success.withAlpha(80),
-                                          blurRadius: 6,
-                                          spreadRadius: 1,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              prov.isOnline ? S.of(context).onlineAccepting : S.of(context).offline,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontSize: 13,
-                                color: prov.isOnline
-                                    ? AppColors.success
-                                    : AppColors.muted,
-                              ),
-                            ),
-                            // Capacity indicator pill
-                            if (prov.isOnline && currentLoad > 0) ...[
-                              const SizedBox(width: 8),
-                              Builder(builder: (ctx) {
-                                final pct = maxCapacity > 0
-                                    ? (currentLoad / maxCapacity).clamp(0.0, 1.0)
-                                    : 0.0;
-                                final color = pct < 0.7
-                                    ? AppColors.success
-                                    : pct < 0.9
-                                        ? AppColors.warning
-                                        : AppColors.danger;
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: color.withAlpha(25),
-                                    borderRadius: AppRadius.smBR,
-                                    border: Border.all(
-                                        color: color.withAlpha(80)),
-                                  ),
-                                  child: Text(
-                                    '${(pct * 100).toStringAsFixed(0)}% full',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: color,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 10,
+              Material(
+                color: AppColors.appBarBg,
+                child: SafeArea(
+                  bottom: false,
+                  child: SizedBox(
+                    height: 70,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          // Greeting column
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hello, ${user?.fullName?.split(' ').first ?? 'Collector'} 👋🏾',
+                                  style: AppTextStyles.appBarTitle,
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      width: 6, height: 6,
+                                      margin: const EdgeInsets.only(right: 5),
+                                      decoration: BoxDecoration(
+                                        color: prov.isOnline
+                                            ? AppColors.success
+                                            : AppColors.muted,
+                                        shape: BoxShape.circle,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ],
-                        ),
+                                    Text(
+                                      prov.isOnline
+                                          ? S.of(context).onlineAccepting
+                                          : S.of(context).offline,
+                                      style: AppTextStyles.appBarSub.copyWith(
+                                        color: prov.isOnline
+                                            ? AppColors.success
+                                            : AppColors.muted,
+                                      ),
+                                    ),
+                                    // Capacity pill
+                                    if (prov.isOnline && currentLoad > 0) ...[
+                                      const SizedBox(width: 6),
+                                      Builder(builder: (ctx) {
+                                        final pct = maxCapacity > 0
+                                            ? (currentLoad / maxCapacity).clamp(0.0, 1.0)
+                                            : 0.0;
+                                        final c = pct < 0.7
+                                            ? AppColors.success
+                                            : pct < 0.9
+                                                ? AppColors.warning
+                                                : AppColors.danger;
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: c.withAlpha(25),
+                                            borderRadius: AppRadius.smBR,
+                                            border: Border.all(color: c.withAlpha(80)),
+                                          ),
+                                          child: Text(
+                                            '${(pct * 100).toStringAsFixed(0)}%',
+                                            style: AppTextStyles.caption.copyWith(
+                                              color: c,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 9,
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Online/Offline power toggle (Rydr: 45x45 rounded action button)
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              prov.toggleOnline();
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 45, height: 45,
+                              decoration: BoxDecoration(
+                                gradient: prov.isOnline
+                                    ? const LinearGradient(
+                                        colors: [Color(0xFF16A34A), AppColors.success],
+                                      )
+                                    : null,
+                                color: prov.isOnline ? null : AppColors.appBarAction,
+                                borderRadius: AppRadius.smBR,
+                                border: Border.all(
+                                  color: prov.isOnline
+                                      ? AppColors.success
+                                      : AppColors.border,
+                                ),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  prov.isOnline
+                                      ? PhosphorIconsFill.power
+                                      : PhosphorIconsRegular.power,
+                                  color: prov.isOnline ? AppColors.white : AppColors.muted,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    // Online toggle
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        prov.toggleOnline();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: 56, height: 44,
-                        decoration: BoxDecoration(
-                          gradient: prov.isOnline
-                              ? const LinearGradient(
-                                  colors: [Color(0xFF16A34A), AppColors.success],
-                                )
-                              : null,
-                          color: prov.isOnline
-                              ? null
-                              : AppColors.card,
-                          borderRadius: AppRadius.lgBR,
-                          border: Border.all(
-                            color: prov.isOnline
-                                ? AppColors.success
-                                : AppColors.border,
-                          ),
-                          boxShadow: prov.isOnline
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.success.withAlpha(60),
-                                    blurRadius: 12,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            prov.isOnline
-                                ? PhosphorIconsFill.power
-                                : PhosphorIconsRegular.power,
-                            color: prov.isOnline
-                                ? AppColors.white
-                                : AppColors.muted,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
-              // Active pickup banner
-              if (active != null) ...[
-                const SizedBox(height: 10),
+              // Active pickup banner (below appbar)
+              if (active != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: GestureDetector(
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(
@@ -440,14 +420,14 @@ class _MapTabState extends State<_MapTab> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withAlpha(180),
+                            AppColors.steelBlue,
+                            AppColors.steelBlue.withAlpha(180),
                           ],
                         ),
                         borderRadius: AppRadius.xlBR,
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).primaryColor.withAlpha(80),
+                            color: AppColors.steelBlue.withAlpha(80),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -491,10 +471,8 @@ class _MapTabState extends State<_MapTab> {
                     ),
                   ),
                 ),
-              ],
             ],
           ),
-        ),
         ), // end Positioned top overlay
 
         // Locate-me FAB

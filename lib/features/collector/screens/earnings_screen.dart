@@ -175,13 +175,13 @@ class _EarningsBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
         ),
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: AppColors.border),
         ),
       ),

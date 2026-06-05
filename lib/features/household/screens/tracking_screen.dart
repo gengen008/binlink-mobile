@@ -16,6 +16,7 @@ import '../../../core/routing/routing_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
 import '../../../core/l10n/strings.dart';
+import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 
@@ -316,6 +317,14 @@ class _TrackingScreenState extends State<TrackingScreen>
     }
 
     return Scaffold(
+      backgroundColor: AppColors.midnightNavy,
+      // ── AppBar (Rydr: dark solid bar, rounded-square back, trailing status badge) ──
+      appBar: AppScaffoldBar(
+        title: S.of(context).liveTracking,
+        trailing: _booking != null
+            ? StatusBadge(status: status, animate: true)
+            : null,
+      ),
       floatingActionButton: _booking != null
           ? FloatingActionButton(
               onPressed: () => showChatSheet(context,
@@ -329,24 +338,6 @@ class _TrackingScreenState extends State<TrackingScreen>
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
         child: Column(
           children: [
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 20, 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    Expanded(child: Text(S.of(context).liveTracking,
-                        style: AppTextStyles.h3)),
-                    if (_booking != null)
-                      StatusBadge(status: status, animate: true),
-                  ],
-                ),
-              ),
-            ),
 
             // Map
             Expanded(

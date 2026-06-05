@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -79,136 +78,87 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final size = MediaQuery.sizeOf(context);
-
     return Scaffold(
       backgroundColor: AppColors.midnightNavy,
       resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // ── Background ────────────────────────────────────────────────
-          Positioned.fill(
-            child: CustomPaint(painter: _AuthBgPainter()),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
           ),
-
-          // ── Hero section ──────────────────────────────────────────────
-          Positioned(
-            top: 0, left: 0, right: 0,
-            height: size.height * 0.38,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 400),
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.cardElevated,
-                            borderRadius: AppRadius.smBR,
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: const Icon(PhosphorIconsRegular.arrowLeft,
-                              color: AppColors.white, size: 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Top: back button (Rydr uses no back btn but BinLink needs it) ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: FadeInDown(
+                    duration: const Duration(milliseconds: 400),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.card,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Icon(
+                          PhosphorIconsRegular.arrowLeft,
+                          color: AppColors.white,
+                          size: 20,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 80),
-                      child: Text(
-                        'Create\naccount.',
-                        style: AppTextStyles.h1.copyWith(
-                          fontSize: 36,
-                          height: 1.1,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 160),
-                      child: Text(
-                        FlavorConfig.registerSubtitle,
-                        style: AppTextStyles.body
-                            .copyWith(color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ── Form card ─────────────────────────────────────────────────
-          Positioned(
-            bottom: 0, left: 0, right: 0,
-            child: FadeInUp(
-              duration: const Duration(milliseconds: 500),
-              delay: const Duration(milliseconds: 200),
-              child: Container(
-                constraints: BoxConstraints(maxHeight: size.height * 0.72),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(28),
-                    topRight: Radius.circular(28),
                   ),
-                  border: const Border(
-                    top: BorderSide(color: AppColors.border),
-                    left: BorderSide(color: AppColors.border),
-                    right: BorderSide(color: AppColors.border),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(80),
-                      blurRadius: 40,
-                      offset: const Offset(0, -8),
-                    ),
-                  ],
                 ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                      24, 20, 24,
-                      MediaQuery.viewInsetsOf(context).bottom + 24),
-                  child: Form(
-                    key: _formKey,
+
+                const SizedBox(height: 20),
+
+                // ── Auth header — logo only (shorter than login) ─────────────────
+                FadeInDown(
+                  duration: const Duration(milliseconds: 1500),
+                  child: Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Handle
-                        Center(
-                          child: Container(
-                            width: 40, height: 4,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(
-                              color: AppColors.sheetHandle,
-                              borderRadius: AppRadius.fullBR,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'BL',
+                                  style: TextStyle(
+                                    fontFamily: 'PlusJakartaSans',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'BinLink',
+                              style: AppTextStyles.h2.copyWith(fontSize: 20),
+                            ),
+                          ],
                         ),
-
-                        Text('Your details', style: AppTextStyles.h3),
-                        const SizedBox(height: 4),
-                        Text('Fill in your information to get started',
-                            style: AppTextStyles.bodySmall),
-                        const SizedBox(height: 22),
-
-                        // Role badge
+                        const SizedBox(height: 16),
+                        // Role badge (BinLink-specific)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                              horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.steelBlue.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
@@ -237,7 +187,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 18),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Form section (Rydr: FadeInDown 1400ms) ──────────────────────
+                const SizedBox(height: 30),
+                FadeInDown(
+                  duration: const Duration(milliseconds: 1400),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          'Create Account',
+                          style: AppTextStyles.h2.copyWith(fontSize: 22),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          FlavorConfig.registerSubtitle,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
 
                         // Full name
                         AppTextField(
@@ -247,10 +225,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           autofillHints: const [AutofillHints.name],
                           prefixIcon: const Icon(PhosphorIconsRegular.user,
                               color: AppColors.muted, size: 20),
-                          validator: (v) => Validators.required(v, 'Full name'),
+                          validator: (v) =>
+                              Validators.required(v, 'Full name'),
                           textInputAction: TextInputAction.next,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 10),
 
                         // Email
                         AppTextField(
@@ -264,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: Validators.email,
                           textInputAction: TextInputAction.next,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 10),
 
                         // Password
                         AppTextField(
@@ -278,18 +257,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           suffixIcon: GestureDetector(
                             onTap: () =>
                                 setState(() => _showPass = !_showPass),
-                            child: Icon(
-                              _showPass
-                                  ? PhosphorIconsRegular.eyeSlash
-                                  : PhosphorIconsRegular.eye,
-                              color: AppColors.muted, size: 20,
+                            child: Text(
+                              _showPass ? 'hide' : 'show',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.steelBlue,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                           validator: Validators.password,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _register(),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 20),
 
                         // Create account button
                         AppButton(
@@ -297,81 +277,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           loading: auth.loading,
                           onPressed: _register,
                         ),
-                        const SizedBox(height: 18),
-
-                        // Divider
-                        Row(children: [
-                          const Expanded(
-                              child: Divider(color: AppColors.border)),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 14),
-                            child: Text('or',
-                                style: AppTextStyles.caption
-                                    .copyWith(color: AppColors.muted)),
-                          ),
-                          const Expanded(
-                              child: Divider(color: AppColors.border)),
-                        ]),
-                        const SizedBox(height: 16),
-
-                        // Google
-                        _GoogleRegisterButton(
-                            loading: auth.loading,
-                            onPressed: _registerGoogle),
-                        const SizedBox(height: 22),
-
-                        // Sign in link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Already have an account? ',
-                                style: AppTextStyles.bodySmall
-                                    .copyWith(color: AppColors.muted)),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Text('Sign In',
-                                  style: AppTextStyles.label
-                                      .copyWith(color: AppColors.steelBlue)),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
+
+                // ── Google register button (Rydr: FadeInDown 2000ms) ─────────────
+                const SizedBox(height: 40),
+                FadeInDown(
+                  duration: const Duration(milliseconds: 2000),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: _GoogleRegisterButton(
+                      loading: auth.loading,
+                      onPressed: _registerGoogle,
+                    ),
+                  ),
+                ),
+
+                // ── Sign in link (Rydr: FadeInDown 2200ms) ──────────────────────
+                const SizedBox(height: 40),
+                FadeInDown(
+                  duration: const Duration(milliseconds: 2200),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Text(
+                          'Sign In',
+                          style: AppTextStyles.body.copyWith(
+                            fontSize: 13,
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
-}
-
-// ── Background painter ────────────────────────────────────────────────────────
-
-class _AuthBgPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    paint.color = AppColors.steelBlue.withAlpha(18);
-    canvas.drawCircle(Offset(size.width + 40, -60), 200, paint);
-    paint.color = AppColors.deepOcean.withAlpha(180);
-    canvas.drawCircle(Offset(-60, size.height * 0.5), 160, paint);
-    final dotPaint = Paint()
-      ..color = AppColors.steelBlue.withAlpha(16)
-      ..style = PaintingStyle.fill;
-    const step = 36.0;
-    for (double x = 0; x < size.width; x += step) {
-      for (double y = 0; y < size.height * 0.42; y += step) {
-        canvas.drawCircle(Offset(x, y), 1.5, dotPaint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_AuthBgPainter old) => false;
 }
 
 // ── Google register button ────────────────────────────────────────────────────
@@ -387,23 +347,30 @@ class _GoogleRegisterButton extends StatelessWidget {
     return GestureDetector(
       onTap: loading ? null : onPressed,
       child: Container(
-        height: 54,
+        height: 50,
+        width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.cardElevated,
-          borderRadius: AppRadius.smBR,
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 22, height: 22,
+              width: 22,
+              height: 22,
               child: CustomPaint(painter: _GLogoPainter()),
             ),
-            const SizedBox(width: 12),
-            Text('Sign up with Google',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.white)),
+            const SizedBox(width: 10),
+            Text(
+              'Sign up with Google',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),
@@ -417,11 +384,11 @@ class _GLogoPainter extends CustomPainter {
     final cx = size.width / 2;
     final cy = size.height / 2;
     final r  = size.width / 2;
-    final colours = [
-      const Color(0xFF4285F4),
-      const Color(0xFF34A853),
-      const Color(0xFFFBBC05),
-      const Color(0xFFEA4335),
+    const colours = [
+      Color(0xFF4285F4),
+      Color(0xFF34A853),
+      Color(0xFFFBBC05),
+      Color(0xFFEA4335),
     ];
     final p = Paint()
       ..style = PaintingStyle.stroke
@@ -439,10 +406,11 @@ class _GLogoPainter extends CustomPainter {
     canvas.drawRect(
         Rect.fromLTWH(cx, cy - size.height * 0.18, r, size.height * 0.36),
         Paint()
-          ..color = AppColors.cardElevated
+          ..color = AppColors.card
           ..style = PaintingStyle.fill);
     canvas.drawRect(
-        Rect.fromLTWH(cx, cy - size.height * 0.18, r * 0.85, size.height * 0.36),
+        Rect.fromLTWH(
+            cx, cy - size.height * 0.18, r * 0.85, size.height * 0.36),
         Paint()
           ..color = colours[0]
           ..style = PaintingStyle.fill);

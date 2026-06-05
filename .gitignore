@@ -55,3 +55,4 @@ android/app/src/collector/google-services.json
 release.jks
 android/app/release.jks
 android/app/keystore.jks
+android/build/

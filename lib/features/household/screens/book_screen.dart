@@ -15,6 +15,7 @@ import '../../../core/services/location_service.dart';
 import '../../../core/services/places_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
+import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/step_progress_bar.dart';
 import '../../../shared/widgets/date_picker_row.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -290,151 +291,140 @@ class _BookScreenState extends State<BookScreen>
     final prov = context.watch<HouseholdProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.midnightNavy,
+      // ── AppBar (Rydr: dark solid bar, rounded-square back button, left-aligned title) ──
+      appBar: AppScaffoldBar(
+        centerTitle: false,
+        onBack: () {
+          if (_step > 0) {
+            _toStep(_step - 1);
+          } else {
+            Navigator.pop(context);
+          }
+        },
+        titleWidget: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Book a Pickup', style: AppTextStyles.appBarTitle),
+            Text(
+              'Step ${_step + 1} of 6 — ${_kStepLabels[_step]}',
+              style: AppTextStyles.appBarSub,
+            ),
+          ],
+        ),
+      ),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // ── App bar ──────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (_step > 0) {
-                          _toStep(_step - 1);
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      },
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Book a Pickup', style: AppTextStyles.h3),
-                          Text(
-                            'Step ${_step + 1} of 6 — ${_kStepLabels[_step]}',
-                            style: AppTextStyles.caption,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // ── Step progress bar ──────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: StepProgressBar(
+                totalSteps: 6,
+                currentStep: _step,
               ),
+            ),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-              // ── Step progress bar ────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: StepProgressBar(
-                  totalSteps: 6,
-                  currentStep: _step,
-                ),
+            // ── Step pages ─────────────────────────────────────────
+            Expanded(
+              child: PageView(
+                controller: _pageCtrl,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _Step1Category(
+                    selected: _category,
+                    onSelect: (k) => setState(() => _category = k),
+                    fade: _fade,
+                  ),
+                  _Step2Volume(
+                    binSize: _binSize,
+                    extraBags: _extraBags,
+                    estWeight: _estWeightKg,
+                    onBinSize: (s) => setState(() => _binSize = s),
+                    onExtraBags: (v) => setState(() => _extraBags = v),
+                    onWeight: (v) => setState(() => _estWeightKg = v),
+                    fade: _fade,
+                  ),
+                  _Step3Photos(
+                    photos: _wastePhotos,
+                    uploading: _uploadingPhotos,
+                    onPickImage: () async {
+                      final img = await _picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 75,
+                      );
+                      if (img != null) setState(() => _wastePhotos.add(img));
+                    },
+                    onPickGallery: () async {
+                      final imgs = await _picker.pickMultiImage(imageQuality: 75);
+                      if (imgs.isNotEmpty) setState(() => _wastePhotos.addAll(imgs));
+                    },
+                    onRemove: (i) => setState(() => _wastePhotos.removeAt(i)),
+                    fade: _fade,
+                  ),
+                  _Step3Schedule(
+                    isNow: _isNow,
+                    selectedDate: _scheduledDate,
+                    timePref: _timePref,
+                    frequency: _frequency,
+                    onNow: (v) => setState(() => _isNow = v),
+                    onDate: (d) => setState(() => _scheduledDate = d),
+                    onTimePref: (t) => setState(() => _timePref = t),
+                    onFrequency: (f) => setState(() => _frequency = f),
+                    fade: _fade,
+                  ),
+                  _Step4Address(
+                    addressCtrl: _addressCtrl,
+                    notesCtrl: _notesCtrl,
+                    lat: _lat,
+                    lng: _lng,
+                    locating: _locating,
+                    onLocate: _getLocation,
+                    onAddressSelected: _onAddressSelected,
+                    fade: _fade,
+                  ),
+                  _Step5Review(
+                    category: _category,
+                    binSize: _binSize,
+                    extraBags: _extraBags,
+                    address: _addressCtrl.text,
+                    isNow: _isNow,
+                    scheduledDate: _scheduledDate,
+                    timePref: _timePref,
+                    frequency: _frequency,
+                    base: _base,
+                    extrasAmt: _extrasAmt,
+                    total: _total,
+                    payMethod: _payMethod,
+                    fade: _fade,
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 20),
-
-              // ── Step pages ───────────────────────────────────────
-              Expanded(
-                child: PageView(
-                  controller: _pageCtrl,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _Step1Category(
-                      selected: _category,
-                      onSelect: (k) => setState(() => _category = k),
-                      fade: _fade,
-                    ),
-                    _Step2Volume(
-                      binSize: _binSize,
-                      extraBags: _extraBags,
-                      estWeight: _estWeightKg,
-                      onBinSize: (s) => setState(() => _binSize = s),
-                      onExtraBags: (v) => setState(() => _extraBags = v),
-                      onWeight: (v) => setState(() => _estWeightKg = v),
-                      fade: _fade,
-                    ),
-                    _Step3Photos(
-                      photos: _wastePhotos,
-                      uploading: _uploadingPhotos,
-                      onPickImage: () async {
-                        final img = await _picker.pickImage(
-                          source: ImageSource.camera,
-                          imageQuality: 75,
-                        );
-                        if (img != null) setState(() => _wastePhotos.add(img));
-                      },
-                      onPickGallery: () async {
-                        final imgs = await _picker.pickMultiImage(imageQuality: 75);
-                        if (imgs.isNotEmpty) setState(() => _wastePhotos.addAll(imgs));
-                      },
-                      onRemove: (i) => setState(() => _wastePhotos.removeAt(i)),
-                      fade: _fade,
-                    ),
-                    _Step3Schedule(
-                      isNow: _isNow,
-                      selectedDate: _scheduledDate,
-                      timePref: _timePref,
-                      frequency: _frequency,
-                      onNow: (v) => setState(() => _isNow = v),
-                      onDate: (d) => setState(() => _scheduledDate = d),
-                      onTimePref: (t) => setState(() => _timePref = t),
-                      onFrequency: (f) => setState(() => _frequency = f),
-                      fade: _fade,
-                    ),
-                    _Step4Address(
-                      addressCtrl: _addressCtrl,
-                      notesCtrl: _notesCtrl,
-                      lat: _lat,
-                      lng: _lng,
-                      locating: _locating,
-                      onLocate: _getLocation,
-                      onAddressSelected: _onAddressSelected,
-                      fade: _fade,
-                    ),
-                    _Step5Review(
-                      category: _category,
-                      binSize: _binSize,
-                      extraBags: _extraBags,
-                      address: _addressCtrl.text,
-                      isNow: _isNow,
-                      scheduledDate: _scheduledDate,
-                      timePref: _timePref,
-                      frequency: _frequency,
-                      base: _base,
-                      extrasAmt: _extrasAmt,
-                      total: _total,
-                      payMethod: _payMethod,
-                      fade: _fade,
-                    ),
-                  ],
-                ),
+            // ── Next / Confirm button ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: AppButton(
+                label: _step == 5 ? 'Confirm & Pay ${Fmt.currency(_total)}' : 'Continue',
+                loading: prov.loading || _uploadingPhotos,
+                onPressed: _canAdvance()
+                    ? () => _step == 5 ? _confirm() : _toStep(_step + 1)
+                    : null,
+                icon: _step == 5
+                    ? const Icon(PhosphorIconsRegular.checkCircle,
+                        color: AppColors.white, size: 20)
+                    : const Icon(PhosphorIconsRegular.arrowRight,
+                        color: AppColors.white, size: 20),
               ),
-
-              // ── Next / Confirm button ────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: AppButton(
-                  label: _step == 5 ? 'Confirm & Pay ${Fmt.currency(_total)}' : 'Continue',
-                  loading: prov.loading || _uploadingPhotos,
-                  onPressed: _canAdvance()
-                      ? () => _step == 5 ? _confirm() : _toStep(_step + 1)
-                      : null,
-                  icon: _step == 5
-                      ? const Icon(PhosphorIconsRegular.checkCircle,
-                          color: AppColors.white, size: 20)
-                      : const Icon(PhosphorIconsRegular.arrowRight,
-                          color: AppColors.white, size: 20),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

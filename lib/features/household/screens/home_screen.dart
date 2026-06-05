@@ -22,7 +22,6 @@ import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/stats_row.dart';
 import '../../../shared/widgets/collector_bottom_sheet.dart';
-import '../../../shared/widgets/location_search_sheet.dart';
 import 'book_screen.dart';
 import 'tracking_screen.dart';
 import 'privacy_screen.dart';
@@ -324,191 +323,90 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ),
 
-          // ── Top overlay: header + search bar ──────────────────────
-          // Positioned so it only takes its natural height, never covers the map.
+          // ── AppBar (Rydr: solid dark AppBar — greeting left, drawer icon right) ──
           Positioned(
             top: 0, left: 0, right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                // Greeting header (glass card)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.deepOcean.withAlpha(230),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(60),
-                          blurRadius: 20,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+            child: Material(
+              color: AppColors.appBarBg,
+              child: SafeArea(
+                bottom: false,
+                child: SizedBox(
+                  height: 70,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        // Rydr DrawerMenuButton — opens AppDrawer
-                        DrawerMenuButton(
-                          onTap: () => Scaffold.of(context).openDrawer(),
-                        ),
-                        const SizedBox(width: 12),
-
-                        // Greeting + name
+                        // Greeting column (Rydr: "Hello, Daniel 👋🏾" + subtitle)
                         Expanded(
                           child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${_greeting()}, 👋',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.muted,
-                                ),
+                                'Hello, ${auth.user?.fullName?.split(' ').first ?? 'there'} 👋🏾',
+                                style: AppTextStyles.appBarTitle,
                               ),
+                              const SizedBox(height: 2),
                               Text(
-                                auth.user?.fullName?.split(' ').first ??
-                                    'Welcome',
-                                style: AppTextStyles.h3,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                S.of(context).bookPickup,
+                                style: AppTextStyles.appBarSub,
                               ),
                             ],
                           ),
                         ),
 
-                        // Online collectors chip
-                        if (prov.onlineCollectors.isNotEmpty)
+                        // Online collectors badge (compact)
+                        if (prov.onlineCollectors.isNotEmpty) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withAlpha(25),
+                              color: AppColors.success.withAlpha(20),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: AppColors.success.withAlpha(80)),
+                                  color: AppColors.success.withAlpha(60)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  width: 6, height: 6,
+                                  width: 5, height: 5,
                                   decoration: const BoxDecoration(
                                     color: AppColors.success,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 4),
                                 Text(
                                   '${prov.onlineCollectors.length} ${S.of(context).nearbyCount}',
                                   style: AppTextStyles.caption.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w700,
+                                    fontSize: 10,
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        else
-                          const SizedBox(width: 8),
-                        const SizedBox(width: 10),
-
-                        // Notification bell
-                        GestureDetector(
-                          onTap: () => Navigator.pushNamed(
-                              context, '/notifications'),
-                          child: Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.card,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: const Icon(
-                              PhosphorIconsRegular.bell,
-                              color: AppColors.skyBlue,
-                              size: 20,
-                            ),
                           ),
+                          const SizedBox(width: 8),
+                        ],
+
+                        // Drawer icon (Rydr: rounded square on the right)
+                        DrawerMenuButton(
+                          onTap: () => Scaffold.of(context).openDrawer(),
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
-                // Search bar pill — opens Places search
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    onTap: () async {
-                      HapticFeedback.lightImpact();
-                      final result = await showLocationSearch(
-                        context,
-                        lat: widget.myPos.latitude,
-                        lng: widget.myPos.longitude,
-                      );
-                      if (result != null && context.mounted) {
-                        _mapCtrl?.animateCamera(
-                          CameraUpdate.newLatLngZoom(
-                            LatLng(result.lat, result.lng), 16.0),
-                        );
-                      }
-                    },
-                    child: Container(
-                      height: 50,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.deepOcean.withAlpha(230),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(50),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(PhosphorIconsRegular.magnifyingGlass,
-                              color: AppColors.steelBlue, size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(S.of(context).searchAreaLandmark,
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.muted,
-                                )),
-                          ),
-                          Container(
-                            width: 28, height: 28,
-                            decoration: BoxDecoration(
-                              color: AppColors.steelBlue.withAlpha(25),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(PhosphorIconsRegular.mapPin,
-                                color: AppColors.steelBlue, size: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-          ), // end Positioned top overlay
 
           // ── Locate-me FAB ──────────────────────────────────────────
           Positioned(
             right: 16,
-            bottom: active != null ? 200 : 168,
+            bottom: active != null ? 200 : 320,
             child: GestureDetector(
               onTap: _locateMe,
               child: Container(
@@ -533,30 +431,24 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ),
 
-          // ── Bottom: active banner OR split CTA ─────────────────────
+          // ── Bottom: active banner OR Rydr bottom sheet ─────────────
           Positioned(
             left: 0, right: 0, bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: active != null
-                    ? _ActiveBookingBanner(booking: active)
-                    : _SplitCta(),
-              ),
-            ),
+            child: active != null
+                ? SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: _ActiveBookingBanner(booking: active),
+                    ),
+                  )
+                : const _HomeBottomSheet(),
           ),
         ],
       ),
     );
   }
 
-  String _greeting() {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
 }
 
 // ── Active booking banner ─────────────────────────────────────────────────────
@@ -797,146 +689,217 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
   }
 }
 
-// ── Split CTA ─────────────────────────────────────────────────────────────────
+// ── Home bottom sheet (Rydr: 300px rounded-top sheet, handle + search pill + waste cards) ──
 
-class _SplitCta extends StatelessWidget {
+class _HomeBottomSheet extends StatelessWidget {
+  const _HomeBottomSheet();
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Request Now
-        Expanded(
-          flex: 5,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              Navigator.push(context,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: 300,
+      decoration: const BoxDecoration(
+        color: AppColors.deepOcean,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x50000000),
+            blurRadius: 20,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Handle (Rydr: 80x2.875 centered) ─────────────────────────────
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 80,
+              height: 3,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── "Book a pickup" search pill (Rydr: "Where to?" tappable pill) ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
                   MaterialPageRoute(
                     builder: (_) => const BookScreen(mode: 'immediate'),
-                  ));
-            },
-            child: Container(
-              height: 76,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.steelBlue, AppColors.deepOcean],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.steelBlue.withAlpha(100)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.steelBlue.withAlpha(80),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40, height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withAlpha(20),
-                        borderRadius: BorderRadius.circular(12),
+                );
+              },
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.borderActive),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        color: AppColors.muted,
+                        size: 20,
                       ),
-                      child: const Icon(PhosphorIconsFill.lightning,
-                          color: AppColors.white, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(S.of(context).requestNow,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.white,
-                              )),
-                          Text(S.of(context).arrival15min,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.iceBlue,
-                                fontSize: 10,
-                              )),
-                        ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          S.of(context).bookPickup,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.muted,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: const Icon(
+                          PhosphorIconsRegular.arrowRight,
+                          color: AppColors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 16),
 
-        const SizedBox(width: 10),
-
-        // Schedule
-        Expanded(
-          flex: 4,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (_) => const BookScreen(mode: 'scheduled'),
-                  ));
-            },
-            child: Container(
-              height: 76,
-              decoration: BoxDecoration(
-                color: AppColors.deepOcean.withAlpha(230),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(50),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40, height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.skyBlue.withAlpha(25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: AppColors.skyBlue.withAlpha(60)),
-                      ),
-                      child: const Icon(PhosphorIconsRegular.calendarBlank,
-                          color: AppColors.skyBlue, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(S.of(context).schedule,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.white,
-                              )),
-                          Text(S.of(context).pickDate,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.muted,
-                                fontSize: 10,
-                              )),
-                        ],
-                      ),
-                    ),
-                  ],
+          // ── Horizontal waste type cards (Rydr: FavoriteItems ListView h:130) ──
+          SizedBox(
+            height: 110,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: const [
+                _WasteTypeCard(
+                  icon: PhosphorIconsFill.trashSimple,
+                  label: 'Household',
+                  price: 'GHC 30',
+                  color: AppColors.steelBlue,
+                  mode: 'immediate',
                 ),
-              ),
+                SizedBox(width: 8),
+                _WasteTypeCard(
+                  icon: PhosphorIconsFill.recycle,
+                  label: 'Plastic',
+                  price: 'GHC 30',
+                  color: AppColors.success,
+                  mode: 'immediate',
+                ),
+                SizedBox(width: 8),
+                _WasteTypeCard(
+                  icon: PhosphorIconsFill.leaf,
+                  label: 'Organic',
+                  price: 'GHC 40',
+                  color: Color(0xFF34D399),
+                  mode: 'immediate',
+                ),
+                SizedBox(width: 8),
+                _WasteTypeCard(
+                  icon: PhosphorIconsFill.laptop,
+                  label: 'E-Waste',
+                  price: 'GHC 50',
+                  color: Color(0xFFA78BFA),
+                  mode: 'scheduled',
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Waste type quick-launch card (mirrors Rydr's FavoriteItems widget) ────────
+
+class _WasteTypeCard extends StatelessWidget {
+  const _WasteTypeCard({
+    required this.icon,
+    required this.label,
+    required this.price,
+    required this.color,
+    required this.mode,
+  });
+
+  final IconData icon;
+  final String   label;
+  final String   price;
+  final Color    color;
+  final String   mode;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => BookScreen(mode: mode)),
+        );
+      },
+      child: Container(
+        width: 90,
+        height: 110,
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(60)),
         ),
-      ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              price,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.muted,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1943,7 +1906,7 @@ class _RatingSheetState extends State<_RatingSheet> {
     setState(() => _submitting = true);
     try {
       await ApiClient.post('/api/bookings/${widget.bookingId}/rating', {
-        'stars': _stars,
+        'rating': _stars,
         if (_commentCtrl.text.trim().isNotEmpty) 'comment': _commentCtrl.text.trim(),
       });
       if (mounted) setState(() { _submitting = false; _submitted = true; });

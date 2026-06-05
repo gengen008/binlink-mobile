@@ -138,13 +138,13 @@ class _JobsBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
         ),
-        border: const Border(bottom: BorderSide(color: AppColors.border)),
+        border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Stack(
         children: [
@@ -171,7 +171,7 @@ class _JobsBanner extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('My Pickups', style: AppTextStyles.h2),
+                          const Text('My Pickups', style: AppTextStyles.h2),
                           Text('Active jobs & history',
                               style: AppTextStyles.caption
                                   .copyWith(color: AppColors.skyBlue)),
