@@ -31,54 +31,25 @@ class _EarningsScreenState extends State<EarningsScreen> {
     return Consumer<CollectorProvider>(
       builder: (_, prov, __) => Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: Row(
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            // ── Branded balance banner ─────────────────────────────────
+            _EarningsBanner(
+              available:  prov.walletAvailable,
+              pending:    prov.walletPending,
+              withdrawn:  prov.walletWithdrawn,
+              loading:    prov.loading || prov.loadingWallet,
+              onRefresh:  () { prov.loadDashboard(); prov.loadWallet(); },
+              onPayout:   () => _showPayoutSheet(context, prov),
+            ),
+
+            Expanded(
+              child: prov.loading && prov.loadingWallet
+                  ? const Center(child: CircularProgressIndicator(
+                      color: AppColors.steelBlue, strokeWidth: 2))
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                       children: [
-                        Text('Earnings & Wallet', style: AppTextStyles.h2),
-                        Text('Your financial overview', style: AppTextStyles.caption),
-                      ],
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        prov.loadDashboard();
-                        prov.loadWallet();
-                      },
-                      child: const Icon(PhosphorIconsRegular.arrowClockwise,
-                          color: AppColors.skyBlue, size: 22),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Expanded(
-                child: prov.loading && prov.loadingWallet
-                    ? const Center(child: CircularProgressIndicator(
-                        color: AppColors.steelBlue, strokeWidth: 2))
-                    : ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                        children: [
-                          // ── Wallet balance card ──
-                          _WalletCard(
-                            available:  prov.walletAvailable,
-                            pending:    prov.walletPending,
-                            withdrawn:  prov.walletWithdrawn,
-                            onPayout:   () => _showPayoutSheet(context, prov),
-                          ),
-
-                          const SizedBox(height: 20),
-
                           // ── Today summary ──
                           Row(
                             children: [
@@ -163,9 +134,8 @@ class _EarningsScreenState extends State<EarningsScreen> {
                               (b) => _PickupEarningTile(booking: b)),
                         ],
                       ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -184,118 +154,191 @@ class _EarningsScreenState extends State<EarningsScreen> {
   }
 }
 
-// ── Wallet balance card ────────────────────────────────────────────────────
+// ── Branded earnings banner ────────────────────────────────────────────────
 
-class _WalletCard extends StatelessWidget {
-  const _WalletCard({
+class _EarningsBanner extends StatelessWidget {
+  const _EarningsBanner({
     required this.available,
     required this.pending,
     required this.withdrawn,
+    required this.loading,
+    required this.onRefresh,
     required this.onPayout,
   });
   final double available;
   final double pending;
   final double withdrawn;
+  final bool loading;
+  final VoidCallback onRefresh;
   final VoidCallback onPayout;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A3A5C), Color(0xFF0D2137)],
+          colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.xxl),
-        border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.steelBlue.withAlpha(40),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: const Border(
+          bottom: BorderSide(color: AppColors.border),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.success.withAlpha(25),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.success.withAlpha(80)),
-                ),
-                child: const Icon(PhosphorIconsFill.wallet,
-                    color: AppColors.success, size: 20),
+          // Decorative circles
+          Positioned(
+            top: -40, right: -40,
+            child: Container(
+              width: 160, height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.steelBlue.withAlpha(20),
               ),
-              const SizedBox(width: 12),
-              Column(
+            ),
+          ),
+          Positioned(
+            bottom: -30, left: -30,
+            child: Container(
+              width: 120, height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.skyBlue.withAlpha(12),
+              ),
+            ),
+          ),
+
+          // Content
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Available Balance', style: AppTextStyles.label),
-                  const SizedBox(height: 2),
-                  Text(Fmt.currency(available),
-                      style: AppTextStyles.monoLg.copyWith(
-                        color: AppColors.success,
-                        fontSize: 28,
-                      )),
+                  // Title row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.steelBlue.withAlpha(30),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: AppColors.steelBlue.withAlpha(80)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(PhosphorIconsFill.wallet,
+                                color: AppColors.steelBlue, size: 12),
+                            const SizedBox(width: 5),
+                            Text('Wallet',
+                                style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.steelBlue,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: onRefresh,
+                        child: Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.steelBlue.withAlpha(25),
+                            borderRadius: AppRadius.smBR,
+                            border: Border.all(
+                                color: AppColors.steelBlue.withAlpha(60)),
+                          ),
+                          child: loading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.steelBlue),
+                                )
+                              : const Icon(PhosphorIconsRegular.arrowClockwise,
+                                  color: AppColors.steelBlue, size: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Balance
+                  Text('Available Balance',
+                      style: AppTextStyles.caption
+                          .copyWith(color: AppColors.skyBlue, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  Text(
+                    Fmt.currency(available),
+                    style: AppTextStyles.monoLg.copyWith(
+                        fontSize: 34, letterSpacing: -0.5),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Pending + Withdrawn chips
+                  Row(
+                    children: [
+                      _BannerStat(
+                          label: 'Pending',
+                          value: Fmt.currency(pending),
+                          color: AppColors.warning),
+                      const SizedBox(width: 10),
+                      _BannerStat(
+                          label: 'Withdrawn',
+                          value: Fmt.currency(withdrawn),
+                          color: AppColors.skyBlue),
+                      const Spacer(),
+
+                      // Payout CTA button
+                      GestureDetector(
+                        onTap: available > 0 ? onPayout : null,
+                        child: Opacity(
+                          opacity: available > 0 ? 1.0 : 0.4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: available > 0
+                                  ? [
+                                      BoxShadow(
+                                        color:
+                                            AppColors.steelBlue.withAlpha(80),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(PhosphorIconsFill.arrowCircleRight,
+                                    color: AppColors.white, size: 14),
+                                SizedBox(width: 6),
+                                Text('Payout',
+                                    style: TextStyle(
+                                      fontFamily: 'PlusJakartaSans',
+                                      color: AppColors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.border),
-          const SizedBox(height: 16),
-
-          Row(
-            children: [
-              _WalletStat('Pending', pending, AppColors.warning),
-              const _VDiv(),
-              _WalletStat('Withdrawn', withdrawn, AppColors.skyBlue),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Payout button
-          GestureDetector(
-            onTap: available > 0 ? onPayout : null,
-            child: Opacity(
-              opacity: available > 0 ? 1.0 : 0.45,
-              child: Container(
-                width: double.infinity,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: AppRadius.lgBR,
-                  boxShadow: available > 0 ? [
-                    BoxShadow(
-                      color: AppColors.steelBlue.withAlpha(60),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ] : null,
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(PhosphorIconsFill.arrowCircleRight,
-                        color: AppColors.white, size: 18),
-                    SizedBox(width: 8),
-                    Text('Request Payout', style: TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      color: AppColors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    )),
-                  ],
-                ),
               ),
             ),
           ),
@@ -305,36 +348,33 @@ class _WalletCard extends StatelessWidget {
   }
 }
 
-class _WalletStat extends StatelessWidget {
-  const _WalletStat(this.label, this.amount, this.color);
+class _BannerStat extends StatelessWidget {
+  const _BannerStat(
+      {required this.label, required this.value, required this.color});
   final String label;
-  final double amount;
+  final String value;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(18),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.caption),
-          const SizedBox(height: 4),
-          Text(Fmt.currency(amount),
-              style: AppTextStyles.mono.copyWith(color: color, fontSize: 14)),
+          Text(label,
+              style: AppTextStyles.caption
+                  .copyWith(color: color, fontSize: 9)),
+          Text(value,
+              style: AppTextStyles.monoSm
+                  .copyWith(color: AppColors.textPrimary, fontSize: 12)),
         ],
       ),
-    );
-  }
-}
-
-class _VDiv extends StatelessWidget {
-  const _VDiv();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1, height: 32, color: AppColors.border,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
     );
   }
 }

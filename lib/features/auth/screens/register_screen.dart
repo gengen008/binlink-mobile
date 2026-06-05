@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -51,7 +52,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Registration failed'), backgroundColor: AppColors.danger),
+        SnackBar(
+            content: Text(auth.error ?? 'Registration failed'),
+            backgroundColor: AppColors.danger),
       );
     }
   }
@@ -67,7 +70,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     } else if (auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.danger),
+        SnackBar(
+            content: Text(auth.error!), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -75,225 +79,375 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Back button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(PhosphorIconsRegular.arrowLeft, color: AppColors.white),
-                  ),
+      backgroundColor: AppColors.midnightNavy,
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        children: [
+          // ── Background ────────────────────────────────────────────────
+          Positioned.fill(
+            child: CustomPaint(painter: _AuthBgPainter()),
+          ),
+
+          // ── Hero section ──────────────────────────────────────────────
+          Positioned(
+            top: 0, left: 0, right: 0,
+            height: size.height * 0.38,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button
+                    FadeInDown(
+                      duration: const Duration(milliseconds: 400),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.cardElevated,
+                            borderRadius: AppRadius.smBR,
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Icon(PhosphorIconsRegular.arrowLeft,
+                              color: AppColors.white, size: 20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    FadeInDown(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 80),
+                      child: Text(
+                        'Create\naccount.',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 36,
+                          height: 1.1,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    FadeInDown(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 160),
+                      child: Text(
+                        FlavorConfig.registerSubtitle,
+                        style: AppTextStyles.body
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+          ),
 
-              Expanded(
+          // ── Form card ─────────────────────────────────────────────────
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            child: FadeInUp(
+              duration: const Duration(milliseconds: 500),
+              delay: const Duration(milliseconds: 200),
+              child: Container(
+                constraints: BoxConstraints(maxHeight: size.height * 0.72),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                  border: const Border(
+                    top: BorderSide(color: AppColors.border),
+                    left: BorderSide(color: AppColors.border),
+                    right: BorderSide(color: AppColors.border),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(80),
+                      blurRadius: 40,
+                      offset: const Offset(0, -8),
+                    ),
+                  ],
+                ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: EdgeInsets.fromLTRB(
+                      24, 20, 24,
+                      MediaQuery.viewInsetsOf(context).bottom + 24),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(height: 8),
+                        // Handle
+                        Center(
+                          child: Container(
+                            width: 40, height: 4,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.sheetHandle,
+                              borderRadius: AppRadius.fullBR,
+                            ),
+                          ),
+                        ),
 
-                        // Heading — Rydr FadeInDown stagger
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        Text('Your details', style: AppTextStyles.h3),
+                        const SizedBox(height: 4),
+                        Text('Fill in your information to get started',
+                            style: AppTextStyles.bodySmall),
+                        const SizedBox(height: 22),
+
+                        // Role badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.steelBlue.withAlpha(25),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: AppColors.steelBlue.withAlpha(80)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('Create account', style: AppTextStyles.h1),
-                              const SizedBox(height: 8),
+                              Icon(
+                                FlavorConfig.isCollector
+                                    ? PhosphorIconsFill.truck
+                                    : PhosphorIconsFill.house,
+                                color: AppColors.steelBlue,
+                                size: 13,
+                              ),
+                              const SizedBox(width: 6),
                               Text(
-                                FlavorConfig.registerSubtitle,
-                                style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                                FlavorConfig.isCollector
+                                    ? 'Collector account'
+                                    : 'Household account',
+                                style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.steelBlue,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 18),
 
                         // Full name
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 150),
-                          child: AppTextField(
-                            controller: _nameCtrl,
-                            label: 'Full Name',
-                            hint: 'Your full name',
-                            autofillHints: const [AutofillHints.name],
-                            prefixIcon: const Icon(PhosphorIconsRegular.user, color: AppColors.muted, size: 20),
-                            validator: (v) => Validators.required(v, 'Full name'),
-                            textInputAction: TextInputAction.next,
-                          ),
+                        AppTextField(
+                          controller: _nameCtrl,
+                          label: 'Full Name',
+                          hint: 'Your full name',
+                          autofillHints: const [AutofillHints.name],
+                          prefixIcon: const Icon(PhosphorIconsRegular.user,
+                              color: AppColors.muted, size: 20),
+                          validator: (v) => Validators.required(v, 'Full name'),
+                          textInputAction: TextInputAction.next,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
                         // Email
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 250),
-                          child: AppTextField(
-                            controller: _emailCtrl,
-                            label: 'Email',
-                            hint: 'you@example.com',
-                            keyboardType: TextInputType.emailAddress,
-                            autofillHints: const [AutofillHints.email],
-                            prefixIcon: const Icon(PhosphorIconsRegular.envelope, color: AppColors.muted, size: 20),
-                            validator: Validators.email,
-                            textInputAction: TextInputAction.next,
-                          ),
+                        AppTextField(
+                          controller: _emailCtrl,
+                          label: 'Email address',
+                          hint: 'you@example.com',
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          prefixIcon: const Icon(PhosphorIconsRegular.envelope,
+                              color: AppColors.muted, size: 20),
+                          validator: Validators.email,
+                          textInputAction: TextInputAction.next,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
                         // Password
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 350),
-                          child: AppTextField(
-                            controller: _passCtrl,
-                            label: 'Password',
-                            hint: 'At least 8 characters',
-                            obscureText: !_showPass,
-                            autofillHints: const [AutofillHints.newPassword],
-                            prefixIcon: const Icon(PhosphorIconsRegular.lock, color: AppColors.muted, size: 20),
-                            suffixIcon: GestureDetector(
-                              onTap: () => setState(() => _showPass = !_showPass),
-                              child: Icon(
-                                _showPass ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
-                                color: AppColors.muted, size: 20,
-                              ),
+                        AppTextField(
+                          controller: _passCtrl,
+                          label: 'Password',
+                          hint: 'At least 8 characters',
+                          obscureText: !_showPass,
+                          autofillHints: const [AutofillHints.newPassword],
+                          prefixIcon: const Icon(PhosphorIconsRegular.lock,
+                              color: AppColors.muted, size: 20),
+                          suffixIcon: GestureDetector(
+                            onTap: () =>
+                                setState(() => _showPass = !_showPass),
+                            child: Icon(
+                              _showPass
+                                  ? PhosphorIconsRegular.eyeSlash
+                                  : PhosphorIconsRegular.eye,
+                              color: AppColors.muted, size: 20,
                             ),
-                            validator: Validators.password,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _register(),
                           ),
+                          validator: Validators.password,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _register(),
                         ),
-
-                        // Collector welcome banner
-                        if (_role == 'COLLECTOR') ...[
-                          const SizedBox(height: 16),
-                          FadeInDown(
-                            duration: const Duration(milliseconds: 600),
-                            delay: const Duration(milliseconds: 400),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withAlpha(15),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.success.withAlpha(60)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(PhosphorIconsFill.checkCircle, color: AppColors.success, size: 18),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      'You can start accepting pickups immediately after signing up.',
-                                      style: AppTextStyles.caption.copyWith(color: AppColors.success),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 22),
 
                         // Create account button
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 450),
-                          child: AppButton(
-                            label: 'Create Account',
+                        AppButton(
+                          label: 'Create Account',
+                          loading: auth.loading,
+                          onPressed: _register,
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Divider
+                        Row(children: [
+                          const Expanded(
+                              child: Divider(color: AppColors.border)),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text('or',
+                                style: AppTextStyles.caption
+                                    .copyWith(color: AppColors.muted)),
+                          ),
+                          const Expanded(
+                              child: Divider(color: AppColors.border)),
+                        ]),
+                        const SizedBox(height: 16),
+
+                        // Google
+                        _GoogleRegisterButton(
                             loading: auth.loading,
-                            onPressed: _register,
-                            icon: const Icon(PhosphorIconsRegular.arrowRight, color: AppColors.white, size: 20),
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // OR divider + Google
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 550),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  const Expanded(child: Divider(color: AppColors.border)),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    child: Text('or', style: AppTextStyles.caption.copyWith(color: AppColors.muted)),
-                                  ),
-                                  const Expanded(child: Divider(color: AppColors.border)),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              GestureDetector(
-                                onTap: auth.loading ? null : _registerGoogle,
-                                child: Container(
-                                  height: 54,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.card,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.border),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(PhosphorIconsRegular.googleLogo, color: AppColors.white, size: 22),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Sign up with Google',
-                                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
+                            onPressed: _registerGoogle),
+                        const SizedBox(height: 22),
 
                         // Sign in link
-                        FadeInUp(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 650),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Already have an account? ', style: AppTextStyles.body.copyWith(color: AppColors.muted)),
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Text('Sign In', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.steelBlue)),
-                              ),
-                            ],
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Already have an account? ',
+                                style: AppTextStyles.bodySmall
+                                    .copyWith(color: AppColors.muted)),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Text('Sign In',
+                                  style: AppTextStyles.label
+                                      .copyWith(color: AppColors.steelBlue)),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Background painter ────────────────────────────────────────────────────────
+
+class _AuthBgPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    paint.color = AppColors.steelBlue.withAlpha(18);
+    canvas.drawCircle(Offset(size.width + 40, -60), 200, paint);
+    paint.color = AppColors.deepOcean.withAlpha(180);
+    canvas.drawCircle(Offset(-60, size.height * 0.5), 160, paint);
+    final dotPaint = Paint()
+      ..color = AppColors.steelBlue.withAlpha(16)
+      ..style = PaintingStyle.fill;
+    const step = 36.0;
+    for (double x = 0; x < size.width; x += step) {
+      for (double y = 0; y < size.height * 0.42; y += step) {
+        canvas.drawCircle(Offset(x, y), 1.5, dotPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AuthBgPainter old) => false;
+}
+
+// ── Google register button ────────────────────────────────────────────────────
+
+class _GoogleRegisterButton extends StatelessWidget {
+  const _GoogleRegisterButton(
+      {required this.loading, required this.onPressed});
+  final bool loading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: loading ? null : onPressed,
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: AppColors.cardElevated,
+          borderRadius: AppRadius.smBR,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 22, height: 22,
+              child: CustomPaint(painter: _GLogoPainter()),
+            ),
+            const SizedBox(width: 12),
+            Text('Sign up with Google',
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.white)),
+          ],
         ),
       ),
     );
   }
+}
+
+class _GLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r  = size.width / 2;
+    final colours = [
+      const Color(0xFF4285F4),
+      const Color(0xFF34A853),
+      const Color(0xFFFBBC05),
+      const Color(0xFFEA4335),
+    ];
+    final p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.18;
+    const s = -0.2;
+    final sw = [1.65, 1.57, 1.57, 1.57];
+    double st = s;
+    for (int i = 0; i < 4; i++) {
+      p.color = colours[i];
+      canvas.drawArc(
+          Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.72),
+          st, sw[i], false, p);
+      st += sw[i];
+    }
+    canvas.drawRect(
+        Rect.fromLTWH(cx, cy - size.height * 0.18, r, size.height * 0.36),
+        Paint()
+          ..color = AppColors.cardElevated
+          ..style = PaintingStyle.fill);
+    canvas.drawRect(
+        Rect.fromLTWH(cx, cy - size.height * 0.18, r * 0.85, size.height * 0.36),
+        Paint()
+          ..color = colours[0]
+          ..style = PaintingStyle.fill);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }

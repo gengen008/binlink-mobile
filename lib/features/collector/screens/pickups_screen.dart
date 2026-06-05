@@ -39,108 +39,240 @@ class _PickupsScreenState extends State<PickupsScreen>
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Row(
+      child: Column(
+        children: [
+          // ── Branded jobs banner ────────────────────────────────────
+          Consumer<CollectorProvider>(
+            builder: (_, prov, __) => _JobsBanner(
+              assignedCount:  prov.assignedJobs.length,
+              pendingCount:   prov.pendingJobs.length,
+              completedCount: prov.completedJobs.length,
+              loading:        prov.loadingJobs,
+              onRefresh:      () => context.read<CollectorProvider>().loadJobs(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Tab bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: AppRadius.lgBR,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: TabBar(
+                controller: _tab,
+                indicator: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: AppRadius.mdBR,
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
+                labelColor: AppColors.white,
+                unselectedLabelColor: AppColors.muted,
+                dividerColor: Colors.transparent,
+                tabs: const [
+                  Tab(text: 'Assigned'),
+                  Tab(text: 'Pending'),
+                  Tab(text: 'Completed'),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Expanded(
+            child: Consumer<CollectorProvider>(
+              builder: (_, prov, __) => TabBarView(
+                controller: _tab,
                 children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('My Pickups', style: AppTextStyles.h2),
-                      Text('Manage your jobs',
-                          style: AppTextStyles.caption),
-                    ],
+                  _JobList(
+                    jobs: prov.assignedJobs,
+                    emptyIcon: PhosphorIconsRegular.truck,
+                    emptyTitle: 'No assigned pickups',
+                    emptySubtitle: 'Accept a request from the map to get started',
                   ),
-                  const Spacer(),
-                  Consumer<CollectorProvider>(
-                    builder: (_, prov, __) => prov.loadingJobs
-                        ? const SizedBox(
-                            width: 18, height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.steelBlue,
-                            ),
-                          )
-                        : GestureDetector(
-                            onTap: () => context.read<CollectorProvider>().loadJobs(),
-                            child: const Icon(
-                              PhosphorIconsRegular.arrowClockwise,
-                              color: AppColors.skyBlue,
-                              size: 22,
-                            ),
-                          ),
+                  _JobList(
+                    jobs: prov.pendingJobs,
+                    emptyIcon: PhosphorIconsRegular.clock,
+                    emptyTitle: 'No pending pickups',
+                    emptySubtitle: 'Scheduled future pickups will appear here',
+                  ),
+                  _JobList(
+                    jobs: prov.completedJobs,
+                    emptyIcon: PhosphorIconsRegular.checkCircle,
+                    emptyTitle: 'No completed pickups',
+                    emptySubtitle: 'Your finished jobs will appear here',
                   ),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            const SizedBox(height: 16),
+// ── Jobs banner ───────────────────────────────────────────────────────────────
 
-            // Tab bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: AppRadius.lgBR,
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: TabBar(
-                  controller: _tab,
-                  indicator: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: AppRadius.mdBR,
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
-                  labelColor: AppColors.white,
-                  unselectedLabelColor: AppColors.muted,
-                  dividerColor: Colors.transparent,
-                  tabs: const [
-                    Tab(text: 'Assigned'),
-                    Tab(text: 'Pending'),
-                    Tab(text: 'Completed'),
-                  ],
-                ),
-              ),
-            ),
+class _JobsBanner extends StatelessWidget {
+  const _JobsBanner({
+    required this.assignedCount,
+    required this.pendingCount,
+    required this.completedCount,
+    required this.loading,
+    required this.onRefresh,
+  });
+  final int assignedCount;
+  final int pendingCount;
+  final int completedCount;
+  final bool loading;
+  final VoidCallback onRefresh;
 
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: Consumer<CollectorProvider>(
-                builder: (_, prov, __) => TabBarView(
-                  controller: _tab,
-                  children: [
-                    _JobList(
-                      jobs: prov.assignedJobs,
-                      emptyIcon: PhosphorIconsRegular.truck,
-                      emptyTitle: 'No assigned pickups',
-                      emptySubtitle: 'Accept a request from the map to get started',
-                    ),
-                    _JobList(
-                      jobs: prov.pendingJobs,
-                      emptyIcon: PhosphorIconsRegular.clock,
-                      emptyTitle: 'No pending pickups',
-                      emptySubtitle: 'Scheduled future pickups will appear here',
-                    ),
-                    _JobList(
-                      jobs: prov.completedJobs,
-                      emptyIcon: PhosphorIconsRegular.checkCircle,
-                      emptyTitle: 'No completed pickups',
-                      emptySubtitle: 'Your finished jobs will appear here',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
         ),
+        border: const Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -30, right: -30,
+            child: Container(
+              width: 130, height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.steelBlue.withAlpha(18),
+              ),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title row
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('My Pickups', style: AppTextStyles.h2),
+                          Text('Active jobs & history',
+                              style: AppTextStyles.caption
+                                  .copyWith(color: AppColors.skyBlue)),
+                        ],
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: onRefresh,
+                        child: Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.steelBlue.withAlpha(25),
+                            borderRadius: AppRadius.smBR,
+                            border: Border.all(
+                                color: AppColors.steelBlue.withAlpha(60)),
+                          ),
+                          child: loading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(9),
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.steelBlue),
+                                )
+                              : const Icon(PhosphorIconsRegular.arrowClockwise,
+                                  color: AppColors.steelBlue, size: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Stats chips
+                  Row(
+                    children: [
+                      _StatChip(
+                        label: 'Active',
+                        count: assignedCount,
+                        icon: PhosphorIconsFill.truck,
+                        color: AppColors.steelBlue,
+                      ),
+                      const SizedBox(width: 8),
+                      _StatChip(
+                        label: 'Pending',
+                        count: pendingCount,
+                        icon: PhosphorIconsFill.clock,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: 8),
+                      _StatChip(
+                        label: 'Done',
+                        count: completedCount,
+                        icon: PhosphorIconsFill.checkCircle,
+                        color: AppColors.success,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.color,
+  });
+  final String label;
+  final int count;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 5),
+          Text('$count',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: color, fontSize: 13)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: AppTextStyles.caption
+                  .copyWith(color: color.withAlpha(200), fontSize: 10)),
+        ],
       ),
     );
   }
