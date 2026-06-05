@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
@@ -95,12 +94,11 @@ class _CollectorEditProfileScreenState
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: Color(0xFF1F2421)),
+                          color: AppColors.secondary),
                     ),
                     Expanded(
-                      child: Text('Edit Profile', style: GoogleFonts.montserrat(
-                        fontSize: 18, fontWeight: FontWeight.w400,
-                        color: const Color(0xFF1F2421))),
+                      child: Text('Edit Profile', style: AppTextStyles.appBarTitle.copyWith(
+                        color: AppColors.secondary)),
                     ),
                   ],
                 ),
@@ -123,17 +121,15 @@ class _CollectorEditProfileScreenState
                                   : (auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFDCE1DE),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(30),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Text(
                                     _initials(name),
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF1F2421),
+                                    style: AppTextStyles.h3.copyWith(
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ),

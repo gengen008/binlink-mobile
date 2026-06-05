@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../shared/widgets/app_bar.dart';
 
@@ -166,18 +167,16 @@ class _SectionBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(section.heading,
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
+              style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1F2421),
+                color: AppColors.secondary,
               )),
           const SizedBox(height: 8),
           Text(
             section.body,
-            style: GoogleFonts.montserrat(
-              fontSize: 11,
+            style: AppTextStyles.bodySmall.copyWith(
               fontWeight: FontWeight.w300,
-              color: const Color(0xFF1F2421),
+              color: AppColors.secondary,
               height: 1.7,
             ),
           ),

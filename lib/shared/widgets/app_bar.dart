@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -101,16 +101,11 @@ class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _titleWidget() {
     if (titleWidget != null) return titleWidget!;
     if (title != null) {
-      // Rydr CustomAppBar: GoogleFonts.montserrat(18px, w400, white)
       return Text(
         title!,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: GoogleFonts.montserrat(
-          fontSize: 18.0,
-          fontWeight: FontWeight.w400,
-          color: Colors.white,
-        ),
+        style: AppTextStyles.appBarTitle,
       );
     }
     return const SizedBox.shrink();
@@ -133,14 +128,14 @@ class _BackButton extends StatelessWidget {
         width: 45,
         height: 45,
         decoration: const BoxDecoration(
-          color: Color(0xFFDCE1DE),
+          color: AppColors.appBarAction,
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
         ),
         child: const Center(
           child: Icon(
-            Icons.arrow_back_ios,
+            PhosphorIconsRegular.arrowLeft,
             size: 18,
-            color: Color(0xFF1F2421),
+            color: Colors.white,
           ),
         ),
       ),

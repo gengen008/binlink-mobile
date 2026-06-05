@@ -98,7 +98,7 @@ class _BottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFDCE1DE))),
+        border: Border(top: BorderSide(color: AppColors.fieldFill)),
       ),
       child: SafeArea(
         top: false,
@@ -156,7 +156,7 @@ class _NavItem extends StatelessWidget {
                 height: sel ? 4 : 0,
                 margin: const EdgeInsets.only(bottom: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F2421),
+                  color: AppColors.secondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -466,7 +466,7 @@ class _HomeTabState extends State<_HomeTab> {
               child: Container(
                 width: 48, height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F2421),
+                  color: AppColors.secondary,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
@@ -560,10 +560,10 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
                       decoration: BoxDecoration(
                         color: sel
                             ? AppColors.danger.withAlpha(15)
-                            : const Color(0xFFDCE1DE),
+                            : AppColors.fieldFill,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: sel ? AppColors.danger : const Color(0xFFDCE1DE),
+                          color: sel ? AppColors.danger : AppColors.fieldFill,
                         ),
                       ),
                       child: Row(
@@ -1243,10 +1243,10 @@ class _HistoryTab extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: sel
                             ? AppColors.danger.withAlpha(15)
-                            : const Color(0xFFDCE1DE),
+                            : AppColors.fieldFill,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: sel ? AppColors.danger : const Color(0xFFDCE1DE),
+                          color: sel ? AppColors.danger : AppColors.fieldFill,
                         ),
                       ),
                       child: Row(
@@ -1975,7 +1975,7 @@ class _BookingDetailSheet extends StatelessWidget {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1F2421),
+                    color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Row(
@@ -2209,7 +2209,7 @@ class _RatingSheetState extends State<_RatingSheet> {
               width: double.infinity,
               height: 52,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F2421),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
@@ -2357,7 +2357,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       Container(
                         width: 88, height: 88,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFDCE1DE),
+                          color: AppColors.fieldFill,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -2365,7 +2365,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                             Fmt.initials(user?.fullName),
                             style: AppTextStyles.h2.copyWith(
                               fontSize: 28,
-                              color: const Color(0xFF1F2421),
+                              color: AppColors.secondary,
                             ),
                           ),
                         ),
@@ -2379,7 +2379,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                           child: Container(
                             width: 28, height: 28,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1F2421),
+                              color: AppColors.secondary,
                               shape: BoxShape.circle,
                               border: Border.all(
                                   color: Colors.white, width: 2),

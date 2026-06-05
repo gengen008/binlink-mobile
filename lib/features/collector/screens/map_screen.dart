@@ -883,8 +883,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                 children: [
                   Container(
                     width: 88, height: 88,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFDCE1DE),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(30),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -892,7 +892,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                         Fmt.initials(user?.fullName),
                         style: AppTextStyles.h2.copyWith(
                           fontSize: 28,
-                          color: const Color(0xFF1F2421),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),

@@ -35,12 +35,12 @@ class StepProgressBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isDone || isActive
-                            ? const Color(0xFF1F2421)
-                            : const Color(0xFFDCE1DE),
+                            ? AppColors.primary
+                            : AppColors.fieldFill,
                         border: Border.all(
                           color: isDone || isActive
-                              ? const Color(0xFF1F2421)
-                              : const Color(0xFFDCE1DE),
+                              ? AppColors.primary
+                              : AppColors.fieldFill,
                           width: isActive ? 2 : 1,
                         ),
                       ),
@@ -53,7 +53,7 @@ class StepProgressBar extends StatelessWidget {
                                 style: TextStyle(
                                   color: isDone || isActive
                                       ? Colors.white
-                                      : const Color(0xFF1F2421),
+                                      : AppColors.muted,
                                   fontWeight: FontWeight.w700,
                                   fontSize: isActive ? 12 : 11,
                                 ),
@@ -71,8 +71,8 @@ class StepProgressBar extends StatelessWidget {
                     height: 2,
                     decoration: BoxDecoration(
                       color: i < currentStep
-                          ? const Color(0xFF1F2421)
-                          : const Color(0xFFDCE1DE),
+                          ? AppColors.primary
+                          : AppColors.fieldFill,
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),

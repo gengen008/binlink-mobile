@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_text_styles.dart';
 
 enum AppButtonVariant { primary, secondary, danger, ghost }
 
@@ -31,33 +31,35 @@ class AppButton extends StatelessWidget {
 
     return InkWell(
       onTap: loading ? null : onPressed,
-      borderRadius: AppRadius.smBR,
+      borderRadius: AppRadius.buttonBR,
       child: Container(
         width: fullWidth ? double.infinity : null,
         height: height,
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: AppRadius.smBR,
+          borderRadius: AppRadius.buttonBR,
           border: border != null ? Border.all(color: border) : null,
         ),
         child: Center(
           child: loading
               ? SizedBox(
-                  width: 22, height: 22,
+                  width: 22,
+                  height: 22,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: fg,
+                    strokeWidth: 2.5,
+                    color: fg,
                   ),
                 )
               : Row(
-                  mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+                  mainAxisSize:
+                      fullWidth ? MainAxisSize.max : MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[icon!, const SizedBox(width: 8)],
-                    Text(label,
-                        style: GoogleFonts.poppins(
-                          color: fg,
-                          fontWeight: FontWeight.w500,
-                        )),
+                    Text(
+                      label,
+                      style: AppTextStyles.button.copyWith(color: fg),
+                    ),
                   ],
                 ),
         ),
@@ -68,14 +70,17 @@ class AppButton extends StatelessWidget {
   (Color, Color, Color?) _colors() {
     switch (variant) {
       case AppButtonVariant.primary:
-        // Rydr exact: Secondarygrey (0xFF1F2421) fill, white text
-        return (const Color(0xFF1F2421), Colors.white, null);
+        return (AppColors.primary, Colors.white, null);
       case AppButtonVariant.secondary:
-        return (const Color(0xFFDCE1DE), const Color(0xFF1F2421), const Color(0xFFDCE1DE));
+        return (AppColors.fieldFill, AppColors.secondary, AppColors.border);
       case AppButtonVariant.danger:
-        return (AppColors.danger.withAlpha(20), AppColors.danger, AppColors.danger.withAlpha(80));
+        return (
+          AppColors.danger.withAlpha(20),
+          AppColors.danger,
+          AppColors.danger.withAlpha(80),
+        );
       case AppButtonVariant.ghost:
-        return (Colors.transparent, const Color(0xFF1F2421), null);
+        return (Colors.transparent, AppColors.secondary, null);
     }
   }
 }

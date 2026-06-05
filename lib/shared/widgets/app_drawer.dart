@@ -27,7 +27,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -85,17 +84,15 @@ class AppDrawer extends StatelessWidget {
                             child: Container(
                               width: 110,
                               height: 110,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFDCE1DE),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(30),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
                                   initials,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1F2421),
+                                  style: AppTextStyles.h2.copyWith(
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -138,7 +135,7 @@ class AppDrawer extends StatelessWidget {
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
-                    color: Color(0xFFDCE1DE),
+                    color: AppColors.border,
                     padding: EdgeInsets.symmetric(horizontal: 16),
                   ),
                   const SizedBox(height: 10),
@@ -189,7 +186,7 @@ class AppDrawer extends StatelessWidget {
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
-                    color: Color(0xFFDCE1DE),
+                    color: AppColors.border,
                     padding: EdgeInsets.symmetric(horizontal: 16),
                   ),
                   const SizedBox(height: 10),

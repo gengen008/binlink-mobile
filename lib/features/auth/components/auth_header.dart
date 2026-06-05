@@ -1,49 +1,49 @@
-// Rydr authHeader(BuildContext context) — exact transplant.
-// Source: views/Authentication/components/auth_header.dart
+// Trippo-style auth header — eco branding for dark auth scaffolds.
 //
-// FadeInDown(1500ms) > Column([
-//   Center(Container(w:105, h:33, DecorationImage(logo))),
-//   YMargin(30),
-//   Container(screenWidth, 160, DecorationImage(authimage1, contain))
-// ])
+// Replaces the old Rydr authimage1 illustration with a minimal logo + name
+// block that works on the dark #0F172A + main.jpg overlay background.
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/rydr_assets.dart';
 
 Widget authHeader(BuildContext context) {
-  return FadeInDown(
-    duration: const Duration(milliseconds: 1500),
-    child: Column(
-      children: [
-        // Rydr: Center(Container(w:105, h:33, alignment:center, DecorationImage(logo)))
-        Center(
-          child: Container(
-            alignment: Alignment.center,
-            width: 105,
-            height: 33,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.contain,
-                image: AssetImage(RydrAssets.logo),
+  return FadeIn(
+    duration: const Duration(milliseconds: 1000),
+    child: Center(
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(30),
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Image.asset(RydrAssets.logo, fit: BoxFit.contain),
               ),
             ),
           ),
-        ),
-        // Rydr: YMargin(30)
-        const SizedBox(height: 30),
-        // Rydr: Container(screenWidth, 160, DecorationImage(authimage1, contain))
-        Container(
-          width: MediaQuery.sizeOf(context).width,
-          height: 160,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              fit: BoxFit.contain,
-              image: AssetImage(RydrAssets.authimage1),
+          const SizedBox(height: 12),
+          Text(
+            'BinLink',
+            style: AppTextStyles.h3.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 3),
+          Text(
+            'Eco Waste Collection',
+            style: AppTextStyles.caption.copyWith(color: AppColors.accent),
+          ),
+        ],
+      ),
     ),
   );
 }

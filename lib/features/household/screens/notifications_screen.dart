@@ -81,7 +81,7 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 72, height: 72,
             decoration: const BoxDecoration(
-              color: Color(0xFFDCE1DE),
+              color: AppColors.fieldFill,
               shape: BoxShape.circle,
             ),
             child: const Icon(PhosphorIconsRegular.bell,

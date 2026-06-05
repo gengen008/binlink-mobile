@@ -1,8 +1,14 @@
+// Trippo exact: Scaffold(dark) > centered bold app name on dark bg.
+// BinLink: secondary (#0F172A) scaffold + logo circle + name + Lottie eco animation.
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/rydr_assets.dart';
 import 'onboarding_screen.dart';
 
@@ -44,57 +50,64 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Rydr exact: white bg, Spacer, FadeIn(1500ms) logo 106×33, Spacer,
-    // FadeInUp(500ms) Ripple.gif 83×83, SizedBox(40)
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.secondary,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
 
-          // Rydr: FadeIn(1500ms) > Align(center) > Container(w:106,h:33) logo
+          // Trippo: centered bold app name; BinLink: logo circle + name
           FadeIn(
             duration: const Duration(milliseconds: 1500),
-            child: Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: 106,
-                height: 33,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: AssetImage(RydrAssets.splash),
+            child: Column(
+              children: [
+                Container(
+                  width: 106,
+                  height: 106,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(30),
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Image.asset(RydrAssets.logo, fit: BoxFit.contain),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                Text(
+                  'BinLink',
+                  style: AppTextStyles.h2.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Eco Waste Collection',
+                  style:
+                      AppTextStyles.bodySmall.copyWith(color: AppColors.accent),
+                ),
+              ],
             ),
           ),
 
           const Spacer(),
 
-          // Rydr: FadeInUp(500ms) > Align(center) > Container(w:83,h:83) Ripple.gif
+          // Lottie eco animation at bottom
           FadeInUp(
-            duration: const Duration(milliseconds: 500),
-            child: Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: 83,
-                height: 83,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: AssetImage(RydrAssets.ripple),
-                  ),
-                ),
-              ),
+            duration: const Duration(milliseconds: 600),
+            child: Lottie.asset(
+              RydrAssets.lottieSplash,
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
             ),
           ),
 
           const SafeArea(
             top: false,
-            child: SizedBox(height: 40),
+            child: SizedBox(height: 32),
           ),
         ],
       ),

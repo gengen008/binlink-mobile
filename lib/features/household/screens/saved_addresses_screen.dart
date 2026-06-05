@@ -64,7 +64,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: Color(0xFF1F2421)),
+                          color: AppColors.midnightNavy),
                     ),
                     const Expanded(
                       child: Text('Saved Addresses', style: AppTextStyles.h3),
@@ -74,7 +74,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       child: Container(
                         width: 38, height: 38,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF1F2421),
+                          color: AppColors.midnightNavy,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(PhosphorIconsRegular.plus,
@@ -312,19 +312,19 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: sel
-                            ? const Color(0xFF1F2421)
-                            : const Color(0xFFDCE1DE),
+                            ? AppColors.primary
+                            : AppColors.fieldFill,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: sel
-                              ? const Color(0xFF1F2421)
-                              : const Color(0xFFDCE1DE),
+                              ? AppColors.primary
+                              : AppColors.fieldFill,
                         ),
                       ),
                       child: Center(
                         child: Text(l,
                             style: AppTextStyles.caption.copyWith(
-                              color: sel ? Colors.white : const Color(0xFF1F2421),
+                              color: sel ? Colors.white : AppColors.secondary,
                               fontWeight: FontWeight.w700,
                             )),
                       ),

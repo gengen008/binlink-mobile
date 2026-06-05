@@ -302,7 +302,7 @@ class _JobList extends StatelessWidget {
               Container(
                 width: 64, height: 64,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFDCE1DE),
+                  color: AppColors.fieldFill,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(emptyIcon, color: AppColors.steelBlue, size: 28),
@@ -411,7 +411,7 @@ class _JobCard extends StatelessWidget {
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.0),
-            color: const Color(0xFFDCE1DE),
+            color: AppColors.fieldFill,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

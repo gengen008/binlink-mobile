@@ -380,13 +380,13 @@ class _ChatInput extends StatelessWidget {
               duration: const Duration(milliseconds: 150),
               width: 46, height: 46,
               decoration: BoxDecoration(
-                color: sending ? const Color(0xFFDCE1DE) : const Color(0xFF1F2421),
+                color: sending ? AppColors.fieldFill : AppColors.primary,
                 shape: BoxShape.circle,
                 boxShadow: sending
                     ? null
                     : [
                         BoxShadow(
-                          color: const Color(0xFF1F2421).withAlpha(60),
+                          color: AppColors.primary.withAlpha(60),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )

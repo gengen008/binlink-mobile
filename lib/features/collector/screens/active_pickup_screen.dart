@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -231,10 +230,10 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft, color: Color(0xFF1F2421)),
+                      icon: const Icon(PhosphorIconsRegular.arrowLeft, color: AppColors.secondary),
                     ),
-                    Expanded(child: Text('Active Pickup', style: GoogleFonts.montserrat(
-                      fontSize: 18, fontWeight: FontWeight.w400, color: const Color(0xFF1F2421)))),
+                    Expanded(child: Text('Active Pickup', style: AppTextStyles.appBarTitle.copyWith(
+                      color: AppColors.secondary))),
                     StatusBadge(status: _currentStatus, animate: true),
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -536,13 +535,13 @@ class _HouseholdCard extends StatelessWidget {
             children: [
               Container(
                 width: 44, height: 44,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFDCE1DE),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(Fmt.initials(hhName), style: GoogleFonts.montserrat(
-                    fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1F2421))),
+                  child: Text(Fmt.initials(hhName), style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600, color: AppColors.primary)),
                 ),
               ),
               const SizedBox(width: 12),

@@ -111,7 +111,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFDCE1DE),
+                                color: AppColors.fieldFill,
                                 borderRadius: BorderRadius.circular(AppRadius.sheet),
                               ),
                               child: const Column(
@@ -305,12 +305,12 @@ class _EarningsBanner extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1F2421),
+                              color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: available > 0
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFF1F2421).withAlpha(80),
+                                        color: AppColors.primary.withAlpha(80),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -695,7 +695,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
               height: 52,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F2421),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Material(

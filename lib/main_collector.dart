@@ -42,8 +42,8 @@ Future<void> _appMain() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF021024),
-    systemNavigationBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Color(0xFFFFFFFF),
+    systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
   runApp(const BinLinkApp());

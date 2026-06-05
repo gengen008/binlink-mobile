@@ -615,16 +615,16 @@ class _Step2Volume extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                    color: sel ? AppColors.secondary : AppColors.fieldFill,
                     borderRadius: AppRadius.xlBR,
                     border: Border.all(
-                      color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                      color: sel ? AppColors.secondary : AppColors.fieldFill,
                       width: sel ? 1.5 : 1,
                     ),
                     boxShadow: sel
                         ? [
                             BoxShadow(
-                              color: const Color(0xFF1F2421).withAlpha(60),
+                              color: AppColors.secondary.withAlpha(60),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -1131,10 +1131,10 @@ class _Step3Schedule extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                        color: sel ? AppColors.secondary : AppColors.fieldFill,
                         borderRadius: AppRadius.mdBR,
                         border: Border.all(
-                          color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                          color: sel ? AppColors.secondary : AppColors.fieldFill,
                         ),
                       ),
                       child: Row(
@@ -1177,10 +1177,10 @@ class _Step3Schedule extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 14),
                           decoration: BoxDecoration(
-                            color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                            color: sel ? AppColors.secondary : AppColors.fieldFill,
                             borderRadius: AppRadius.lgBR,
                             border: Border.all(
-                              color: sel ? const Color(0xFF1F2421) : const Color(0xFFDCE1DE),
+                              color: sel ? AppColors.secondary : AppColors.fieldFill,
                             ),
                           ),
                           child: Column(
@@ -1457,7 +1457,7 @@ class _Step4AddressState extends State<_Step4Address> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 11),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1F2421),
+                        color: AppColors.secondary,
                         borderRadius: AppRadius.mdBR,
                       ),
                       child: const Row(
@@ -1854,7 +1854,7 @@ class _ToggleTab extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF1F2421) : null,
+            color: selected ? AppColors.secondary : null,
             borderRadius: AppRadius.mdBR,
           ),
           child: Row(

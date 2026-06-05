@@ -53,7 +53,7 @@ class BookingCard extends StatelessWidget {
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.0),
-            color: const Color(0xFFDCE1DE),
+            color: AppColors.fieldFill,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

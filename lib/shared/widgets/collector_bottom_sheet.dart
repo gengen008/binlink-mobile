@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
@@ -44,7 +43,7 @@ class _CollectorSheet extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),
@@ -72,17 +71,15 @@ class _CollectorSheet extends StatelessWidget {
                 // Avatar circle
                 Container(
                   width: 64, height: 64,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFDCE1DE),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(30),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Text(
                       initials,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1F2421),
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -246,8 +243,8 @@ class _CollectorSheet extends StatelessWidget {
                     child: Container(
                       height: 52,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1F2421),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

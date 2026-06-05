@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_flavor.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/rydr_assets.dart';
 
 const String _kOnboardingSeenKey = 'onboarding_seen_v3';
@@ -18,10 +20,10 @@ Future<void> markOnboardingSeen() async {
   await prefs.setBool(_kOnboardingSeenKey, true);
 }
 
-// ── Onboarding page data (BinLink content, Rydr visual layout) ───────────────
+// ── Onboarding page data ──────────────────────────────────────────────────────
 
 class _Page {
-  final String icon;   // svg asset path
+  final String icon; // svg asset path
   final String text;
   final String desc;
   const _Page({required this.icon, required this.text, required this.desc});
@@ -29,12 +31,12 @@ class _Page {
 
 final List<_Page> _screens = [
   const _Page(
-    icon: RydrAssets.home,
+    icon: RydrAssets.globe,
     text: 'Clean Cities Start Here',
     desc: 'BinLink connects households with trusted\ncollectors for a cleaner Ghana.',
   ),
   const _Page(
-    icon: RydrAssets.stopwatch,
+    icon: RydrAssets.home,
     text: 'Pick Up On Your Schedule',
     desc: 'Book same-day pickups or schedule ahead.\nWe work around your timing.',
   ),
@@ -45,7 +47,7 @@ final List<_Page> _screens = [
   ),
 ];
 
-// ── Main screen (exact Rydr Onboarding widget tree) ───────────────────────────
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -78,10 +80,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final sw = MediaQuery.sizeOf(context).width;
 
-    // Rydr exact: Scaffold(white) > Padding(top:20) > Column([
-    //   YMargin(80), Container(sw,45, logo image), SizedBox(30),
-    //   Expanded(Stack([cityBg, PageView, dots(bottom:100), buttons(bottom:25)]))
-    // ])
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
@@ -89,7 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             const SizedBox(height: 80),
-            // Rydr: Container(sw, 45, DecorationImage(logo, contain))
+            // Logo
             Container(
               width: sw,
               height: 45,
@@ -104,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  // Rydr: city background image
+                  // City background
                   Container(
                     decoration: const BoxDecoration(
                       image: DecorationImage(
@@ -114,20 +112,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
 
-                  // Rydr: PageView
+                  // PageView
                   PageView.builder(
                     itemCount: _screens.length,
                     controller: _pageController,
                     physics: const BouncingScrollPhysics(),
-                    onPageChanged: (index) => setState(() => currentIndex = index),
+                    onPageChanged: (index) =>
+                        setState(() => currentIndex = index),
                     itemBuilder: (_, index) {
                       return Column(
                         children: [
                           const SizedBox(height: 220),
                           Column(
                             children: [
-                              // Rydr: Container(320, 160, DecorationImage(screens[i].img))
-                              // BinLink: SVG icon in a rounded container
                               Container(
                                 width: 320,
                                 height: 160,
@@ -143,34 +140,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   child: SvgPicture.asset(
                                     _screens[index].icon,
                                     colorFilter: const ColorFilter.mode(
-                                      Color(0xFF1F2421),
+                                      AppColors.secondary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 5),
-                              // Rydr: Text(text, poppins, w500, 17.3, SecondaryColor)
                               Text(
                                 _screens[index].text,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  color: const Color(0xFFF3F3C1),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 17.3,
+                                style: AppTextStyles.h4.copyWith(
+                                  color: AppColors.accent,
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              // Rydr: Text(desc, poppins, w300, 13.6, white)
                               Text(
                                 _screens[index].desc,
                                 textAlign: TextAlign.center,
                                 maxLines: 5,
                                 overflow: TextOverflow.clip,
-                                style: GoogleFonts.poppins(
+                                style: AppTextStyles.bodySmall.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 13.6,
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -181,7 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     },
                   ),
 
-                  // Rydr: dot indicators (bottom: 100)
+                  // Dot indicators (bottom: 100)
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
@@ -197,12 +188,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 3.0),
                                   width: 45,
                                   height: 1.5,
                                   decoration: BoxDecoration(
                                     color: currentIndex == index
-                                        ? const Color(0xFF1F2421)
+                                        ? AppColors.secondary
                                         : const Color(0xFFEBEBEB),
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
@@ -215,7 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
 
-                  // Rydr: bottom buttons (bottom: 25) — Skip + circular next
+                  // Bottom buttons (bottom: 25) — Skip + circular next
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
@@ -236,15 +228,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     height: 52,
                                     width: 93,
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(14.0),
-                                      color: const Color(0xFF1F2421),
+                                      borderRadius:
+                                          BorderRadius.circular(14.0),
+                                      color: AppColors.secondary,
                                     ),
-                                    child: Center(
+                                    child: const Center(
                                       child: Text(
                                         'Skip',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                        ),
+                                        style: AppTextStyles.buttonSm,
                                       ),
                                     ),
                                   ),
@@ -263,7 +254,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 nav.pushReplacementNamed('/login');
                               } else {
                                 _pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
+                                  duration:
+                                      const Duration(milliseconds: 300),
                                   curve: Curves.easeInOut,
                                 );
                               }
@@ -273,10 +265,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               width: 61,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFF1F2421),
+                                color: AppColors.secondary,
                               ),
-                              child: Center(
-                                child: SvgPicture.asset(RydrAssets.rightarrow),
+                              child: const Center(
+                                child: Icon(
+                                  PhosphorIconsBold.arrowRight,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                               ),
                             ),
                           ),

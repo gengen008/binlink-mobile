@@ -1,8 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/services/receipt_service.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/rydr_assets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
@@ -109,7 +110,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                       height: 122,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        color: const Color(0xFF1F2421),
+                        color: AppColors.secondary,
                         image: const DecorationImage(
                           fit: BoxFit.cover,
                           image: AssetImage(RydrAssets.paybg),
@@ -121,8 +122,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                         children: [
                           Text(
                             'Amount Due',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 15.0,
+                            style: AppTextStyles.bodyMedium.copyWith(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFFF3F3C1),
                             ),
@@ -130,9 +130,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                           const SizedBox(height: 10),
                           Text(
                             Fmt.currency(amount),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 36.0,
-                              fontWeight: FontWeight.w600,
+                            style: AppTextStyles.h1.copyWith(
                               color: const Color(0xFFF3F3C1),
                             ),
                           ),
@@ -157,10 +155,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                       children: [
                         Text(
                           'Payment Method',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF1F2421),
+                          style: AppTextStyles.h3.copyWith(
+                            color: AppColors.secondary,
                           ),
                         ),
                       ],
@@ -173,7 +169,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                     height: 85,
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                        color: Color(0xFF1F2421)),
+                        color: AppColors.secondary),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -185,8 +181,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                             const SizedBox(width: 10),
                             Text(
                               'Pay with Cash',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13.0,
+                              style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFFF3F3C1),
                               ),
@@ -219,15 +214,13 @@ class _PaymentScreenState extends State<PaymentScreen>
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDCE1DE),
+                        color: AppColors.fieldFill,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w300,
-                          color: const Color(0xFF1F2421),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.secondary,
                         ),
                       ),
                     ),
@@ -282,14 +275,14 @@ class _PaymentScreenState extends State<PaymentScreen>
                       width: 120, height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFF1F2421).withAlpha(20),
+                        color: AppColors.primary.withAlpha(20),
                         border: Border.all(
-                            color: const Color(0xFF1F2421).withAlpha(80), width: 2),
+                            color: AppColors.primary.withAlpha(80), width: 2),
                       ),
                       child: const Center(
                         child: Icon(
-                          Icons.check_circle_outline,
-                          color: Color(0xFF1F2421),
+                          PhosphorIconsRegular.checkCircle,
+                          color: AppColors.primary,
                           size: 60,
                         ),
                       ),
@@ -304,10 +297,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                   child: Column(
                     children: [
                       Text(S.of(context).pickupConfirmed,
-                          style: GoogleFonts.montserrat(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1F2421),
+                          style: AppTextStyles.h2.copyWith(
+                            color: AppColors.secondary,
                           ),
                           textAlign: TextAlign.center),
                       const SizedBox(height: 10),
@@ -315,10 +306,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                         isNow
                             ? 'A collector is being assigned.\nExpected arrival: ~15 minutes.'
                             : 'Your scheduled pickup has been confirmed.',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w300,
-                          color: const Color(0xFF1F2421),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.secondary,
                           height: 1.6,
                         ),
                         textAlign: TextAlign.center,
@@ -336,7 +325,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDCE1DE),
+                      color: AppColors.fieldFill,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Column(
@@ -345,61 +334,52 @@ class _PaymentScreenState extends State<PaymentScreen>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(S.of(context).bookingRef,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w300,
-                                  color: const Color(0xFF1F2421),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.secondary,
                                 )),
                             Text(
                               '#$ref',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
+                              style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1F2421),
+                                color: AppColors.secondary,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Container(height: 1, color: const Color(0xFF1F2421).withAlpha(40)),
+                        Container(height: 1, color: AppColors.secondary.withAlpha(40)),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(S.of(context).amountPaid,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w300,
-                                  color: const Color(0xFF1F2421),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.secondary,
                                 )),
                             Text(
                               Fmt.currency(amount),
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
+                              style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1F2421),
+                                color: AppColors.secondary,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Container(height: 1, color: const Color(0xFF1F2421).withAlpha(40)),
+                        Container(height: 1, color: AppColors.secondary.withAlpha(40)),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Payment',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w300,
-                                  color: const Color(0xFF1F2421),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.secondary,
                                 )),
                             Text(
                               Fmt.paymentMethodLabel(_paymentMethod),
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
+                              style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1F2421),
+                                color: AppColors.secondary,
                               ),
                             ),
                           ],
@@ -441,9 +421,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(S.of(context).downloadReceipt,
-                                  style: GoogleFonts.poppins(
-                                    color: const Color(0xFF212F20),
-                                    fontWeight: FontWeight.w400,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.primary,
                                   )),
                             ],
                           ),
@@ -459,10 +438,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
                             S.of(context).backToHome,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w300,
-                              color: const Color(0xFF1F2421),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.secondary,
                             ),
                           ),
                         ),

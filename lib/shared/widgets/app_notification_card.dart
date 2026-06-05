@@ -6,10 +6,9 @@
 //   ])
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/rydr_assets.dart';
 import '../../core/utils/formatters.dart';
 
 /// Single notification list card — LITERAL Rydr notificationCard() transplant.
@@ -43,14 +42,15 @@ class AppNotificationCard extends StatelessWidget {
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.0),
-            color: const Color(0xFFDCE1DE),
+            color: AppColors.fieldFill,
           ),
           child: Row(
             children: [
-              // Rydr: Padding(all:7, Image(rydrlogo))
-              Padding(
-                padding: const EdgeInsets.all(7.0),
-                child: Image.asset(RydrAssets.rydrlogo),
+              // Rydr: Padding(all:7, icon)
+              const Padding(
+                padding: EdgeInsets.all(7.0),
+                child: Icon(PhosphorIconsRegular.bell,
+                    color: AppColors.steelBlue, size: 15),
               ),
               // Rydr: Column(center, start, [title, YMargin(5), body])
               Column(
@@ -59,10 +59,10 @@ class AppNotificationCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.montserrat(
+                    style: AppTextStyles.caption.copyWith(
                       fontSize: 10.0,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F2421),
+                      color: AppColors.midnightNavy,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -71,10 +71,10 @@ class AppNotificationCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       body,
-                      style: GoogleFonts.montserrat(
+                      style: AppTextStyles.caption.copyWith(
                         fontSize: 7.0,
                         fontWeight: FontWeight.w300,
-                        color: const Color(0xFF1F2421),
+                        color: AppColors.midnightNavy,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

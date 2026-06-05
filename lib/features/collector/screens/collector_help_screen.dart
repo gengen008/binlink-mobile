@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_bar.dart';
 
 class CollectorHelpScreen extends StatelessWidget {
@@ -22,29 +23,17 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       'Collector Support',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1F2421),
-                      ),
+                      style: AppTextStyles.h4.copyWith(color: AppColors.secondary),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "We're here to help you earn more.",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        color: const Color(0xFF5483B3),
-                      ),
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.steelBlue),
                     ),
                     const SizedBox(height: 20),
 
                     Text('Frequently Asked Questions',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F2421),
-                        )),
+                        style: AppTextStyles.h4.copyWith(color: AppColors.secondary)),
                     const SizedBox(height: 12),
 
                     ..._faqs.map((faq) => _FaqTile(faq: faq)),
@@ -52,11 +41,7 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 28),
 
                     Text('Contact Support',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1F2421),
-                        )),
+                        style: AppTextStyles.h4.copyWith(color: AppColors.secondary)),
                     const SizedBox(height: 12),
 
                     _ContactCard(
@@ -175,13 +160,13 @@ class _FaqTileState extends State<_FaqTile> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _open
-                ? const Color(0xFF5483B3).withAlpha(15)
-                : const Color(0xFFDCE1DE),
+                ? AppColors.steelBlue.withAlpha(15)
+                : AppColors.fieldFill,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: _open
-                  ? const Color(0xFF5483B3).withAlpha(80)
-                  : const Color(0xFFDCE1DE),
+                  ? AppColors.steelBlue.withAlpha(80)
+                  : AppColors.fieldFill,
             ),
           ),
           child: Column(
@@ -192,10 +177,9 @@ class _FaqTileState extends State<_FaqTile> {
                   Expanded(
                     child: Text(
                       widget.faq.question,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
+                      style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1F2421),
+                        color: AppColors.secondary,
                       ),
                     ),
                   ),
@@ -203,21 +187,19 @@ class _FaqTileState extends State<_FaqTile> {
                     _open
                         ? PhosphorIconsRegular.caretUp
                         : PhosphorIconsRegular.caretDown,
-                    color: const Color(0xFF5483B3),
+                    color: AppColors.steelBlue,
                     size: 18,
                   ),
                 ],
               ),
               if (_open) ...[
                 const SizedBox(height: 12),
-                Container(height: 1, color: const Color(0xFF1F2421).withAlpha(30)),
+                Container(height: 1, color: AppColors.secondary.withAlpha(30)),
                 const SizedBox(height: 12),
                 Text(
                   widget.faq.answer,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w300,
-                    color: const Color(0xFF1F2421),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.secondary,
                     height: 1.6,
                   ),
                 ),
@@ -250,7 +232,7 @@ class _ContactCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFDCE1DE),
+          color: AppColors.fieldFill,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -262,23 +244,20 @@ class _ContactCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w300,
-                        color: const Color(0xFF1F2421),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.muted,
                       )),
                   const SizedBox(height: 2),
                   Text(value,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
+                      style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1F2421),
+                        color: AppColors.secondary,
                       )),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_outlined,
-                color: Color(0xFF1F2421), size: 10),
+            const Icon(PhosphorIconsRegular.arrowRight,
+                color: AppColors.muted, size: 10),
           ],
         ),
       ),

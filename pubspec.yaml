@@ -73,10 +73,13 @@ dependencies:
   # Charts (analytics / carbon tracking)
   fl_chart: ^0.70.2
 
-  # Animations — FadeIn, FadeInUp, FadeInDown (Rydr design pattern)
+  # Animations
   animate_do: ^3.3.2
 
-  # SVG rendering (Rydr uses SVG icons throughout)
+  # Lottie animations
+  lottie: ^3.1.2
+
+  # SVG rendering
   flutter_svg: ^2.0.10+1
 
 dev_dependencies:
@@ -90,6 +93,7 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/jsons/
     - assets/svg/
 
   fonts:

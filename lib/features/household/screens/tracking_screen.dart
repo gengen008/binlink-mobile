@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -457,18 +456,17 @@ class _TrackingScreenState extends State<TrackingScreen>
                         children: [
                           Container(
                             width: 48, height: 48,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFDCE1DE),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(30),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
                                 Fmt.initials(_booking!['collector']
                                     ['fullName'] as String?),
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
+                                style: AppTextStyles.bodyMedium.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1F2421),
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -481,10 +479,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 Text(
                                   _booking!['collector']['fullName']
                                           as String? ?? 'Collector',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 14,
+                                  style: AppTextStyles.bodyMedium.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1F2421),
+                                    color: AppColors.secondary,
                                   ),
                                 ),
                                 Row(
@@ -603,8 +600,8 @@ class _StatusMessage extends StatelessWidget {
           child: Icon(icon, color: color, size: 22),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text(msg, style: GoogleFonts.montserrat(
-          fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1F2421)))),
+        Expanded(child: Text(msg, style: AppTextStyles.bodyMedium.copyWith(
+          fontWeight: FontWeight.w600, color: AppColors.secondary))),
       ],
     );
   }

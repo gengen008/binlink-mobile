@@ -1,30 +1,23 @@
-// Rydr choose_auth.dart / sign_in.dart — literal transplant.
+// Trippo login_screen.dart — architecture transplant.
 //
-// Rydr source structure:
-//   Scaffold(backgroundColor: Primarywhite) > SafeArea > FadeInDown(3000ms) >
-//   SingleChildScrollView > Column([
-//     YMargin(100), authHeader(context), YMargin(30),
-//     FadeInDown(1400ms, Padding(h:30, Column([title, subtitle, fields, button]))),
-//     YMargin(40), FadeInDown(2000ms, GoogleButton),
-//     YMargin(40), FadeInDown(2200ms, Row("Have an account?")),
-//   ])
+// Trippo source structure:
+//   Scaffold(dark) > Stack([Opacity(0.15, main.jpg), SafeArea > ScrollView > Form])
 //
-// BinLink replacements only:
-//   - Primarywhite → Colors.white
-//   - signIn() → auth.loginWithEmail / loginWithGoogle
-//   - route push → FlavorConfig routes
-//   - authimage1 → authHeader() eco cards
+// BinLink replacements:
+//   - loginWithEmail() / loginWithGoogle()
+//   - FlavorConfig role checks
+//   - eco green primary (#16A34A) vs Trippo blue
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../components/auth_header.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/rydr_assets.dart';
 import '../../../core/utils/validators.dart';
@@ -42,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey   = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
-  bool _showPass   = false;
 
   @override
   void dispose() {
@@ -105,189 +97,181 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    // Rydr: Scaffold(backgroundColor: ColorPath.Primarywhite)
+
+    // Trippo: Scaffold(dark) > Stack([bg opacity 0.15, SafeArea form])
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.secondary,
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Trippo: Opacity(0.15, main.jpg, cover)
+          Opacity(
+            opacity: 0.15,
+            child: Image.asset(RydrAssets.authBg, fit: BoxFit.cover),
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // Rydr: YMargin(100)
-                const SizedBox(height: 100),
 
-                // Rydr: authHeader(context) — FadeInDown(1500ms) logo + illustration
-                authHeader(context),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 48),
 
-                // Rydr: FadeInDown(1400ms, Padding(h:30, Column([...])))
-                const SizedBox(height: 30),
-                FadeInDown(
-                  duration: const Duration(milliseconds: 1400),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Rydr: Text("Welcome Back To Rydr", montserrat, 18, w500, Primarydark)
-                        Text(
-                          FlavorConfig.isCollector
-                              ? 'Welcome Back, Collector'
-                              : 'Welcome Back To BinLink',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF1F2421),
-                            fontSize: 18,
+                    // Logo + app name header
+                    authHeader(context),
+
+                    const SizedBox(height: 40),
+
+                    // Form section
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 700),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              FlavorConfig.isCollector
+                                  ? 'Welcome Back, Collector'
+                                  : 'Welcome Back',
+                              style: AppTextStyles.h2.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              FlavorConfig.isCollector
+                                  ? 'Sign in to your collector account'
+                                  : 'Book waste pickups at affordable rates',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: const Color(0xB3FFFFFF),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+
+                            AppTextField(
+                              controller: _emailCtrl,
+                              label: 'Email address',
+                              hint: 'you@example.com',
+                              keyboardType: TextInputType.emailAddress,
+                              autofillHints: const [AutofillHints.email],
+                              prefixIcon: const Icon(
+                                  PhosphorIconsRegular.envelope,
+                                  color: AppColors.muted,
+                                  size: 20),
+                              validator: Validators.email,
+                              textInputAction: TextInputAction.next,
+                              fillColor: AppColors.fieldFill,
+                              textColor: AppColors.secondary,
+                              labelColor: const Color(0xB3FFFFFF),
+                            ),
+                            const SizedBox(height: 12),
+
+                            AppTextField(
+                              controller: _passCtrl,
+                              label: 'Password',
+                              hint: 'Enter your password',
+                              obscureText: true,
+                              showToggle: true,
+                              autofillHints: const [AutofillHints.password],
+                              prefixIcon: const Icon(PhosphorIconsRegular.lock,
+                                  color: AppColors.muted, size: 20),
+                              validator: Validators.password,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _loginEmail(),
+                              fillColor: AppColors.fieldFill,
+                              textColor: AppColors.secondary,
+                              labelColor: const Color(0xB3FFFFFF),
+                            ),
+                            const SizedBox(height: 12),
+
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pushNamed(
+                                    context, '/forgot-password'),
+                                child: Text(
+                                  'Forgot password?',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            AppButton(
+                              label: 'Sign In',
+                              loading: auth.loading,
+                              onPressed: _loginEmail,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 800),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: _GoogleButton(
+                          loading: auth.loading,
+                          onPressed: _loginGoogle,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 900),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account?",
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: const Color(0xB3FFFFFF),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 7),
-                        // Rydr: Text("Enjoy awesome rides...", montserrat, 12, w300, Primarydark)
-                        Text(
-                          FlavorConfig.isCollector
-                              ? 'Sign in to your collector account'
-                              : 'Book waste pickups at affordable rates',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w300,
-                            color: const Color(0xFF1F2421),
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-
-                        // Rydr: CustomTextFieldWidget(hintText: 'Email Address')
-                        AppTextField(
-                          controller: _emailCtrl,
-                          label: 'Email address',
-                          hint: 'you@example.com',
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          prefixIcon: const Icon(PhosphorIconsRegular.envelope,
-                              color: AppColors.muted, size: 20),
-                          validator: Validators.email,
-                          textInputAction: TextInputAction.next,
-                          fillColor: const Color(0xFFF5F6F5),
-                          textColor: AppColors.midnightNavy,
-                          labelColor: AppColors.midnightNavy,
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Rydr: CustomTextFieldWidget(hideText: true, suffixWidget: Text("show"))
-                        AppTextField(
-                          controller: _passCtrl,
-                          label: 'Password',
-                          hint: 'Enter your password',
-                          obscureText: !_showPass,
-                          autofillHints: const [AutofillHints.password],
-                          prefixIcon: const Icon(PhosphorIconsRegular.lock,
-                              color: AppColors.muted, size: 20),
-                          suffixIcon: GestureDetector(
+                          const SizedBox(width: 4),
+                          GestureDetector(
                             onTap: () =>
-                                setState(() => _showPass = !_showPass),
+                                Navigator.pushNamed(context, '/register'),
                             child: Text(
-                              _showPass ? 'hide' : 'show',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.steelBlue,
+                              'Sign up',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.accent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                          validator: Validators.password,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _loginEmail(),
-                          fillColor: const Color(0xFFF5F6F5),
-                          textColor: AppColors.midnightNavy,
-                          labelColor: AppColors.midnightNavy,
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Forgot password link
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () => Navigator.pushNamed(
-                                context, '/forgot-password'),
-                            child: Text(
-                              'Forgot password?',
-                              style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.steelBlue,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Rydr: Container(h:50, sw, br:8, Primarydark, InkWell("Sign In"))
-                        AppButton(
-                          label: 'Sign In',
-                          loading: auth.loading,
-                          onPressed: _loginEmail,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Rydr: YMargin(40), FadeInDown(2000ms, GoogleButton)
-                const SizedBox(height: 40),
-                FadeInDown(
-                  duration: const Duration(milliseconds: 2000),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: _GoogleButton(
-                      loading: auth.loading,
-                      onPressed: _loginGoogle,
-                    ),
-                  ),
-                ),
-
-                // Rydr: YMargin(40), FadeInDown(2200ms, Row("Have an account? Sign up"))
-                const SizedBox(height: 40),
-                FadeInDown(
-                  duration: const Duration(milliseconds: 2200),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account?",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w300,
-                        ),
+                        ],
                       ),
-                      const SizedBox(width: 5),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/register'),
-                        child: Text(
-                          'Sign up',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 13,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-// ── Google sign-in button — exact Rydr layout ────────────────────────────────
-// Rydr: Container(h:50, sw-180, white, br:8, border:Color(0xFF90D8FF))
-//   > Row(center) [Text("Continue with Google"), XMargin(7), SvgPicture(google.svg)]
+// ── Google sign-in button — Trippo dark overlay style ────────────────────────
 
 class _GoogleButton extends StatelessWidget {
   const _GoogleButton({required this.loading, required this.onPressed});
@@ -296,33 +280,30 @@ class _GoogleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.sizeOf(context).width;
     return InkWell(
       onTap: loading ? null : onPressed,
+      borderRadius: AppRadius.buttonBR,
       child: Container(
-        height: 50,
-        width: sw - 60,
+        height: 56,
+        width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
-          border: Border.all(color: const Color(0xFF90D8FF)),
+          color: Colors.white.withAlpha(20),
+          borderRadius: AppRadius.buttonBR,
+          border: Border.all(color: Colors.white.withAlpha(60)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Continue with Google',
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF212F20),
-                  fontWeight: FontWeight.w400,
-                ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(RydrAssets.google, width: 20, height: 20),
+            const SizedBox(width: 10),
+            Text(
+              'Continue with Google',
+              style: AppTextStyles.button.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
-              const SizedBox(width: 7),
-              SvgPicture.asset(RydrAssets.google),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -93,17 +93,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   : _initials(auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFDCE1DE),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(30),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Text(
                                     initials,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF1F2421),
+                                    style: AppTextStyles.h3.copyWith(
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ),
@@ -124,8 +122,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               : null,
                           onChanged: (_) => setState(() {}),
                           fillColor: const Color(0xFFF5F6F5),
-                          textColor: const Color(0xFF1F2421),
-                          labelColor: const Color(0xFF1F2421),
+                          textColor: AppColors.secondary,
+                          labelColor: AppColors.secondary,
                         ),
 
                         const SizedBox(height: 10),
@@ -137,8 +135,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
                               color: AppColors.muted, size: 20),
                           fillColor: const Color(0xFFF5F6F5),
-                          textColor: const Color(0xFF1F2421),
-                          labelColor: const Color(0xFF1F2421),
+                          textColor: AppColors.secondary,
+                          labelColor: AppColors.secondary,
                         ),
 
                         const SizedBox(height: 30),
