@@ -62,7 +62,7 @@ class _CollectorNotificationsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Notifications'),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),

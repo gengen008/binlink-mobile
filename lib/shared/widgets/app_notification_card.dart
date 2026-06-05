@@ -54,7 +54,7 @@ class AppNotificationCard extends StatelessWidget {
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-            color: AppColors.fieldFill,
+            color: const Color(0xFFDCE1DE),
           ),
           child: Row(
             children: [
@@ -75,7 +75,7 @@ class AppNotificationCard extends StatelessWidget {
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppColors.midnightNavy,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -88,7 +88,7 @@ class AppNotificationCard extends StatelessWidget {
                       style: AppTextStyles.caption.copyWith(
                         fontSize: 7,
                         fontWeight: FontWeight.w300,
-                        color: AppColors.textBody,
+                        color: AppColors.midnightNavy,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -149,7 +149,7 @@ class NotificationDateChip extends StatelessWidget {
           child: Text(
             Fmt.date(date),
             style: AppTextStyles.chip.copyWith(
-              color: AppColors.textSecondary,
+              color: const Color(0xFFF3F3C1),
               fontSize: 9,
               fontWeight: FontWeight.w300,
             ),

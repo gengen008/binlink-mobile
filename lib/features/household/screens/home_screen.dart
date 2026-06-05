@@ -97,8 +97,8 @@ class _BottomNav extends StatelessWidget {
     final s = S.of(context);
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
-        border: Border(top: BorderSide(color: AppColors.border)),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFDCE1DE))),
       ),
       child: SafeArea(
         top: false,
@@ -2825,7 +2825,7 @@ class _EcoWalletCard extends StatelessWidget {
                   )),
                   Text('$pts points earned',
                       style: AppTextStyles.monoSm.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.white,
                       )),
                 ],
               ),

@@ -60,9 +60,9 @@ class AppDrawer extends StatelessWidget {
           topRight: Radius.circular(10),
           bottomRight: Radius.circular(10),
         ),
-        // Rydr: Drawer widget
+        // Rydr: Drawer widget — white background (Rydr default)
         child: Drawer(
-          backgroundColor: AppColors.drawerBg,
+          backgroundColor: Colors.white,
           child: SafeArea(
             child: Padding(
               // Rydr: Padding(top: 70)
@@ -133,7 +133,7 @@ class AppDrawer extends StatelessWidget {
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
-                    color: AppColors.border,
+                    color: Color(0xFFDCE1DE),
                     padding: EdgeInsets.symmetric(horizontal: 16),
                   ),
                   const SizedBox(height: 10),
@@ -184,7 +184,7 @@ class AppDrawer extends StatelessWidget {
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
-                    color: AppColors.border,
+                    color: Color(0xFFDCE1DE),
                     padding: EdgeInsets.symmetric(horizontal: 16),
                   ),
                   const SizedBox(height: 10),
@@ -195,7 +195,7 @@ class AppDrawer extends StatelessWidget {
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textPrimary,
+                      color: AppColors.midnightNavy,
                     ),
                   ),
                   const SizedBox(height: 10),

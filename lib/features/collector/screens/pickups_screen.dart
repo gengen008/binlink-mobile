@@ -39,7 +39,7 @@ class _PickupsScreenState extends State<PickupsScreen>
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+      color: Colors.white,
       child: Column(
         children: [
           // ── Branded jobs banner ────────────────────────────────────
@@ -61,20 +61,19 @@ class _PickupsScreenState extends State<PickupsScreen>
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: const Color(0xFFF5F6F5),
                 borderRadius: AppRadius.lgBR,
-                border: Border.all(color: AppColors.border),
               ),
               child: TabBar(
                 controller: _tab,
                 indicator: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: AppColors.midnightNavy,
                   borderRadius: AppRadius.mdBR,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
-                labelColor: AppColors.white,
-                unselectedLabelColor: AppColors.muted,
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.midnightNavy,
                 dividerColor: Colors.transparent,
                 tabs: const [
                   Tab(text: 'Assigned'),
@@ -172,7 +171,7 @@ class _JobsBanner extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('My Pickups', style: AppTextStyles.h2),
+                          Text('My Pickups', style: AppTextStyles.h2.copyWith(color: AppColors.white)),
                           Text('Active jobs & history',
                               style: AppTextStyles.caption
                                   .copyWith(color: AppColors.skyBlue)),
@@ -302,21 +301,22 @@ class _JobList extends StatelessWidget {
             children: [
               Container(
                 width: 64, height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.card,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFDCE1DE),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border),
                 ),
-                child: Icon(emptyIcon, color: AppColors.muted, size: 28),
+                child: Icon(emptyIcon, color: AppColors.steelBlue, size: 28),
               ),
               const SizedBox(height: 16),
               Text(emptyTitle,
                   style: AppTextStyles.h4.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.midnightNavy,
                   )),
               const SizedBox(height: 6),
               Text(emptySubtitle,
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.midnightNavy,
+                  ),
                   textAlign: TextAlign.center),
             ],
           ),
@@ -338,9 +338,8 @@ class _JobList extends StatelessWidget {
             height: 30,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              color: AppColors.deepOcean,
+              color: AppColors.midnightNavy,
               borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: AppColors.border),
             ),
             child: Center(
               child: Text(
@@ -348,7 +347,7 @@ class _JobList extends StatelessWidget {
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 9,
                   fontWeight: FontWeight.w300,
-                  color: AppColors.textSecondary,
+                  color: const Color(0xFFF3F3C1),
                 ),
               ),
             ),
@@ -412,7 +411,7 @@ class _JobCard extends StatelessWidget {
           width: MediaQuery.sizeOf(context).width,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.0),
-            color: AppColors.fieldFill,
+            color: const Color(0xFFDCE1DE),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -437,7 +436,7 @@ class _JobCard extends StatelessWidget {
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppColors.midnightNavy,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -449,7 +448,7 @@ class _JobCard extends StatelessWidget {
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 7,
                           fontWeight: FontWeight.w300,
-                          color: AppColors.textBody,
+                          color: AppColors.midnightNavy,
                         ),
                       ),
                     ],
@@ -467,7 +466,7 @@ class _JobCard extends StatelessWidget {
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppColors.midnightNavy,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -477,7 +476,7 @@ class _JobCard extends StatelessWidget {
                     style: AppTextStyles.caption.copyWith(
                       fontSize: 7,
                       fontWeight: FontWeight.w300,
-                      color: AppColors.textBody,
+                      color: AppColors.midnightNavy,
                     ),
                   ),
                 ],

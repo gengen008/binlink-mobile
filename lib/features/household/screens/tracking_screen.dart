@@ -318,7 +318,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     }
 
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       // ── AppBar (Rydr: dark solid bar, rounded-square back, trailing status badge) ──
       appBar: AppScaffoldBar(
         title: S.of(context).liveTracking,

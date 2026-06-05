@@ -44,7 +44,7 @@ class StatChip extends StatelessWidget {
             Text(
               value,
               style: AppTextStyles.mono.copyWith(
-                color: AppColors.white,
+                color: AppColors.midnightNavy,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
               ),

@@ -53,7 +53,7 @@ class _HelpScreenState extends State<HelpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Help & Support'),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),

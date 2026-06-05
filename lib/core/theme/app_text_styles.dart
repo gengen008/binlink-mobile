@@ -58,37 +58,37 @@ class AppTextStyles {
   );
 
   // ── AppBar titles (Rydr: Poppins / Montserrat 17-18px) ─────────────────────
-  /// 17px SemiBold — AppBar main greeting (Rydr: Poppins w400 17px)
+  /// 17px SemiBold — AppBar main greeting (dark bg, explicit white)
   static const TextStyle appBarTitle = TextStyle(
     fontFamily: _sans,
     fontSize: 17,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: AppColors.white,
   );
 
-  /// 10px Regular — AppBar subtitle line (Rydr: Poppins w400 10px)
+  /// 10px Regular — AppBar subtitle line (dark bg, skyBlue)
   static const TextStyle appBarSub = TextStyle(
     fontFamily: _sans,
     fontSize: 10,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.skyBlue,
   );
 
   // ── Drawer (Rydr: Montserrat 15px w600 / 12px w600) ───────────────────────
-  /// 15px SemiBold — drawer profile name
+  /// 15px SemiBold — drawer profile name (Rydr: Primarydark on white bg)
   static const TextStyle drawerTitle = TextStyle(
     fontFamily: _sans,
     fontSize: 15,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: AppColors.midnightNavy,
   );
 
-  /// 12px SemiBold — drawer list tile items
+  /// 12px SemiBold — drawer list tile items (Rydr: Primarydark on white bg)
   static const TextStyle drawerItem = TextStyle(
     fontFamily: _sans,
     fontSize: 12,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: AppColors.midnightNavy,
   );
 
   // ── Body text (Rydr: Montserrat 12-13px) ───────────────────────────────────

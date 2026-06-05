@@ -75,7 +75,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Payments & Plans'),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),

@@ -30,7 +30,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
   Widget build(BuildContext context) {
     return Consumer<CollectorProvider>(
       builder: (_, prov, __) => Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
+        color: Colors.white,
         child: Column(
           children: [
             // ── Branded balance banner ─────────────────────────────────
@@ -111,9 +111,8 @@ class _EarningsScreenState extends State<EarningsScreen> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: AppColors.card,
+                                color: const Color(0xFFDCE1DE),
                                 borderRadius: BorderRadius.circular(AppRadius.sheet),
-                                border: Border.all(color: AppColors.border),
                               ),
                               child: const Column(
                                 children: [
@@ -277,7 +276,8 @@ class _EarningsBanner extends StatelessWidget {
                   Text(
                     Fmt.currency(available),
                     style: AppTextStyles.monoLg.copyWith(
-                        fontSize: 34, letterSpacing: -0.5),
+                        fontSize: 34, letterSpacing: -0.5,
+                        color: AppColors.white),
                   ),
 
                   const SizedBox(height: 14),
@@ -372,7 +372,7 @@ class _BannerStat extends StatelessWidget {
                   .copyWith(color: color, fontSize: 9)),
           Text(value,
               style: AppTextStyles.monoSm
-                  .copyWith(color: AppColors.textPrimary, fontSize: 12)),
+                  .copyWith(color: AppColors.white, fontSize: 12)),
         ],
       ),
     );

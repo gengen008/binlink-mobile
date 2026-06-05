@@ -50,12 +50,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Notifications'),
       // Rydr: SingleChildScrollView > Column([YMargin(30), date badge Row, FadeInUp(2000ms, ListView)])
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.bgGradient),
-        child: _loading
+      body: _loading
             ? const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.steelBlue, strokeWidth: 2,
@@ -67,7 +65,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     notifs: _notifs,
                     onMarkRead: _markRead,
                   ),
-      ),
     );
   }
 }
@@ -83,19 +80,19 @@ class _EmptyState extends StatelessWidget {
         children: [
           Container(
             width: 72, height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.card,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDCE1DE),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
             ),
             child: const Icon(PhosphorIconsRegular.bell,
-                color: AppColors.muted, size: 32),
+                color: AppColors.steelBlue, size: 32),
           ),
           const SizedBox(height: 16),
           Text('No notifications yet',
-              style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
+              style: AppTextStyles.h4.copyWith(color: AppColors.midnightNavy)),
           const SizedBox(height: 6),
-          const Text("You're all caught up!", style: AppTextStyles.caption),
+          Text("You're all caught up!",
+              style: AppTextStyles.caption.copyWith(color: AppColors.midnightNavy)),
         ],
       ),
     );

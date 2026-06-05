@@ -133,7 +133,7 @@ class _PolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       appBar: AppScaffoldBar(
         title: title,
         trailing: Icon(icon, color: AppColors.skyBlue, size: 20),

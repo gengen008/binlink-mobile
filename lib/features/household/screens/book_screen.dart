@@ -291,7 +291,7 @@ class _BookScreenState extends State<BookScreen>
     final prov = context.watch<HouseholdProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       // ── AppBar (Rydr: dark solid bar, rounded-square back button, left-aligned title) ──
       appBar: AppScaffoldBar(
         centerTitle: false,

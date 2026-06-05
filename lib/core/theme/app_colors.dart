@@ -21,13 +21,13 @@ class AppColors {
   static const Color danger       = Color(0xFFEF4444);
   static const Color muted        = Color(0xFF64748B);
 
-  // ── Surface hierarchy (dark theme) ─────────────────────────────────────────
-  /// Page/scaffold background
-  static const Color surface      = Color(0xFF0A1929);
-  /// Card, sheet, dialog background
-  static const Color card         = Color(0xFF0D2137);
-  /// Elevated card (one level above card)
-  static const Color cardElevated = Color(0xFF0F2847);
+  // ── Surface hierarchy (Rydr light theme) ────────────────────────────────────
+  /// Page/scaffold background — Rydr: ColorPath.Primarywhite
+  static const Color surface      = Color(0xFFFFFFFF);
+  /// Card, sheet, dialog background — Rydr: ColorPath.Primaryfield
+  static const Color card         = Color(0xFFDCE1DE);
+  /// Elevated card (slightly darker than card)
+  static const Color cardElevated = Color(0xFFCDD3D1);
   /// Subtle border / divider
   static const Color border       = Color(0xFF1A3A5C);
   /// Strong border (active input, focus ring)
@@ -46,17 +46,17 @@ class AppColors {
   static const Color drawerItem   = iceBlue;
   static const Color drawerMuted  = skyBlue;
 
-  // ── Form fields (Rydr Primaryfield = #DCE1DE at opacity 0.3 → dark equiv.) ─
-  /// Field fill — used for TextFormField background
-  static const Color fieldFill    = Color(0xFF0D2137);
-  /// Field fill when focused
-  static const Color fieldFillFocused = Color(0xFF0F2847);
+  // ── Form fields — Rydr: ColorPath.Primaryfield = Color(0xFFDCE1DE) ──────────
+  /// Field fill — Rydr: ColorPath.Primaryfield light grey
+  static const Color fieldFill    = Color(0xFFDCE1DE);
+  /// Field fill when focused (slightly darker)
+  static const Color fieldFillFocused = Color(0xFFCDD3D1);
   /// Placeholder / hint text inside fields
   static const Color fieldHint    = Color(0xFF64748B);
 
   // ── Sheet / Bottom sheet ───────────────────────────────────────────────────
-  /// Background of modal bottom sheets
-  static const Color sheetBg      = Color(0xFF0D2137);
+  /// Background of modal bottom sheets — Rydr: white
+  static const Color sheetBg      = Color(0xFFFFFFFF);
   /// Drag handle colour (Rydr: Primaryfield)
   static const Color sheetHandle  = Color(0xFF1A3A5C);
 
@@ -64,14 +64,15 @@ class AppColors {
   static const Color scrim        = Color(0x99000000);
 
   // ── Text ──────────────────────────────────────────────────────────────────
-  static const Color textPrimary   = white;
+  /// Primary text — Rydr: ColorPath.Primarydark = Color(0xFF1F2421) ≈ midnightNavy
+  static const Color textPrimary   = midnightNavy;
   static const Color textSecondary = skyBlue;
-  /// Body text on dark surfaces (Rydr: offBlack #50555C → our muted)
-  static const Color textBody      = Color(0xFFB0C4DE);
+  /// Body text (Rydr: Primarydark)
+  static const Color textBody      = midnightNavy;
   /// Subtle / de-emphasised text (Rydr: grey labels, timestamps)
   static const Color textMuted     = muted;
-  /// Text on dark filled buttons (Rydr: SecondaryColor #F3F3C1 → iceBlue)
-  static const Color textOnDark    = iceBlue;
+  /// Text on dark filled buttons / dark-bg overlays
+  static const Color textOnDark    = white;
 
   // ── Status chip colors ─────────────────────────────────────────────────────
   static Color statusColor(String status) {
@@ -98,11 +99,11 @@ class AppColors {
   }
 
   // ── Gradients ──────────────────────────────────────────────────────────────
-  /// Page background gradient
+  /// Page background gradient — Rydr: white / near-white light theme
   static const LinearGradient bgGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [midnightNavy, deepOcean],
+    colors: [Color(0xFFFFFFFF), Color(0xFFF5F6F5)],
   );
 
   /// Primary action gradient (buttons, active indicators)

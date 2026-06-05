@@ -12,40 +12,33 @@ class AppTheme {
   AppTheme._();
 
   // ── Household app themes ───────────────────────────────────────────────────
-  static ThemeData get dark  => _build(primary: AppColors.steelBlue,  secondary: AppColors.skyBlue, isDark: true);
-  static ThemeData get light => _build(primary: AppColors.steelBlue,  secondary: AppColors.skyBlue, isDark: false);
+  static ThemeData get dark  => _build(primary: AppColors.steelBlue,  secondary: AppColors.skyBlue);
+  static ThemeData get light => _build(primary: AppColors.steelBlue,  secondary: AppColors.skyBlue);
 
   // ── Collector app themes ───────────────────────────────────────────────────
-  static ThemeData get collectorDark  => _build(primary: AppColors.warning, secondary: const Color(0xFFFBBF24), isDark: true);
-  static ThemeData get collectorLight => _build(primary: AppColors.warning, secondary: const Color(0xFFFBBF24), isDark: false);
+  static ThemeData get collectorDark  => _build(primary: AppColors.warning, secondary: const Color(0xFFFBBF24));
+  static ThemeData get collectorLight => _build(primary: AppColors.warning, secondary: const Color(0xFFFBBF24));
 
   // ── Builder ────────────────────────────────────────────────────────────────
   static ThemeData _build({
     required Color primary,
     required Color secondary,
-    bool isDark = true,
   }) {
-    final brightness  = isDark ? Brightness.dark : Brightness.light;
-    final scaffoldBg  = isDark ? AppColors.midnightNavy : const Color(0xFFF5F7FA);
-    final surfaceCol  = isDark ? AppColors.surface       : Colors.white;
-    final cardCol     = isDark ? AppColors.card          : Colors.white;
-    final borderCol   = isDark ? AppColors.border        : const Color(0xFFE0E6EF);
-    final mutedCol    = isDark ? AppColors.muted         : const Color(0xFF8A9BB5);
-    final fieldFill   = isDark ? AppColors.fieldFill     : const Color(0xFFF0F4F8);
+    // Rydr light theme — white scaffold throughout regardless of brightness param
+    const brightness  = Brightness.light;
+    const scaffoldBg  = Colors.white;
+    const surfaceCol  = Colors.white;
+    const cardCol     = Color(0xFFDCE1DE);
+    const borderCol   = Color(0xFFDCE1DE);
+    const mutedCol    = AppColors.muted;
+    const fieldFill   = Color(0xFFDCE1DE);
 
     return ThemeData(
       brightness: brightness,
       scaffoldBackgroundColor: scaffoldBg,
       primaryColor: primary,
 
-      colorScheme: isDark
-          ? ColorScheme.dark(
-              primary:   primary,
-              secondary: secondary,
-              surface:   AppColors.surface,
-              error:     AppColors.danger,
-            )
-          : ColorScheme.light(
+      colorScheme: ColorScheme.light(
               primary:   primary,
               secondary: secondary,
               surface:   surfaceCol,
@@ -65,19 +58,19 @@ class AppTheme {
         labelLarge:     AppTextStyles.button,
       ),
 
-      // ── AppBar — matches Rydr's dark header (70px height) ─────────────────
-      appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? AppColors.appBarBg : Colors.white,
+      // ── AppBar — dark header (70px height) ────────────────────────────────
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.appBarBg,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-          systemNavigationBarColor: isDark ? AppColors.midnightNavy : Colors.white,
-          systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarColor: Colors.white,
+          systemNavigationBarIconBrightness: Brightness.dark,
         ),
         titleTextStyle: AppTextStyles.appBarTitle,
         iconTheme: IconThemeData(
-          color: isDark ? AppColors.white : AppColors.midnightNavy,
+          color: AppColors.white,
         ),
       ),
 
@@ -87,7 +80,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.mdBR,
-          side: BorderSide(color: borderCol),
+          side: const BorderSide(color: borderCol),
         ),
       ),
 
@@ -99,11 +92,11 @@ class AppTheme {
         labelStyle: AppTextStyles.label,
         border: OutlineInputBorder(
           borderRadius: AppRadius.fieldBR,
-          borderSide: BorderSide(color: borderCol),
+          borderSide: const BorderSide(color: borderCol),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.fieldBR,
-          borderSide: BorderSide(color: borderCol),
+          borderSide: const BorderSide(color: borderCol),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.fieldBR,
@@ -135,22 +128,22 @@ class AppTheme {
       ),
 
       // ── Bottom sheet ───────────────────────────────────────────────────────
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: isDark ? AppColors.sheetBg : Colors.white,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheetBR),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.sheetBR),
         elevation: 0,
       ),
 
       // ── Bottom nav bar ─────────────────────────────────────────────────────
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDark ? AppColors.navBarBg : Colors.white,
+        backgroundColor: Colors.white,
         selectedItemColor: primary,
         unselectedItemColor: mutedCol,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
 
-      dividerTheme: DividerThemeData(color: borderCol, thickness: 1),
+      dividerTheme: const DividerThemeData(color: borderCol, thickness: 1),
 
       // ── Page transitions — Cupertino slide (Rydr uses default push) ────────
       pageTransitionsTheme: const PageTransitionsTheme(
