@@ -33,6 +33,9 @@ class AppTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.autofillHints,
     this.showToggle = false,
+    this.fillColor,
+    this.textColor,
+    this.labelColor,
   });
 
   final TextEditingController? controller;
@@ -53,6 +56,12 @@ class AppTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
   final Iterable<String>? autofillHints;
+  /// Override fill colour — used by light-bg auth screens.
+  final Color? fillColor;
+  /// Override input text colour — used by light-bg auth screens.
+  final Color? textColor;
+  /// Override label text colour — used by light-bg auth screens.
+  final Color? labelColor;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -85,7 +94,7 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: AppTextStyles.label),
+          Text(widget.label!, style: AppTextStyles.label.copyWith(color: widget.labelColor)),
           const SizedBox(height: 8),
         ],
         TextFormField(
@@ -101,14 +110,14 @@ class _AppTextFieldState extends State<AppTextField> {
           textInputAction: widget.textInputAction,
           onFieldSubmitted: widget.onFieldSubmitted,
           autofillHints: widget.autofillHints,
-          style: AppTextStyles.body,
+          style: AppTextStyles.body.copyWith(color: widget.textColor),
           decoration: InputDecoration(
             hintText: widget.hint,
             // Rydr field pattern: explicit fill colours per focus state
             filled: true,
-            fillColor: _focused
+            fillColor: widget.fillColor ?? (_focused
                 ? AppColors.fieldFillFocused
-                : AppColors.fieldFill,
+                : AppColors.fieldFill),
             prefixIcon: widget.prefixIcon,
             // Suffix: either custom suffix OR eye toggle if password field
             suffixIcon: widget.showToggle && widget.obscureText

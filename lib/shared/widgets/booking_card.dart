@@ -1,9 +1,26 @@
+// Rydr tripCard() — literal transplant.
+//
+// Rydr source: trip_screen.dart tripCard()
+//   Padding(h:20,v:5) > Container(p:h15,v5, h:65, w:sw, br:15, Primaryfield, NO border)
+//   > Row(spaceBetween, crossStart, [
+//       Row[Padding(all:7, Image(rydrlogo)), Column(center,start,[addr,YMargin(5),date])],
+//       Column(center, end, [price, YMargin(5), "Trip Completed"])
+//     ]).ripple(() { Navigator.push(context, TripHistory()); })
+//
+// BinLink replacements only:
+//   - rydrlogo image → Phosphor trashSimple icon (same Padding(all:7) wrapper, no circle)
+//   - Primaryfield → AppColors.fieldFill
+//   - "Trip Completed" → Fmt.statusLabel(status)
+//   - addr/date from booking map
+//   - Primarydark → AppColors.textPrimary / AppColors.textBody
+//
+// NOTE: Rydr has NO circle icon container, NO border.
+
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
-import 'status_badge.dart';
 
 class BookingCard extends StatelessWidget {
   const BookingCard({
@@ -19,102 +36,95 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = booking['status'] as String? ?? 'PENDING';
-    final binSize = booking['binSize'] as String? ?? '';
-    final address = booking['pickupAddress'] as String? ?? '';
-    final amount  = Fmt.toDouble(booking['totalAmount']);
-    final createdAt = DateTime.tryParse(booking['createdAt'] as String? ?? '');
+    final status    = booking['status'] as String? ?? 'PENDING';
+    final address   = booking['pickupAddress'] as String? ?? '';
+    final amount    = Fmt.toDouble(booking['totalAmount']);
+    final createdAt = booking['createdAt'] as String?;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: AppColors.cardGradient,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row
-            Row(
-              children: [
-                Container(
-                  width: 42, height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.steelBlue.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
+    // Rydr: Padding(horizontal:20, vertical:5)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          // Rydr: padding:h15,v5 — height:65 — w:screenWidth — br:15 — Primaryfield — NO border
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5.0),
+          height: 65,
+          width: MediaQuery.sizeOf(context).width,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15.0),
+            color: AppColors.fieldFill,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Rydr: Row[Padding(all:7, Image(rydrlogo)), Column[addr, YMargin(5), date]]
+              Row(
+                children: [
+                  // Rydr: Padding(all:7, Image(rydrlogo)) → plain icon, no circle container
+                  const Padding(
+                    padding: EdgeInsets.all(7.0),
+                    child: Icon(PhosphorIconsFill.trashSimple,
+                        color: AppColors.steelBlue, size: 15),
                   ),
-                  child: const Icon(
-                    PhosphorIconsFill.trashSimple,
-                    color: AppColors.steelBlue, size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(Fmt.binSizeLabel(binSize), style: AppTextStyles.h4),
-                      const SizedBox(height: 2),
+                      // Rydr: Text(location, montserrat, 10, w600, Primarydark)
                       Text(
-                        createdAt != null ? Fmt.dateTime(createdAt) : '',
-                        style: AppTextStyles.caption,
+                        address,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 5),
+                      // Rydr: Text(date, montserrat, 7, w300, Primarydark)
+                      Text(
+                        createdAt != null ? Fmt.shortDate(createdAt) : '',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w300,
+                          color: AppColors.textBody,
+                        ),
                       ),
                     ],
                   ),
-                ),
-                StatusBadge(status: status, animate: true),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-            const Divider(color: AppColors.border, height: 1),
-            const SizedBox(height: 12),
-
-            // Address
-            Row(
-              children: [
-                const Icon(PhosphorIconsRegular.mapPin, color: AppColors.skyBlue, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    address,
-                    style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-
-            if (showCollector && booking['collector'] != null) ...[
-              const SizedBox(height: 8),
-              Row(
+                ],
+              ),
+              // Rydr: Column(center, end, [price, YMargin(5), "Trip Completed"])
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Icon(PhosphorIconsRegular.user, color: AppColors.skyBlue, size: 16),
-                  const SizedBox(width: 8),
+                  // Rydr: Text(price, montserrat, 10, w600, Primarydark)
                   Text(
-                    booking['collector']['fullName'] as String? ?? 'Collector',
-                    style: AppTextStyles.label,
+                    Fmt.currency(amount),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  // Rydr: Text("Trip Completed", montserrat, 7, w300, Primarydark)
+                  Text(
+                    Fmt.statusLabel(status),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 7,
+                      fontWeight: FontWeight.w300,
+                      color: AppColors.textBody,
+                    ),
                   ),
                 ],
               ),
             ],
-
-            const SizedBox(height: 12),
-
-            // Amount + arrow
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(Fmt.currency(amount), style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
-                const Icon(PhosphorIconsRegular.arrowRight, color: AppColors.muted, size: 16),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

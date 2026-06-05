@@ -1,8 +1,26 @@
+// Rydr register.dart — literal transplant.
+//
+// Rydr source structure:
+//   Scaffold(backgroundColor: Primarywhite) > SafeArea > SingleChildScrollView >
+//   Column([
+//     YMargin(100), authHeader(context),
+//     FadeInDown(1400ms, Padding(h:30, Column([title, subtitle, fields, button]))),
+//     YMargin(40), FadeInDown(2000ms, GoogleButton),
+//     YMargin(40), FadeInDown(2200ms, Row("Have an account?"))
+//   ])
+//
+// BinLink replacements only:
+//   - Primarywhite → Colors.white
+//   - registerWithEmail() / loginWithGoogle()
+//   - routes → FlavorConfig routes
+//   - role badge inserted (BinLink-specific UX)
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../components/auth_header.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -78,8 +96,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    // Rydr: Scaffold(backgroundColor: ColorPath.Primarywhite)
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -91,108 +110,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Top: back button (Rydr uses no back btn but BinLink needs it) ──
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: FadeInDown(
-                    duration: const Duration(milliseconds: 400),
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.card,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Icon(
-                          PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // Rydr: YMargin(100)
+                const SizedBox(height: 100),
 
-                const SizedBox(height: 20),
+                // Rydr: authHeader(context)
+                authHeader(context),
 
-                // ── Auth header — logo only (shorter than login) ─────────────────
-                FadeInDown(
-                  duration: const Duration(milliseconds: 1500),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'BL',
-                                  style: TextStyle(
-                                    fontFamily: 'PlusJakartaSans',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'BinLink',
-                              style: AppTextStyles.h2.copyWith(fontSize: 20),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Role badge (BinLink-specific)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.steelBlue.withAlpha(25),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: AppColors.steelBlue.withAlpha(80)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                FlavorConfig.isCollector
-                                    ? PhosphorIconsFill.truck
-                                    : PhosphorIconsFill.house,
-                                color: AppColors.steelBlue,
-                                size: 13,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                FlavorConfig.isCollector
-                                    ? 'Collector account'
-                                    : 'Household account',
-                                style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.steelBlue,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // ── Form section (Rydr: FadeInDown 1400ms) ──────────────────────
+                // Rydr: FadeInDown(1400ms, Padding(h:30, Column([...])))
                 const SizedBox(height: 30),
                 FadeInDown(
                   duration: const Duration(milliseconds: 1400),
@@ -202,22 +126,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title
                         Text(
                           'Create Account',
-                          style: AppTextStyles.h2.copyWith(fontSize: 22),
+                          style: AppTextStyles.h2.copyWith(
+                            color: AppColors.midnightNavy,
+                            fontSize: 22,
+                          ),
                         ),
                         const SizedBox(height: 7),
                         Text(
                           FlavorConfig.registerSubtitle,
                           style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFF6B7280),
                             fontSize: 13,
                           ),
                         ),
                         const SizedBox(height: 30),
 
-                        // Full name
                         AppTextField(
                           controller: _nameCtrl,
                           label: 'Full Name',
@@ -228,10 +153,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) =>
                               Validators.required(v, 'Full name'),
                           textInputAction: TextInputAction.next,
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: AppColors.midnightNavy,
+                          labelColor: AppColors.midnightNavy,
                         ),
                         const SizedBox(height: 10),
 
-                        // Email
                         AppTextField(
                           controller: _emailCtrl,
                           label: 'Email address',
@@ -242,10 +169,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: AppColors.muted, size: 20),
                           validator: Validators.email,
                           textInputAction: TextInputAction.next,
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: AppColors.midnightNavy,
+                          labelColor: AppColors.midnightNavy,
                         ),
                         const SizedBox(height: 10),
 
-                        // Password
                         AppTextField(
                           controller: _passCtrl,
                           label: 'Password',
@@ -268,10 +197,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: Validators.password,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _register(),
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: AppColors.midnightNavy,
+                          labelColor: AppColors.midnightNavy,
                         ),
                         const SizedBox(height: 20),
 
-                        // Create account button
                         AppButton(
                           label: 'Create Account',
                           loading: auth.loading,
@@ -282,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
-                // ── Google register button (Rydr: FadeInDown 2000ms) ─────────────
+                // Rydr: YMargin(40), FadeInDown(2000ms, GoogleButton)
                 const SizedBox(height: 40),
                 FadeInDown(
                   duration: const Duration(milliseconds: 2000),
@@ -295,7 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
-                // ── Sign in link (Rydr: FadeInDown 2200ms) ──────────────────────
+                // Rydr: YMargin(40), FadeInDown(2200ms, Row("Have an account?"))
                 const SizedBox(height: 40),
                 FadeInDown(
                   duration: const Duration(milliseconds: 2200),
@@ -306,7 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         'Already have an account? ',
                         style: AppTextStyles.body.copyWith(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFF6B7280),
                           fontWeight: FontWeight.w300,
                         ),
                       ),
@@ -316,7 +247,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           'Sign In',
                           style: AppTextStyles.body.copyWith(
                             fontSize: 13,
-                            color: AppColors.white,
+                            color: AppColors.midnightNavy,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -350,9 +281,9 @@ class _GoogleRegisterButton extends StatelessWidget {
         height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: const Color(0xFFF5F6F5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: const Color(0xFFDCE1DE)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -366,7 +297,7 @@ class _GoogleRegisterButton extends StatelessWidget {
             Text(
               'Sign up with Google',
               style: AppTextStyles.body.copyWith(
-                color: AppColors.white,
+                color: AppColors.midnightNavy,
                 fontWeight: FontWeight.w400,
                 fontSize: 14,
               ),
@@ -406,7 +337,7 @@ class _GLogoPainter extends CustomPainter {
     canvas.drawRect(
         Rect.fromLTWH(cx, cy - size.height * 0.18, r, size.height * 0.36),
         Paint()
-          ..color = AppColors.card
+          ..color = const Color(0xFFF5F6F5)
           ..style = PaintingStyle.fill);
     canvas.drawRect(
         Rect.fromLTWH(

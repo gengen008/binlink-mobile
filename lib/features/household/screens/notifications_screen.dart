@@ -52,6 +52,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: AppColors.midnightNavy,
       appBar: const AppScaffoldBar(title: 'Notifications'),
+      // Rydr: SingleChildScrollView > Column([YMargin(30), date badge Row, FadeInUp(2000ms, ListView)])
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.bgGradient),
         child: _loading

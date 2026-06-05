@@ -1,18 +1,27 @@
+// Rydr notificationCard() — literal transplant.
+//
+// Rydr source: notifications.dart notificationCard()
+//   Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:screenWidth, br:15,
+//     Primaryfield, NO border) > Row([
+//       Padding(all:7, Image(rydrlogo)),
+//       Column(center, start, [Text(title,10,w600,Primarydark), YMargin(5), Text(body,7,w300,Primarydark)])
+//     ])
+//
+// BinLink replacements only:
+//   - rydrlogo image → Phosphor icon keyed from notification type (same Padding(all:7) wrapper, no circle)
+//   - Primaryfield → AppColors.fieldFill
+//   - Primarydark → AppColors.textPrimary / AppColors.textBody
+//   - real API data (title, body from notification map)
+//
+// NOTE: Rydr has NO circle icon container, NO border, NO Expanded on Column, NO unread dot.
+
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 
-/// Single notification list card — Rydr's notificationCard pattern.
-///
-/// Rydr bugs fixed:
-///  - Bare function, not a StatelessWidget → proper widget class
-///  - Hardcoded 65px height → flexible height for long body text
-///  - Hardcoded rydrlogo image → Phosphor icon keyed from notification type
-///  - No real data binding → reads title/body/createdAt from notification map
-///  - No const constructor → fixed
+/// Single notification list card — LITERAL Rydr notificationCard() transplant.
 ///
 /// [notification] — map from GET /api/notifications response:
 ///   { id, title, body, type, isRead, createdAt }
@@ -28,93 +37,67 @@ class AppNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title    = notification['title'] as String? ?? 'Notification';
-    final body     = notification['body']  as String? ?? '';
-    final isRead   = notification['isRead'] as bool? ?? false;
-    final typeStr  = notification['type']  as String? ?? '';
-    final created  = DateTime.tryParse(notification['createdAt'] as String? ?? '');
-    final timeStr  = created != null ? Fmt.relativeTime(created) : '';
-    final icon     = _iconForType(typeStr);
-    final iconColor = _colorForType(typeStr);
+    final title     = notification['title'] as String? ?? 'Notification';
+    final body      = notification['body']  as String? ?? '';
+    final typeStr   = notification['type']  as String? ?? '';
+    final icon      = _iconForType(typeStr);
 
+    // Rydr: Padding(horizontal:20, vertical:5)
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          // Unread → slightly elevated card; read → muted
-          color: isRead ? AppColors.card : AppColors.cardElevated,
-          borderRadius: AppRadius.mdBR,
-          border: Border.all(
-            color: isRead ? AppColors.border : AppColors.borderActive.withAlpha(60),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        child: Container(
+          // Rydr: padding:h10,v5 — height:65 — w:screenWidth — br:15 — Primaryfield — NO border
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          height: 65,
+          width: MediaQuery.sizeOf(context).width,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: AppColors.fieldFill,
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon container (Rydr: rydrlogo image → BinLink: Phosphor icon)
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconColor.withAlpha(25),
-                borderRadius: AppRadius.smBR,
-                border: Border.all(color: iconColor.withAlpha(60)),
+          child: Row(
+            children: [
+              // Rydr: Padding(all:7, Image(rydrlogo)) → plain icon, no circle container
+              Padding(
+                padding: const EdgeInsets.all(7),
+                child: Icon(icon, color: AppColors.steelBlue, size: 16),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: 12),
-
-            // Text content — flexible height (Rydr bug: 65px fixed → overflow)
-            Expanded(
-              child: Column(
+              // Rydr: Column(mainAxisAlignment:center, crossAxisAlignment:start, [...])
+              // NOTE: NOT Expanded in Rydr
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (timeStr.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        Text(timeStr, style: AppTextStyles.chip),
-                      ],
-                    ],
+                  // Rydr: Text(title, montserrat, 10, w600, Primarydark)
+                  Text(
+                    title,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (body.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
+                    // Rydr: Text(body, montserrat, 7, w300, Primarydark)
                     Text(
                       body,
-                      style: AppTextStyles.caption.copyWith(height: 1.4),
-                      maxLines: 3,
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 7,
+                        fontWeight: FontWeight.w300,
+                        color: AppColors.textBody,
+                      ),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],
               ),
-            ),
-
-            // Unread indicator dot
-            if (!isRead) ...[
-              const SizedBox(width: 8),
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: const BoxDecoration(
-                  color: AppColors.steelBlue,
-                  shape: BoxShape.circle,
-                ),
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -139,28 +122,6 @@ class AppNotificationCard extends StatelessWidget {
         return PhosphorIconsFill.bell;
       default:
         return PhosphorIconsFill.bellSimple;
-    }
-  }
-
-  Color _colorForType(String type) {
-    switch (type.toUpperCase()) {
-      case 'BOOKING_UPDATE':
-      case 'BOOKING':
-      case 'PICKUP':
-        return AppColors.steelBlue;
-      case 'JOB_UPDATE':
-      case 'NEW_JOB':
-      case 'COLLECTOR':
-        return AppColors.warning;
-      case 'EARNINGS':
-      case 'PAYOUT':
-      case 'PAYMENT':
-      case 'SUBSCRIPTION':
-        return AppColors.success;
-      case 'SYSTEM':
-        return AppColors.skyBlue;
-      default:
-        return AppColors.muted;
     }
   }
 }

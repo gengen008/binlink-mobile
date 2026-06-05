@@ -1,8 +1,23 @@
+// Rydr forget_password.dart — literal transplant.
+//
+// Rydr source structure:
+//   Scaffold(backgroundColor: Primarywhite) > SingleChildScrollView >
+//   Column([
+//     YMargin(100), authHeader(context),
+//     FadeInDown(1400ms, Padding(h:30, Column([title, subtitle, field, submit])))
+//   ])
+//
+// BinLink replacements only:
+//   - Primarywhite → Colors.white
+//   - sendPasswordReset() API call
+//   - _sent success state added (Rydr has no success state shown — BinLink addition)
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../components/auth_header.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
@@ -46,8 +61,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    // Rydr: Scaffold(backgroundColor: ColorPath.Primarywhite)
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -57,62 +73,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Back button ─────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: FadeInDown(
-                  duration: const Duration(milliseconds: 400),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.card,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(
-                        PhosphorIconsRegular.arrowLeft,
-                        color: AppColors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              // Rydr: YMargin(100)
+              const SizedBox(height: 100),
 
-              // ── Illustration (Rydr: authHeader logo + image) ─────────────────
-              const SizedBox(height: 30),
-              FadeInDown(
-                duration: const Duration(milliseconds: 1500),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    children: [
-                      // Envelope icon ring (Rydr: centered illustration)
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.steelBlue.withAlpha(20),
-                          border: Border.all(
-                              color: AppColors.steelBlue.withAlpha(80),
-                              width: 2),
-                        ),
-                        child: const Icon(
-                          PhosphorIconsRegular.envelopeSimple,
-                          color: AppColors.steelBlue,
-                          size: 40,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Rydr: authHeader(context)
+              authHeader(context),
 
-              // ── Form section (Rydr: FadeInDown 1400ms) ──────────────────────
+              // Rydr: FadeInDown(1400ms, Padding(h:30, Column([title, subtitle, field, Container(submit)])))
               const SizedBox(height: 30),
               FadeInDown(
                 duration: const Duration(milliseconds: 1400),
@@ -123,13 +90,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     children: [
                       Text(
                         'Forgot your\npassword?',
-                        style: AppTextStyles.h2.copyWith(fontSize: 22),
+                        style: AppTextStyles.h2.copyWith(
+                          color: AppColors.midnightNavy,
+                          fontSize: 22,
+                        ),
                       ),
                       const SizedBox(height: 7),
                       Text(
                         "No worries. We'll send a reset link to your email.",
                         style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFF6B7280),
                           fontSize: 13,
                         ),
                       ),
@@ -141,6 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Rydr: CustomTextFieldWidget(hintText: 'Email Address')
                               AppTextField(
                                 controller: _emailCtrl,
                                 label: 'Email address',
@@ -154,8 +125,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 validator: Validators.email,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _sendReset(),
+                                fillColor: const Color(0xFFF5F6F5),
+                                textColor: AppColors.midnightNavy,
+                                labelColor: AppColors.midnightNavy,
                               ),
                               const SizedBox(height: 20),
+                              // Rydr: Container(h:50, sw, br:8, Primarydark, "Submit")
                               AppButton(
                                 label: 'Send Reset Link',
                                 loading: auth.loading,
@@ -169,7 +144,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                       ] else ...[
-                        // ── Success state ──────────────────────────────────────
+                        // Success state (BinLink addition — Rydr has no post-send state)
                         const SizedBox(height: 10),
                         Center(
                           child: ZoomIn(
@@ -195,8 +170,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         Center(
                           child: FadeInUp(
                             duration: const Duration(milliseconds: 500),
-                            child: const Text('Link sent!',
-                                style: AppTextStyles.h2,
+                            child: Text('Link sent!',
+                                style: AppTextStyles.h2.copyWith(
+                                  color: AppColors.midnightNavy,
+                                ),
                                 textAlign: TextAlign.center),
                           ),
                         ),
@@ -208,7 +185,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: Text(
                               'A password reset link has been sent to\n${_emailCtrl.text.trim()}',
                               style: AppTextStyles.body.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: const Color(0xFF6B7280),
                                   fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
@@ -218,13 +195,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         FadeInUp(
                           duration: const Duration(milliseconds: 500),
                           delay: const Duration(milliseconds: 160),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
-                            child: AppButton(
-                              label: 'Back to Sign In',
-                              onPressed: () => Navigator.pushReplacementNamed(
-                                  context, '/login'),
-                            ),
+                          child: AppButton(
+                            label: 'Back to Sign In',
+                            onPressed: () => Navigator.pushReplacementNamed(
+                                context, '/login'),
                           ),
                         ),
                       ],

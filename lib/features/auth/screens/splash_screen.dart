@@ -49,37 +49,37 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
 
-          // ── Logo (Rydr: FadeIn 1500ms, centered 105×33 logo image) ───────────
+          // Rydr: FadeIn(1500ms) > Center(Container(w:105, h:33, alignment:center, logo image))
+          // BinLink: same 105×33 dimensions, BL icon as logo
           FadeIn(
             duration: const Duration(milliseconds: 1500),
             child: Center(
               child: Container(
-                width: 106,
-                height: 106,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.steelBlue.withAlpha(60),
-                      blurRadius: 32,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    'BL',
-                    style: TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -1,
+                width: 105,
+                height: 33,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 33,
+                  height: 33,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'BL',
+                      style: TextStyle(
+                        fontFamily: 'PlusJakartaSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ),

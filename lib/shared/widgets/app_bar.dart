@@ -120,10 +120,9 @@ class _BackButton extends StatelessWidget {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          // Rydr: Primaryfield fill → BinLink: appBarAction dark tint
+          // Rydr: Primaryfield fill → BinLink: appBarAction dark tint (NO border — Rydr exact)
           color: AppColors.appBarAction,
           borderRadius: AppRadius.smBR,
-          border: Border.all(color: AppColors.border),
         ),
         child: const Icon(
           PhosphorIconsRegular.arrowLeft,
@@ -148,10 +147,10 @@ class DrawerMenuButton extends StatelessWidget {
       child: Container(
         width: 45,
         height: 45,
+        // Rydr: Primaryfield fill (no border)
         decoration: BoxDecoration(
-          color: AppColors.appBarAction,
+          color: AppColors.steelBlue,
           borderRadius: AppRadius.smBR,
-          border: Border.all(color: AppColors.border),
         ),
         child: const Icon(
           PhosphorIconsRegular.list,

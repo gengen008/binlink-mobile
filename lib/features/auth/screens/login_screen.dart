@@ -1,8 +1,26 @@
+// Rydr choose_auth.dart / sign_in.dart — literal transplant.
+//
+// Rydr source structure:
+//   Scaffold(backgroundColor: Primarywhite) > SafeArea > FadeInDown(3000ms) >
+//   SingleChildScrollView > Column([
+//     YMargin(100), authHeader(context), YMargin(30),
+//     FadeInDown(1400ms, Padding(h:30, Column([title, subtitle, fields, button]))),
+//     YMargin(40), FadeInDown(2000ms, GoogleButton),
+//     YMargin(40), FadeInDown(2200ms, Row("Have an account?")),
+//   ])
+//
+// BinLink replacements only:
+//   - Primarywhite → Colors.white
+//   - signIn() → auth.loginWithEmail / loginWithGoogle
+//   - route push → FlavorConfig routes
+//   - authimage1 → authHeader() eco cards
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../components/auth_header.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -84,8 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    // Rydr: Scaffold(backgroundColor: ColorPath.Primarywhite)
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -96,13 +115,13 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // ── Top margin (Rydr: YMargin(100)) ────────────────────────────
-                const SizedBox(height: 60),
+                // Rydr: YMargin(100)
+                const SizedBox(height: 100),
 
-                // ── Auth header (Rydr: authHeader widget) ───────────────────────
-                const _BinLinkAuthHeader(),
+                // Rydr: authHeader(context) — FadeInDown(1500ms) logo + illustration
+                authHeader(context),
 
-                // ── Form section (Rydr: FadeInDown 1400ms) ──────────────────────
+                // Rydr: FadeInDown(1400ms, Padding(h:30, Column([...])))
                 const SizedBox(height: 30),
                 FadeInDown(
                   duration: const Duration(milliseconds: 1400),
@@ -112,27 +131,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title (Rydr: "Welcome Back To Rydr" Montserrat w500 18)
+                        // Rydr: Text("Welcome Back To Rydr", montserrat, 18, w500)
                         Text(
                           FlavorConfig.isCollector
                               ? 'Welcome Back, Collector'
                               : 'Welcome Back',
-                          style: AppTextStyles.h2.copyWith(fontSize: 22),
+                          style: AppTextStyles.h2.copyWith(
+                            color: AppColors.midnightNavy,
+                            fontSize: 22,
+                          ),
                         ),
                         const SizedBox(height: 7),
-                        // Subtitle (Rydr: "Enjoy awesome rides..." Montserrat w300 12)
+                        // Rydr: Text("Enjoy awesome rides...", montserrat, 12, w300)
                         Text(
                           FlavorConfig.isCollector
                               ? 'Sign in to your collector account'
                               : 'Sign in to book waste pickups',
                           style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFF6B7280),
                             fontSize: 13,
                           ),
                         ),
                         const SizedBox(height: 30),
 
-                        // Email (Rydr: CustomTextFieldWidget hintText: 'Email Address')
+                        // Rydr: CustomTextFieldWidget(hintText: 'Email Address')
                         AppTextField(
                           controller: _emailCtrl,
                           label: 'Email address',
@@ -143,10 +165,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: AppColors.muted, size: 20),
                           validator: Validators.email,
                           textInputAction: TextInputAction.next,
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: AppColors.midnightNavy,
+                          labelColor: AppColors.midnightNavy,
                         ),
                         const SizedBox(height: 10),
 
-                        // Password (Rydr: hideText: true, suffixWidget: Text("show"))
+                        // Rydr: CustomTextFieldWidget(hideText: true, suffixWidget: Text("show"))
                         AppTextField(
                           controller: _passCtrl,
                           label: 'Password',
@@ -169,6 +194,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: Validators.password,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _loginEmail(),
+                          fillColor: const Color(0xFFF5F6F5),
+                          textColor: AppColors.midnightNavy,
+                          labelColor: AppColors.midnightNavy,
                         ),
                         const SizedBox(height: 10),
 
@@ -188,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Primary button (Rydr: dark filled, full-width, rounded 8)
+                        // Rydr: Container(h:50, sw, br:8, Primarydark, InkWell("Sign In"))
                         AppButton(
                           label: 'Sign In',
                           loading: auth.loading,
@@ -199,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // ── Google button row (Rydr: FadeInDown 2000ms, Google + Facebook + Touch) ──
+                // Rydr: YMargin(40), FadeInDown(2000ms, GoogleButton)
                 const SizedBox(height: 40),
                 FadeInDown(
                   duration: const Duration(milliseconds: 2000),
@@ -212,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // ── Register link (Rydr: FadeInDown 2200ms, "Have an account?") ──
+                // Rydr: YMargin(40), FadeInDown(2200ms, Row("Have an account? Sign up"))
                 const SizedBox(height: 40),
                 FadeInDown(
                   duration: const Duration(milliseconds: 2200),
@@ -223,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         "Don't have an account? ",
                         style: AppTextStyles.body.copyWith(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFF6B7280),
                           fontWeight: FontWeight.w300,
                         ),
                       ),
@@ -234,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Sign up',
                           style: AppTextStyles.body.copyWith(
                             fontSize: 13,
-                            color: AppColors.white,
+                            color: AppColors.midnightNavy,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -247,158 +275,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── BinLink auth header (Rydr: authHeader widget — logo + illustration) ───────
-
-class _BinLinkAuthHeader extends StatelessWidget {
-  const _BinLinkAuthHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeInDown(
-      duration: const Duration(milliseconds: 1500),
-      child: Column(
-        children: [
-          // Logo (Rydr: centered 105x33 image → BinLink: BL wordmark)
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'BL',
-                      style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'BinLink',
-                  style: AppTextStyles.h2.copyWith(fontSize: 20),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          // Illustration (Rydr: full-width 160px Container — BinLink: eco cards row)
-          const SizedBox(
-            width: double.infinity,
-            height: 160,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _EcoItem(
-                    icon: PhosphorIconsFill.trashSimple,
-                    label: 'Household',
-                    time: '30 GHC',
-                    color: AppColors.steelBlue,
-                  ),
-                  _EcoItem(
-                    icon: PhosphorIconsFill.recycle,
-                    label: 'Plastic',
-                    time: '30 GHC',
-                    color: AppColors.success,
-                  ),
-                  _EcoItem(
-                    icon: PhosphorIconsFill.leaf,
-                    label: 'Organic',
-                    time: '40 GHC',
-                    color: Color(0xFF34D399),
-                  ),
-                  _EcoItem(
-                    icon: PhosphorIconsFill.laptop,
-                    label: 'E-Waste',
-                    time: '50 GHC',
-                    color: Color(0xFFA78BFA),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Eco item card (mirrors Rydr's FavoriteItems widget) ───────────────────────
-
-class _EcoItem extends StatelessWidget {
-  const _EcoItem({
-    required this.icon,
-    required this.label,
-    required this.time,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String   label;
-  final String   time;
-  final Color    color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 120,
-      width: 110,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.steelBlue),
-        borderRadius: const BorderRadius.all(Radius.circular(25)),
-        color: AppColors.card,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            height: 67,
-            width: 67,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withAlpha(25),
-            ),
-            child: Icon(icon, color: color, size: 26),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            time,
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 9,
-              fontWeight: FontWeight.w400,
-              color: AppColors.muted,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -419,9 +295,9 @@ class _GoogleButton extends StatelessWidget {
         height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: const Color(0xFFF5F6F5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: const Color(0xFFDCE1DE)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -435,7 +311,7 @@ class _GoogleButton extends StatelessWidget {
             Text(
               'Continue with Google',
               style: AppTextStyles.body.copyWith(
-                color: AppColors.white,
+                color: AppColors.midnightNavy,
                 fontWeight: FontWeight.w400,
                 fontSize: 14,
               ),
@@ -475,7 +351,7 @@ class _GoogleLogoPainter extends CustomPainter {
     canvas.drawRect(
         Rect.fromLTWH(cx, cy - size.height * 0.18, r, size.height * 0.36),
         Paint()
-          ..color = AppColors.card
+          ..color = const Color(0xFFF5F6F5)
           ..style = PaintingStyle.fill);
     canvas.drawRect(
         Rect.fromLTWH(

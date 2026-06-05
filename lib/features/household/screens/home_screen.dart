@@ -697,140 +697,135 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
   }
 }
 
-// ── Home bottom sheet (Rydr: 300px rounded-top sheet, handle + search pill + waste cards) ──
+// ── Home bottom sheet — LITERAL Rydr home_view.dart AnimatedContainer transplant ──
+//
+// Rydr source: home_view.dart AnimatedContainer(curve:easeInOut, duration:100ms,
+//   alignment:bottomCenter, height:300, width:screenWidth,
+//   decoration:only(topLeft:25,topRight:25), color:Primarywhite)
+//   child: Column[YMargin(7), handle, YMargin(20), SingleChildScrollView(vertical,
+//     Column[CustomPlaceHolder(), YMargin(10), Container(h:130,w:sw,ListView(FavoriteItems)),
+//            YMargin(10), Padding(h:30,Container(h:40,Secondarygrey,br:10,"Set locations"))])]
 
 class _HomeBottomSheet extends StatelessWidget {
   const _HomeBottomSheet();
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 100),
+      alignment: Alignment.bottomCenter,
       height: 300,
+      width: w,
+      // Rydr: color: ColorPath.Primarywhite (white)
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x50000000),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25.0),
+          topRight: Radius.circular(25.0),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Handle (Rydr: 80x2.875 centered) ─────────────────────────────
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 80,
-              height: 3,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
+          const SizedBox(height: 7),
+          // Handle — Rydr: Container(80, 2.875, all(80), PrimaryColor.0.5)
+          Container(
+            width: 80,
+            height: 2.875,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(80)),
+              color: AppColors.steelBlue.withAlpha(128),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // ── "Book a pickup" search pill (Rydr: "Where to?" tappable pill) ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const BookScreen(mode: 'immediate'),
+          const SizedBox(height: 20),
+          SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                // CustomPlaceHolder equivalent — BinLink: "Book a pickup" tappable pill
+                const _BookingPlaceHolder(),
+                const SizedBox(height: 10),
+                // FavoriteItems ListView — Rydr: h:130, w:screenWidth, Padding(h:30)
+                SizedBox(
+                  height: 130,
+                  width: w,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const RangeMaintainingScrollPhysics(),
+                      children: const [
+                        _WasteTypeCard(
+                          icon: PhosphorIconsFill.trashSimple,
+                          label: 'Household',
+                          price: 'GHC 30',
+                          color: AppColors.steelBlue,
+                          mode: 'immediate',
+                        ),
+                        SizedBox(width: 8),
+                        _WasteTypeCard(
+                          icon: PhosphorIconsFill.recycle,
+                          label: 'Plastic',
+                          price: 'GHC 30',
+                          color: AppColors.success,
+                          mode: 'immediate',
+                        ),
+                        SizedBox(width: 8),
+                        _WasteTypeCard(
+                          icon: PhosphorIconsFill.leaf,
+                          label: 'Organic',
+                          price: 'GHC 40',
+                          color: Color(0xFF34D399),
+                          mode: 'immediate',
+                        ),
+                        SizedBox(width: 8),
+                        _WasteTypeCard(
+                          icon: PhosphorIconsFill.laptop,
+                          label: 'E-Waste',
+                          price: 'GHC 50',
+                          color: Color(0xFFA78BFA),
+                          mode: 'scheduled',
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.borderActive),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        PhosphorIconsRegular.magnifyingGlass,
-                        color: AppColors.muted,
-                        size: 20,
+                const SizedBox(height: 10),
+                // "Set favorite locations" → BinLink: "Saved Addresses"
+                // Rydr: Padding(h:30) Container(h:40, w:sw-100, Secondarygrey, br:10,
+                //   InkWell(Row(center, Text("Set favorite locations"))))
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const SavedAddressesScreen()),
+                    ),
+                    child: Container(
+                      height: 40,
+                      width: w - 100,
+                      // Rydr: Secondarygrey (dark gray)
+                      decoration: BoxDecoration(
+                        color: AppColors.midnightNavy,
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          S.of(context).bookPickup,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.muted,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Saved Addresses',
+                            style: AppTextStyles.body.copyWith(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: const Icon(
-                          PhosphorIconsRegular.arrowRight,
-                          color: AppColors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // ── Horizontal waste type cards (Rydr: FavoriteItems ListView h:130) ──
-          SizedBox(
-            height: 110,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: const [
-                _WasteTypeCard(
-                  icon: PhosphorIconsFill.trashSimple,
-                  label: 'Household',
-                  price: 'GHC 30',
-                  color: AppColors.steelBlue,
-                  mode: 'immediate',
-                ),
-                SizedBox(width: 8),
-                _WasteTypeCard(
-                  icon: PhosphorIconsFill.recycle,
-                  label: 'Plastic',
-                  price: 'GHC 30',
-                  color: AppColors.success,
-                  mode: 'immediate',
-                ),
-                SizedBox(width: 8),
-                _WasteTypeCard(
-                  icon: PhosphorIconsFill.leaf,
-                  label: 'Organic',
-                  price: 'GHC 40',
-                  color: Color(0xFF34D399),
-                  mode: 'immediate',
-                ),
-                SizedBox(width: 8),
-                _WasteTypeCard(
-                  icon: PhosphorIconsFill.laptop,
-                  label: 'E-Waste',
-                  price: 'GHC 50',
-                  color: Color(0xFFA78BFA),
-                  mode: 'scheduled',
                 ),
               ],
             ),
@@ -841,7 +836,90 @@ class _HomeBottomSheet extends StatelessWidget {
   }
 }
 
-// ── Waste type quick-launch card (mirrors Rydr's FavoriteItems widget) ────────
+// ── Booking placeholder — LITERAL Rydr CustomPlaceHolder transplant ───────────
+//
+// Rydr: Padding(h:30) > Container(h:55,w:sw,br:9,Primaryfield.0.3)
+//   > Row(spaceBetween, [Row[car_svg+XMargin(10)+"Where to?"], Container(25×60,dark,all(5))])
+
+class _BookingPlaceHolder extends StatelessWidget {
+  const _BookingPlaceHolder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const BookScreen(mode: 'immediate')),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          height: 55,
+          width: MediaQuery.sizeOf(context).width,
+          // Rydr: Primaryfield.withOpacity(0.3) — light fill on white bg
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(9),
+            color: AppColors.midnightNavy.withAlpha(20),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                const Icon(PhosphorIconsRegular.trashSimple,
+                    color: AppColors.steelBlue, size: 25),
+                const SizedBox(width: 10),
+                Text(
+                  'Book a pickup',
+                  // Rydr: Primarydark text
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.midnightNavy,
+                  ),
+                ),
+              ]),
+              Container(
+                height: 25,
+                width: 60,
+                decoration: const BoxDecoration(
+                  color: AppColors.midnightNavy,
+                  borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(PhosphorIconsRegular.clock,
+                        size: 13, color: Colors.white),
+                    Text(
+                      'Now',
+                      style: AppTextStyles.body.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Waste type card — LITERAL Rydr FavoriteItems transplant ──────────────────
+//
+// Rydr: ClipRect > Container(h:120,w:110,border:PrimaryColor,br:all(25))
+//   > Column[YMargin(10), Container(67×67,circle,F5F6F5,Padding(18,SvgPicture(icon,26×26))),
+//            YMargin(5), Text(text,10,w600,Primarydark), YMargin(5), Text(time,9,w400,#999393)]
+//   .ripple(() {})
 
 class _WasteTypeCard extends StatelessWidget {
   const _WasteTypeCard({
@@ -868,44 +946,56 @@ class _WasteTypeCard extends StatelessWidget {
           MaterialPageRoute(builder: (_) => BookScreen(mode: mode)),
         );
       },
-      child: Container(
-        width: 90,
-        height: 110,
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withAlpha(60)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: color.withAlpha(25),
-                shape: BoxShape.circle,
+      // Rydr: ClipRect > Container(h:120,w:110,border:PrimaryColor,br:all(25)) — NO color fill
+      child: ClipRect(
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        child: Container(
+          height: 120,
+          width: 110,
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.steelBlue),
+            borderRadius: const BorderRadius.all(Radius.circular(25)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Rydr: YMargin(10)
+              const SizedBox(height: 10),
+              // Rydr: Container(67×67, circle, Color(0xFFF5F6F5))
+              Container(
+                height: 67,
+                width: 67,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFF5F6F5),
+                ),
+                child: Icon(icon, color: color, size: 26),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 10,
+              // Rydr: YMargin(5)
+              const SizedBox(height: 5),
+              // Rydr: Text(text, montserrat, 10, w600, Primarydark)
+              Text(
+                label,
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.midnightNavy,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              price,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.muted,
-                fontSize: 9,
+              // Rydr: YMargin(5)
+              const SizedBox(height: 5),
+              // Rydr: Text(time, montserrat, 9, w400, #999393)
+              Text(
+                price,
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF999393),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
