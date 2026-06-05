@@ -13,6 +13,10 @@ concurrency:
 permissions:
   contents: write   # needed to create/update releases
 
+# Opt into Node.js 24 now — GitHub forces it on June 16 2026 anyway
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     name: Build APKs (household + collector)
