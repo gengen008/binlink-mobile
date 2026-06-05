@@ -438,7 +438,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     suffixText: 'kg',
                     suffixStyle: AppTextStyles.caption.copyWith(color: AppColors.muted),
                     filled: true,
-                    fillColor: AppColors.deepOcean,
+                    fillColor: AppColors.fieldFill,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: AppRadius.mdBR,
@@ -833,7 +833,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: AppColors.card,
         borderRadius: AppRadius.sheetBR,
       ),
       padding: EdgeInsets.fromLTRB(

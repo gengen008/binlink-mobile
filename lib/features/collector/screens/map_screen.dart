@@ -103,7 +103,7 @@ class _BottomNav extends StatelessWidget {
     final s = S.of(context);
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: Colors.white,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: SafeArea(
@@ -516,18 +516,18 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
             child: Container(
               width: 48, height: 48,
               decoration: BoxDecoration(
-                color: AppColors.deepOcean,
+                color: Colors.white,
                 borderRadius: AppRadius.lgBR,
                 border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(60),
+                    color: Colors.black.withAlpha(40),
                     blurRadius: 12,
                   ),
                 ],
               ),
               child: const Icon(PhosphorIconsRegular.crosshair,
-                  color: AppColors.skyBlue, size: 22),
+                  color: AppColors.primary, size: 22),
             ),
           ),
         ),
@@ -631,7 +631,7 @@ class _RequestCardState extends State<_RequestCard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.deepOcean.withAlpha(240),
+        color: AppColors.secondary,
         borderRadius: AppRadius.xxlBR,
         border: Border.all(color: AppColors.border),
         boxShadow: [
@@ -833,21 +833,21 @@ class _ProfileTabState extends State<_ProfileTab> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: sel ? AppColors.warning.withAlpha(30) : AppColors.deepOcean,
+                  color: sel ? AppColors.primary.withAlpha(20) : AppColors.fieldFill,
                   borderRadius: AppRadius.lgBR,
-                  border: Border.all(color: sel ? AppColors.warning : AppColors.border),
+                  border: Border.all(color: sel ? AppColors.primary : AppColors.border),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(lang,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: sel ? AppColors.warning : AppColors.textPrimary,
+                            color: sel ? AppColors.primary : AppColors.secondary,
                           )),
                     ),
                     if (sel)
                       const Icon(PhosphorIconsFill.checkCircle,
-                          color: AppColors.warning, size: 18),
+                          color: AppColors.primary, size: 18),
                   ],
                 ),
               ),
@@ -908,7 +908,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                             : AppColors.muted,
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppColors.deepOcean, width: 2),
+                            color: Colors.white, width: 2),
                       ),
                     ),
                   ),

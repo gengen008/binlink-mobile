@@ -376,7 +376,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 12, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: AppColors.deepOcean.withAlpha(220),
+                                      color: AppColors.secondary.withAlpha(220),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                           color: AppColors.steelBlue
@@ -403,7 +403,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: AppColors.deepOcean.withAlpha(230),
+                                color: AppColors.secondary.withAlpha(230),
                                 borderRadius: AppRadius.fullBR,
                                 border: Border.all(
                                     color: AppColors.steelBlue.withAlpha(80)),
@@ -430,7 +430,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 decoration: const BoxDecoration(
-                  color: AppColors.deepOcean,
+                  color: AppColors.card,
                   borderRadius: AppRadius.sheetBR,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),

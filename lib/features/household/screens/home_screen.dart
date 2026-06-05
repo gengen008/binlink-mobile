@@ -359,7 +359,7 @@ class _HomeTabState extends State<_HomeTab> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.deepOcean.withAlpha(220),
+                        color: AppColors.secondary.withAlpha(220),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                             color: AppColors.steelBlue.withAlpha(60)),
@@ -649,7 +649,7 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.deepOcean.withAlpha(240),
+              color: AppColors.secondary.withAlpha(240),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: color.withAlpha(80)),
               boxShadow: [
@@ -1536,7 +1536,7 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
       minChildSize: 0.4,
       builder: (_, ctrl) => Container(
         decoration: const BoxDecoration(
-          color: AppColors.deepOcean,
+          color: AppColors.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: ListView(
@@ -1835,7 +1835,7 @@ class _BookingDetailSheet extends StatelessWidget {
       minChildSize: 0.4,
       builder: (_, ctrl) => Container(
         decoration: const BoxDecoration(
-          color: AppColors.deepOcean,
+          color: AppColors.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: ListView(
@@ -2061,7 +2061,7 @@ class _RatingSheetState extends State<_RatingSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(
@@ -2307,7 +2307,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: sel ? AppColors.steelBlue.withAlpha(30) : AppColors.deepOcean,
+                  color: sel ? AppColors.steelBlue.withAlpha(30) : AppColors.fieldFill,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: sel ? AppColors.steelBlue : AppColors.border,

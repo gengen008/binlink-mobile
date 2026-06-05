@@ -139,7 +139,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
     return Container(
       height: screenH * 0.92,
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(

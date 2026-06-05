@@ -1410,7 +1410,7 @@ class _Step4AddressState extends State<_Step4Address> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.deepOcean.withAlpha(220),
+                            color: AppColors.secondary.withAlpha(220),
                             borderRadius: BorderRadius.circular(AppRadius.sheet),
                             border: Border.all(color: AppColors.border),
                           ),

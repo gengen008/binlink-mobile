@@ -502,7 +502,7 @@ class _JobCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: AppColors.deepOcean,
+          color: AppColors.card,
           borderRadius: AppRadius.sheetBR,
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),

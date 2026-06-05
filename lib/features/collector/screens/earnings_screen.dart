@@ -603,7 +603,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.deepOcean,
+        color: AppColors.card,
         borderRadius: AppRadius.sheetBR,
       ),
       padding: EdgeInsets.fromLTRB(
