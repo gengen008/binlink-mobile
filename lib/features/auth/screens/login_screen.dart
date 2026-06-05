@@ -298,47 +298,40 @@ class _BinLinkAuthHeader extends StatelessWidget {
           ),
           const SizedBox(height: 30),
 
-          // Illustration (Rydr: full-width 160px car image → BinLink: eco icons row)
+          // Illustration (Rydr: full-width 160px Container — BinLink: eco cards row)
           const SizedBox(
             width: double.infinity,
             height: 160,
-            child: Center(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 30),
-                physics: NeverScrollableScrollPhysics(),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _EcoItem(
-                      icon: PhosphorIconsFill.trashSimple,
-                      label: 'Household',
-                      time: '30 GHC',
-                      color: AppColors.steelBlue,
-                    ),
-                    SizedBox(width: 8),
-                    _EcoItem(
-                      icon: PhosphorIconsFill.recycle,
-                      label: 'Plastic',
-                      time: '30 GHC',
-                      color: AppColors.success,
-                    ),
-                    SizedBox(width: 8),
-                    _EcoItem(
-                      icon: PhosphorIconsFill.leaf,
-                      label: 'Organic',
-                      time: '40 GHC',
-                      color: Color(0xFF34D399),
-                    ),
-                    SizedBox(width: 8),
-                    _EcoItem(
-                      icon: PhosphorIconsFill.laptop,
-                      label: 'E-Waste',
-                      time: '50 GHC',
-                      color: Color(0xFFA78BFA),
-                    ),
-                  ],
-                ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _EcoItem(
+                    icon: PhosphorIconsFill.trashSimple,
+                    label: 'Household',
+                    time: '30 GHC',
+                    color: AppColors.steelBlue,
+                  ),
+                  _EcoItem(
+                    icon: PhosphorIconsFill.recycle,
+                    label: 'Plastic',
+                    time: '30 GHC',
+                    color: AppColors.success,
+                  ),
+                  _EcoItem(
+                    icon: PhosphorIconsFill.leaf,
+                    label: 'Organic',
+                    time: '40 GHC',
+                    color: Color(0xFF34D399),
+                  ),
+                  _EcoItem(
+                    icon: PhosphorIconsFill.laptop,
+                    label: 'E-Waste',
+                    time: '50 GHC',
+                    color: Color(0xFFA78BFA),
+                  ),
+                ],
               ),
             ),
           ),

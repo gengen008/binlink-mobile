@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -46,90 +45,68 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Rydr: white background, minimal — FadeIn(1500ms) logo, Spacer, FadeInUp(500ms) pulse ring
     return Scaffold(
-      backgroundColor: AppColors.midnightNavy,
+      backgroundColor: Colors.white,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
 
-          // ── Logo wordmark (Rydr: FadeIn 1500ms centered logo image) ──────────
+          // ── Logo (Rydr: FadeIn 1500ms, centered 105×33 logo image) ───────────
           FadeIn(
             duration: const Duration(milliseconds: 1500),
-            child: Align(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.steelBlue.withAlpha(100),
-                          blurRadius: 40,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+            child: Center(
+              child: Container(
+                width: 106,
+                height: 106,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.steelBlue.withAlpha(60),
+                      blurRadius: 32,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 8),
                     ),
-                    child: const Center(
-                      child: Text(
-                        'BL',
-                        style: TextStyle(
-                          fontFamily: 'PlusJakartaSans',
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -1,
-                        ),
-                      ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'BL',
+                    style: TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -1,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    FlavorConfig.appName,
-                    style: AppTextStyles.h2,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    FlavorConfig.tagline,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
 
           const Spacer(),
 
-          // ── Bottom eco-pulse ring (Rydr: FadeInUp 500ms ripple image) ────────
+          // ── Eco-pulse ring (Rydr: FadeInUp 500ms, 83×83 ripple image) ────────
           FadeInUp(
             duration: const Duration(milliseconds: 500),
-            child: Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: 83,
-                height: 83,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.steelBlue.withAlpha(80),
-                    width: 2,
-                  ),
-                  color: AppColors.steelBlue.withAlpha(15),
+            child: Container(
+              width: 83,
+              height: 83,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.steelBlue.withAlpha(120),
+                  width: 2,
                 ),
-                child: Icon(
-                  PhosphorIconsRegular.recycle,
-                  color: AppColors.steelBlue.withAlpha(140),
-                  size: 36,
-                ),
+                color: AppColors.steelBlue.withAlpha(12),
+              ),
+              child: const Icon(
+                PhosphorIconsRegular.recycle,
+                color: AppColors.steelBlue,
+                size: 36,
               ),
             ),
           ),

@@ -174,18 +174,25 @@ class NotificationDateChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Rydr: Container(width:90, height:30, borderRadius:5, color:Primarydark) centered date label
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        width: 90,
+        height: 30,
         decoration: BoxDecoration(
-          color: AppColors.deepOcean,
-          borderRadius: AppRadius.smBR,
-          border: Border.all(color: AppColors.border),
+          color: AppColors.midnightNavy,
+          borderRadius: BorderRadius.circular(5),
         ),
-        child: Text(
-          Fmt.date(date),
-          style: AppTextStyles.chip.copyWith(color: AppColors.textOnDark),
+        child: Center(
+          child: Text(
+            Fmt.date(date),
+            style: AppTextStyles.chip.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 9,
+              fontWeight: FontWeight.w300,
+            ),
+          ),
         ),
       ),
     );

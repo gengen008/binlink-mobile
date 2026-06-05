@@ -404,13 +404,14 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
                 child: Column(
                   children: [
-                    Center(
+                    // sheetHeader() — Rydr: 80×2.875, borderRadius: all(80), PrimaryColor.withOpacity(0.5)
+                  Center(
                       child: Container(
-                        width: 40, height: 4,
+                        width: 80, height: 3,
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                          color: AppColors.border,
-                          borderRadius: AppRadius.fullBR,
+                          color: AppColors.steelBlue.withAlpha(120),
+                          borderRadius: const BorderRadius.all(Radius.circular(80)),
                         ),
                       ),
                     ),

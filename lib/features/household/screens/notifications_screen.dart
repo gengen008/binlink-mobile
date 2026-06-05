@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/network/api_client.dart';
@@ -133,7 +134,10 @@ class _NotifList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _buildRows();
-    return ListView.builder(
+    // Rydr: FadeInUp(duration: 2000ms) wrapping the notification ListView
+    return FadeInUp(
+      duration: const Duration(milliseconds: 2000),
+      child: ListView.builder(
       padding: const EdgeInsets.only(bottom: 24),
       itemCount: rows.length,
       itemBuilder: (_, i) {
@@ -148,6 +152,7 @@ class _NotifList extends StatelessWidget {
           onTap: isRead ? null : () => onMarkRead(n['id'] as String, row.idx!),
         );
       },
+      ),
     );
   }
 }

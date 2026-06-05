@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:animate_do/animate_do.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -303,23 +304,26 @@ class _HomeTabState extends State<_HomeTab> {
       color: AppColors.midnightNavy,
       child: Stack(
         children: [
-          // ── Full-screen MapLibre map ───────────────────────────────
+          // ── Full-screen MapLibre map (Rydr: FadeIn 1500ms) ────────────────
           Positioned.fill(
-            child: MapLibreMap(
-              styleString: kMapStyleUrl,
-              initialCameraPosition: CameraPosition(
-                target: widget.myPos,
-                zoom:   14.0,
+            child: FadeIn(
+              duration: const Duration(milliseconds: 1500),
+              child: MapLibreMap(
+                styleString: kMapStyleUrl,
+                initialCameraPosition: CameraPosition(
+                  target: widget.myPos,
+                  zoom:   14.0,
+                ),
+                onMapCreated: (ctrl) {
+                  _mapCtrl = ctrl;
+                  ctrl.onCircleTapped.add(_onCircleTapped);
+                },
+                onStyleLoadedCallback: _onStyleLoaded,
+                myLocationEnabled:    false,
+                compassEnabled:       false,
+                rotateGesturesEnabled: false,
+                tiltGesturesEnabled:   false,
               ),
-              onMapCreated: (ctrl) {
-                _mapCtrl = ctrl;
-                ctrl.onCircleTapped.add(_onCircleTapped);
-              },
-              onStyleLoadedCallback: _onStyleLoaded,
-              myLocationEnabled:    false,
-              compassEnabled:       false,
-              rotateGesturesEnabled: false,
-              tiltGesturesEnabled:   false,
             ),
           ),
 
@@ -442,7 +446,11 @@ class _HomeTabState extends State<_HomeTab> {
                       child: _ActiveBookingBanner(booking: active),
                     ),
                   )
-                : const _HomeBottomSheet(),
+                : FadeInUp(
+                    delay: const Duration(milliseconds: 1000),
+                    duration: const Duration(milliseconds: 2000),
+                    child: const _HomeBottomSheet(),
+                  ),
           ),
         ],
       ),

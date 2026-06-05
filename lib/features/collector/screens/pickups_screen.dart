@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -323,11 +324,48 @@ class _JobList extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-      itemCount: jobs.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, i) => _JobCard(job: jobs[i]),
+    // Rydr: date badge row above list + FadeInUp(2000ms) on ListView
+    final now = DateTime.now();
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final dateLabel = '${now.day} ${months[now.month - 1]} ${now.year}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: AppColors.deepOcean,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Center(
+              child: Text(
+                dateLabel,
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w300,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: FadeInUp(
+            duration: const Duration(milliseconds: 2000),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              itemCount: jobs.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (_, i) => _JobCard(job: jobs[i]),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

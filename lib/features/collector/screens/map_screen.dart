@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
@@ -260,19 +261,22 @@ class _MapTabState extends State<_MapTab> {
 
     return Stack(
       children: [
-        // Full-screen map
-        MapLibreMap(
-          styleString: kMapStyleUrl,
-          initialCameraPosition: CameraPosition(
-            target: widget.pos,
-            zoom: 14.0,
+        // Full-screen map (Rydr: FadeIn 1500ms)
+        FadeIn(
+          duration: const Duration(milliseconds: 1500),
+          child: MapLibreMap(
+            styleString: kMapStyleUrl,
+            initialCameraPosition: CameraPosition(
+              target: widget.pos,
+              zoom: 14.0,
+            ),
+            onMapCreated: (c) => _mapCtrl = c,
+            onStyleLoadedCallback: _onStyleLoaded,
+            myLocationEnabled: false,
+            compassEnabled: false,
+            rotateGesturesEnabled: false,
+            tiltGesturesEnabled: false,
           ),
-          onMapCreated: (c) => _mapCtrl = c,
-          onStyleLoadedCallback: _onStyleLoaded,
-          myLocationEnabled: false,
-          compassEnabled: false,
-          rotateGesturesEnabled: false,
-          tiltGesturesEnabled: false,
         ),
 
         // ── AppBar (Rydr: solid dark Material bar — greeting left, toggle right) ──
