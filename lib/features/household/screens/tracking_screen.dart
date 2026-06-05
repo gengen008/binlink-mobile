@@ -19,6 +19,7 @@ import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
+import '../../../shared/widgets/searching_radar_widget.dart';
 
 double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
   const r = 6371.0;
@@ -362,6 +363,39 @@ class _TrackingScreenState extends State<TrackingScreen>
                             tiltGesturesEnabled:   false,
                           ),
                         ),
+
+                        // Searching radar — shown while waiting for a collector
+                        if (status == 'PENDING' || status == 'SEARCHING')
+                          Positioned(
+                            top: 16, left: 0, right: 0,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SearchingRadarWidget(radius: 55),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.deepOcean.withAlpha(220),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: AppColors.steelBlue
+                                              .withAlpha(60)),
+                                    ),
+                                    child: Text(
+                                      status == 'SEARCHING'
+                                          ? 'Searching for a collector...'
+                                          : 'Waiting for acceptance...',
+                                      style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
 
                         // ETA overlay chip
                         if (etaLabel != null)

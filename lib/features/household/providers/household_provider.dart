@@ -5,6 +5,11 @@ import '../../../core/network/api_client.dart';
 import '../../../core/network/socket_service.dart';
 import '../../../core/gps/kalman_filter.dart';
 
+// Zone event type constants
+const _kZoneMove    = 'move';
+const _kZoneOnline  = 'online';
+const _kZoneOffline = 'offline';
+
 class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _bookings = [];
   List<Map<String, dynamic>> _onlineCollectors = [];
@@ -158,6 +163,66 @@ class HouseholdProvider extends ChangeNotifier {
     _collectorLat = null;
     _collectorLng = null;
     _gpsSmoother.reset();
+  }
+
+  // ── Zone subscription — real-time nearby collector feed ────────────────────
+  // Events: {event: 'move'|'online'|'offline', collectorId, lat?, lng?, bearing?}
+  final _zoneEvents = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get zoneEventStream => _zoneEvents.stream;
+
+  void subscribeToNearby(double lat, double lng) {
+    SocketService.joinZone(lat, lng);
+    SocketService.on('zone:collector', _onZoneCollector);
+    SocketService.on('zone:online',    _onZoneOnline);
+    SocketService.on('zone:offline',   _onZoneOffline);
+  }
+
+  void unsubscribeFromNearby() {
+    SocketService.leaveZone();
+    SocketService.off('zone:collector');
+    SocketService.off('zone:online');
+    SocketService.off('zone:offline');
+  }
+
+  void _onZoneCollector(dynamic data) {
+    final d = data as Map<String, dynamic>;
+    // Update cached position so the badge count is accurate
+    final id  = d['collectorId'] as String;
+    final idx = _onlineCollectors.indexWhere((c) => c['id'] == id);
+    if (idx >= 0) {
+      _onlineCollectors[idx] = {
+        ..._onlineCollectors[idx],
+        'lastLat': d['lat'],
+        'lastLng': d['lng'],
+      };
+    }
+    // Forward to stream — CollectorLayer consumes this without rebuilding widgets
+    if (!_zoneEvents.isClosed) {
+      _zoneEvents.add({...d, 'event': _kZoneMove});
+    }
+  }
+
+  void _onZoneOnline(dynamic data) {
+    final d  = data as Map<String, dynamic>;
+    final id = d['collectorId'] as String;
+    if (!_onlineCollectors.any((c) => c['id'] == id)) {
+      _onlineCollectors.add({
+        'id':      id,
+        'lastLat': d['lat'],
+        'lastLng': d['lng'],
+      });
+      notifyListeners();
+    }
+    if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOnline});
+  }
+
+  void _onZoneOffline(dynamic data) {
+    final d    = data as Map<String, dynamic>;
+    final id   = d['collectorId'] as String;
+    final prev = _onlineCollectors.length;
+    _onlineCollectors.removeWhere((c) => c['id'] == id);
+    if (_onlineCollectors.length != prev) notifyListeners();
+    if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOffline});
   }
 
   // ── Saved Addresses ────────────────────────────────────────────────────────

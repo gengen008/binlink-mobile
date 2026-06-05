@@ -120,6 +120,15 @@ class SocketService {
     emit('booking:join', {'bookingId': bookingId}, ack);
   }
 
+  // ── Zone subscription — household subscribes to nearby collector feed ──────
+  static void joinZone(double lat, double lng) {
+    emit('zone:join', {'lat': lat, 'lng': lng});
+  }
+
+  static void leaveZone() {
+    emit('zone:leave', null);
+  }
+
   // ── Collector controls ────────────────────────────────────────────────────
   static void goOnline([Function(dynamic)? ack]) =>
       emit('collector:go-online', null, ack);

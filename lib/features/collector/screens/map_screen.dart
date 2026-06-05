@@ -197,23 +197,51 @@ class _MapTab extends StatefulWidget {
   State<_MapTab> createState() => _MapTabState();
 }
 
-class _MapTabState extends State<_MapTab> {
+class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
   MapLibreMapController? _mapCtrl;
   Circle? _posCircle;
   bool _styleLoaded = false;
   bool _lastIsOnline = false;
 
+  // Smooth position interpolation
+  late final AnimationController _posAnim;
+  LatLng? _animFrom;
+  LatLng? _animTo;
+  LatLng? _animCurrent;
+
+  @override
+  void initState() {
+    super.initState();
+    _posAnim = AnimationController(
+      vsync:    this,
+      duration: const Duration(milliseconds: 800),
+    )..addListener(_onPosTick);
+  }
+
   @override
   void dispose() {
+    _posAnim.dispose();
     _mapCtrl?.dispose();
     super.dispose();
+  }
+
+  void _onPosTick() {
+    if (_animFrom == null || _animTo == null || _posCircle == null) return;
+    final t = CurvedAnimation(parent: _posAnim, curve: Curves.easeOut).value;
+    _animCurrent = LatLng(
+      _animFrom!.latitude  + (_animTo!.latitude  - _animFrom!.latitude)  * t,
+      _animFrom!.longitude + (_animTo!.longitude - _animFrom!.longitude) * t,
+    );
+    _mapCtrl?.updateCircle(_posCircle!, CircleOptions(geometry: _animCurrent!));
   }
 
   @override
   void didUpdateWidget(_MapTab old) {
     super.didUpdateWidget(old);
     if (old.pos != widget.pos && _posCircle != null) {
-      _mapCtrl?.updateCircle(_posCircle!, CircleOptions(geometry: widget.pos));
+      _animFrom = _animCurrent ?? old.pos;
+      _animTo   = widget.pos;
+      _posAnim.forward(from: 0);
       _mapCtrl?.animateCamera(CameraUpdate.newLatLng(widget.pos));
     }
   }

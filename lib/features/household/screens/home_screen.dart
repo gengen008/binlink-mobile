@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show Point;
 import 'package:animate_do/animate_do.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +18,14 @@ import '../../../core/services/location_service.dart';
 import '../../../core/services/receipt_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
+import '../../../core/maps/collector_layer.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/stats_row.dart';
 import '../../../shared/widgets/collector_bottom_sheet.dart';
+import '../../../shared/widgets/searching_radar_widget.dart';
 import 'book_screen.dart';
 import 'tracking_screen.dart';
 import 'privacy_screen.dart';
@@ -188,9 +191,14 @@ class _HomeTabState extends State<_HomeTab> {
   MapLibreMapController? _mapCtrl;
   bool _styleLoaded = false;
   Circle? _myCircle;
-  final Map<String, Circle> _collectorCircles = {};
-  bool _syncing = false;
-  List<Map<String, dynamic>> _lastCollectors = [];
+
+  // CollectorLayer manages animated GeoJSON markers + pulse rings
+  CollectorLayer? _collectorLayer;
+  StreamSubscription<Map<String, dynamic>>? _zoneSub;
+  HouseholdProvider? _prov;
+
+  // Track last collector list for initial seeding when layer becomes ready
+  List<Map<String, dynamic>> _pendingCollectors = [];
 
   @override
   void didUpdateWidget(_HomeTab old) {
@@ -205,7 +213,9 @@ class _HomeTabState extends State<_HomeTab> {
 
   @override
   void dispose() {
-    _mapCtrl?.onCircleTapped.remove(_onCircleTapped);
+    _zoneSub?.cancel();
+    _collectorLayer?.dispose();
+    _prov?.unsubscribeFromNearby();
     super.dispose();
   }
 
@@ -216,73 +226,78 @@ class _HomeTabState extends State<_HomeTab> {
 
   Future<void> _onStyleLoaded() async {
     _styleLoaded = true;
-    final prov = context.read<HouseholdProvider>();
+    _prov = context.read<HouseholdProvider>();
+
+    // User's own position circle
     _myCircle = await _mapCtrl?.addCircle(CircleOptions(
-      geometry:           widget.myPos,
-      circleRadius:       10,
-      circleColor:        '#5483B3',
-      circleStrokeColor:  '#C1E8FF',
-      circleStrokeWidth:  2.5,
-      circleOpacity:      0.9,
+      geometry:          widget.myPos,
+      circleRadius:      10,
+      circleColor:       '#5483B3',
+      circleStrokeColor: '#C1E8FF',
+      circleStrokeWidth: 2.5,
+      circleOpacity:     0.9,
     ));
-    await _syncCollectors(prov.onlineCollectors);
+
+    // Init animated collector layer
+    _collectorLayer = CollectorLayer(_mapCtrl!);
+    await _collectorLayer!.init();
+
+    // Seed from HTTP-loaded collectors (may be empty if still loading)
+    final initial = _pendingCollectors.isNotEmpty
+        ? _pendingCollectors
+        : _prov!.onlineCollectors;
+    _collectorLayer!.setInitial(initial);
+
+    // Subscribe to zone socket for real-time updates
+    _prov!.subscribeToNearby(
+      widget.myPos.latitude, widget.myPos.longitude);
+
+    // Forward zone events to CollectorLayer
+    _zoneSub = _prov!.zoneEventStream.listen(_onZoneEvent);
   }
 
-  void _onCircleTapped(Circle circle) {
-    final data = circle.data?['collector'] as Map<String, dynamic>?;
-    if (data == null) return;
-    HapticFeedback.lightImpact();
-    showCollectorSheet(
-      context, data,
-      onRequestPickup: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
-    );
+  void _onZoneEvent(Map<String, dynamic> event) {
+    final type = event['event'] as String? ?? '';
+    final id   = event['collectorId'] as String? ?? '';
+    if (id.isEmpty) return;
+    switch (type) {
+      case 'move':
+        _collectorLayer?.updatePosition(
+          id,
+          (event['lat']     as num).toDouble(),
+          (event['lng']     as num).toDouble(),
+          (event['bearing'] as num?)?.toDouble() ?? 0,
+        );
+      case 'online':
+        _collectorLayer?.updatePosition(
+          id,
+          (event['lat'] as num).toDouble(),
+          (event['lng'] as num).toDouble(),
+          (event['bearing'] as num?)?.toDouble() ?? 0,
+        );
+      case 'offline':
+        _collectorLayer?.removeCollector(id);
+    }
   }
 
-  Future<void> _syncCollectors(List<Map<String, dynamic>> collectors) async {
-    if (_mapCtrl == null || !_styleLoaded || _syncing) return;
-    _syncing = true;
-    try {
-      // Remove circles for collectors no longer online
-      final newIds = collectors
-          .map((c) => c['id'] as String?)
-          .whereType<String>()
-          .toSet();
-      final toRemove = _collectorCircles.keys
-          .where((id) => !newIds.contains(id))
-          .toList();
-      for (final id in toRemove) {
-        final circle = _collectorCircles.remove(id);
-        if (circle != null) await _mapCtrl!.removeCircle(circle);
+  void _onMapClick(Point<double> _, LatLng tap) {
+    if (_prov == null) return;
+    for (final c in _prov!.onlineCollectors) {
+      final lat = (c['lastLat'] as num?)?.toDouble();
+      final lng = (c['lastLng'] as num?)?.toDouble();
+      if (lat == null || lng == null) continue;
+      final dlat = tap.latitude  - lat;
+      final dlng = tap.longitude - lng;
+      // ~0.001 degree ≈ 111 m — generous tap target
+      if (dlat * dlat + dlng * dlng < 0.001 * 0.001 * 4) {
+        HapticFeedback.lightImpact();
+        showCollectorSheet(
+          context, c,
+          onRequestPickup: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
+        );
+        return;
       }
-      // Add / update circles
-      for (final c in collectors) {
-        final id  = c['id'] as String?;
-        final lat = (c['lastLat'] as num?)?.toDouble();
-        final lng = (c['lastLng'] as num?)?.toDouble();
-        if (id == null || lat == null || lng == null) continue;
-        if (_collectorCircles.containsKey(id)) {
-          await _mapCtrl!.updateCircle(
-            _collectorCircles[id]!,
-            CircleOptions(geometry: LatLng(lat, lng)),
-          );
-        } else {
-          final circle = await _mapCtrl!.addCircle(
-            CircleOptions(
-              geometry:          LatLng(lat, lng),
-              circleRadius:      11,
-              circleColor:       '#22C55E',
-              circleStrokeColor: '#FFFFFF',
-              circleStrokeWidth: 2.5,
-              circleOpacity:     0.9,
-            ),
-            {'collector': c},
-          );
-          _collectorCircles[id] = circle;
-        }
-      }
-    } finally {
-      _syncing = false;
     }
   }
 
@@ -292,13 +307,17 @@ class _HomeTabState extends State<_HomeTab> {
     final auth   = context.watch<AuthProvider>();
     final active = prov.activeBooking;
 
-    // Sync collector markers whenever the list changes
-    if (_styleLoaded && prov.onlineCollectors != _lastCollectors) {
-      _lastCollectors = prov.onlineCollectors;
+    // Seed CollectorLayer when provider loads the initial HTTP list
+    if (_styleLoaded && _collectorLayer != null &&
+        prov.onlineCollectors.isNotEmpty) {
+      _pendingCollectors = prov.onlineCollectors;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _syncCollectors(prov.onlineCollectors);
+        if (mounted) _collectorLayer?.setInitial(_pendingCollectors);
       });
     }
+
+    final searchStatus = active?['status'] as String? ?? '';
+    final isSearching  = searchStatus == 'PENDING' || searchStatus == 'SEARCHING';
 
     return Container(
       color: AppColors.midnightNavy,
@@ -314,18 +333,49 @@ class _HomeTabState extends State<_HomeTab> {
                   target: widget.myPos,
                   zoom:   14.0,
                 ),
-                onMapCreated: (ctrl) {
-                  _mapCtrl = ctrl;
-                  ctrl.onCircleTapped.add(_onCircleTapped);
-                },
+                onMapCreated: (ctrl) => _mapCtrl = ctrl,
                 onStyleLoadedCallback: _onStyleLoaded,
-                myLocationEnabled:    false,
-                compassEnabled:       false,
+                onMapClick: _onMapClick,
+                myLocationEnabled:     false,
+                compassEnabled:        false,
                 rotateGesturesEnabled: false,
                 tiltGesturesEnabled:   false,
               ),
             ),
           ),
+
+          // ── Searching radar overlay (PENDING / SEARCHING) ─────────────────
+          if (isSearching)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 76,
+              left: 0, right: 0,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SearchingRadarWidget(radius: 60),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.deepOcean.withAlpha(220),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppColors.steelBlue.withAlpha(60)),
+                      ),
+                      child: Text(
+                        searchStatus == 'SEARCHING'
+                            ? 'Searching for a collector...'
+                            : 'Waiting for acceptance...',
+                        style: AppTextStyles.caption
+                            .copyWith(color: AppColors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // ── AppBar (Rydr: solid dark AppBar — greeting left, drawer icon right) ──
           Positioned(
