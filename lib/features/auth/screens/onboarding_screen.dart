@@ -20,34 +20,49 @@ Future<void> markOnboardingSeen() async {
   await prefs.setBool(_kOnboardingSeenKey, true);
 }
 
-// ── Onboarding page data ──────────────────────────────────────────────────────
+// ── Page data ──────────────────────────────────────────────────────────────────
 
 class _Page {
-  final String icon; // svg asset path
-  final String text;
-  final String desc;
-  const _Page({required this.icon, required this.text, required this.desc});
+  final String icon;
+  final String heading;
+  final String body;
+  final Color accent;
+  const _Page({
+    required this.icon,
+    required this.heading,
+    required this.body,
+    required this.accent,
+  });
 }
 
-final List<_Page> _screens = [
-  const _Page(
+const _pages = [
+  _Page(
     icon: RydrAssets.globe,
-    text: 'Clean Cities Start Here',
-    desc: 'BinLink connects households with trusted\ncollectors for a cleaner Ghana.',
+    heading: 'Clean Cities\nStart Here',
+    body: 'BinLink connects your home to trusted\ncollectors for a cleaner Ghana.',
+    accent: AppColors.steelBlue,
   ),
-  const _Page(
-    icon: RydrAssets.home,
-    text: 'Pick Up On Your Schedule',
-    desc: 'Book same-day pickups or schedule ahead.\nWe work around your timing.',
+  _Page(
+    icon: RydrAssets.stopwatch,
+    heading: 'Book in Seconds',
+    body: 'Request a same-day pickup or schedule\nahead. We work around your timing.',
+    accent: AppColors.success,
   ),
-  const _Page(
+  _Page(
     icon: RydrAssets.locate,
-    text: 'Watch Your Collector Live',
-    desc: 'Real-time GPS tracking. Know exactly\nwhen your collector will arrive.',
+    heading: 'Track Live',
+    body: 'Real-time GPS tracking. Know exactly\nwhen your collector will arrive.',
+    accent: AppColors.skyBlue,
+  ),
+  _Page(
+    icon: RydrAssets.cash,
+    heading: 'Earn Eco Rewards',
+    body: 'Every recyclable pickup earns points.\nRedeem them for discounts on bookings.',
+    accent: Color(0xFF34D399),
   ),
 ];
 
-// ── Main screen ───────────────────────────────────────────────────────────────
+// ── Screen ─────────────────────────────────────────────────────────────────────
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -57,233 +72,374 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  int currentIndex = 0;
-  late PageController _pageController;
-
-  @override
-  void initState() {
-    _pageController = PageController(initialPage: 0);
-    super.initState();
-  }
+  final _ctrl = PageController();
+  int _current = 0;
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  Future<void> _storeOnboardInfo() async {
+  Future<void> _done() async {
+    final nav = Navigator.of(context);
     await markOnboardingSeen();
+    if (!mounted) return;
+    nav.pushReplacementNamed('/login');
+  }
+
+  Future<void> _next() async {
+    if (_current == _pages.length - 1) {
+      await _done();
+    } else {
+      _ctrl.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.sizeOf(context).width;
+    final page = _pages[_current];
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.only(top: 20.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 80),
-            // Logo
-            Container(
-              width: sw,
-              height: 45,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  fit: BoxFit.contain,
-                  image: AssetImage(RydrAssets.logo),
+      backgroundColor: AppColors.secondary,
+      body: Stack(
+        children: [
+          // ── City background at very low opacity ──
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.18,
+              child: Image.asset(RydrAssets.citybg, fit: BoxFit.cover),
+            ),
+          ),
+
+          // ── Dark gradient (bottom-heavy) ensures text is always readable ──
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Color(0xBB021024),
+                    AppColors.secondary,
+                  ],
+                  stops: [0.0, 0.30, 0.65],
                 ),
               ),
             ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: Stack(
-                children: [
-                  // City background
-                  Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: AssetImage(RydrAssets.citybg),
-                      ),
-                    ),
-                  ),
+          ),
 
-                  // PageView
-                  PageView.builder(
-                    itemCount: _screens.length,
-                    controller: _pageController,
-                    physics: const BouncingScrollPhysics(),
-                    onPageChanged: (index) =>
-                        setState(() => currentIndex = index),
-                    itemBuilder: (_, index) {
-                      return Column(
-                        children: [
-                          const SizedBox(height: 220),
-                          Column(
-                            children: [
-                              Container(
-                                width: 320,
-                                height: 160,
-                                alignment: Alignment.center,
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha(220),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(30),
-                                  child: SvgPicture.asset(
-                                    _screens[index].icon,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.secondary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                _screens[index].text,
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.h4.copyWith(
-                                  color: AppColors.accent,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                _screens[index].desc,
-                                textAlign: TextAlign.center,
-                                maxLines: 5,
-                                overflow: TextOverflow.clip,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                            ],
+          // ── Content ──
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Top bar: logo + brand name + skip ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      ClipOval(
+                        child: ColoredBox(
+                          color: AppColors.primary.withAlpha(40),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Image.asset(
+                              RydrAssets.logo,
+                              width: 28,
+                              height: 28,
+                              fit: BoxFit.contain,
+                            ),
                           ),
-                        ],
-                      );
-                    },
-                  ),
-
-                  // Dot indicators (bottom: 100)
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 100.0),
-                      child: SizedBox(
-                        height: 10.0,
-                        child: ListView.builder(
-                          itemCount: _screens.length,
-                          shrinkWrap: true,
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (context, index) {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 3.0),
-                                  width: 45,
-                                  height: 1.5,
-                                  decoration: BoxDecoration(
-                                    color: currentIndex == index
-                                        ? AppColors.secondary
-                                        : const Color(0xFFEBEBEB),
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
                         ),
                       ),
-                    ),
-                  ),
-
-                  // Bottom buttons (bottom: 25) — Skip + circular next
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 25),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          // Skip button (hidden on last page)
-                          currentIndex != _screens.length - 1
-                              ? InkWell(
-                                  onTap: () async {
-                                    final nav = Navigator.of(context);
-                                    await _storeOnboardInfo();
-                                    if (!mounted) return;
-                                    nav.pushReplacementNamed('/login');
-                                  },
-                                  child: Container(
-                                    height: 52,
-                                    width: 93,
-                                    decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.circular(14.0),
-                                      color: AppColors.secondary,
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        'Skip',
-                                        style: AppTextStyles.buttonSm,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox(height: 52, width: 93),
-
-                          const SizedBox(width: 50),
-
-                          // Circular next / finish button
-                          InkWell(
-                            onTap: () async {
-                              if (currentIndex == _screens.length - 1) {
-                                final nav = Navigator.of(context);
-                                await _storeOnboardInfo();
-                                if (!mounted) return;
-                                nav.pushReplacementNamed('/login');
-                              } else {
-                                _pageController.nextPage(
-                                  duration:
-                                      const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            },
-                            child: Container(
-                              height: 61,
-                              width: 61,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.secondary,
+                      const SizedBox(width: 8),
+                      Text(
+                        'BinLink',
+                        style: AppTextStyles.h4.copyWith(color: Colors.white),
+                      ),
+                      const Spacer(),
+                      if (_current < _pages.length - 1)
+                        GestureDetector(
+                          onTap: _done,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.white.withAlpha(40)),
+                            ),
+                            child: Text(
+                              'Skip',
+                              style: AppTextStyles.caption.copyWith(
+                                color: Colors.white.withAlpha(180),
+                                fontSize: 13,
                               ),
-                              child: const Center(
-                                child: Icon(
-                                  PhosphorIconsBold.arrowRight,
-                                  color: Colors.white,
-                                  size: 24,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // ── PageView ──
+                Expanded(
+                  child: PageView.builder(
+                    controller: _ctrl,
+                    itemCount: _pages.length,
+                    physics: const BouncingScrollPhysics(),
+                    onPageChanged: (i) => setState(() => _current = i),
+                    itemBuilder: (_, i) {
+                      final pg = _pages[i];
+                      return Column(
+                        children: [
+                          const Spacer(flex: 2),
+
+                          // Icon — double circle with accent tint
+                          Container(
+                            width: 148,
+                            height: 148,
+                            decoration: BoxDecoration(
+                              color: pg.accent.withAlpha(30),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: pg.accent.withAlpha(60),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 96,
+                                height: 96,
+                                decoration: BoxDecoration(
+                                  color: pg.accent.withAlpha(55),
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(24),
+                                child: SvgPicture.asset(
+                                  pg.icon,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+
+                          const SizedBox(height: 40),
+
+                          // Heading
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 36),
+                            child: Text(
+                              pg.heading,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.h2.copyWith(
+                                color: Colors.white,
+                                fontSize: 27,
+                                height: 1.25,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Description
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 44),
+                            child: Text(
+                              pg.body,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.body.copyWith(
+                                color: Colors.white.withAlpha(180),
+                                height: 1.65,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+
+                          const Spacer(flex: 3),
                         ],
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+
+                // ── Dot indicators ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_pages.length, (i) {
+                    final sel = i == _current;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: sel ? 28 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? page.accent
+                            : Colors.white.withAlpha(55),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    );
+                  }),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ── Bottom buttons ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _current == _pages.length - 1
+                      ? _GetStartedButton(accent: page.accent, onTap: _done)
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: _OutlineBtn(label: 'Skip', onTap: _done),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: _FilledBtn(
+                                label: 'Next',
+                                accent: page.accent,
+                                onTap: _next,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+
+                const SafeArea(top: false, child: SizedBox(height: 16)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Button widgets ─────────────────────────────────────────────────────────────
+
+class _GetStartedButton extends StatelessWidget {
+  const _GetStartedButton({required this.accent, required this.onTap});
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: accent,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withAlpha(80),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Get Started',
+              style: AppTextStyles.button.copyWith(color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              PhosphorIconsBold.arrowRight,
+              color: Colors.white,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilledBtn extends StatelessWidget {
+  const _FilledBtn({
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: accent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withAlpha(65),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: AppTextStyles.button.copyWith(color: Colors.white),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              PhosphorIconsRegular.arrowRight,
+              color: Colors.white,
+              size: 17,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OutlineBtn extends StatelessWidget {
+  const _OutlineBtn({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withAlpha(45)),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: AppTextStyles.button.copyWith(
+              color: Colors.white.withAlpha(180),
+            ),
+          ),
         ),
       ),
     );

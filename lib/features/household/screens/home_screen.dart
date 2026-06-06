@@ -463,33 +463,6 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ),
 
-          // ── Locate-me FAB ──────────────────────────────────────────
-          Positioned(
-            right: 16,
-            bottom: active != null ? 200 : 320,
-            child: GestureDetector(
-              onTap: _locateMe,
-              child: Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(60),
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  PhosphorIconsRegular.crosshair,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
-
           // ── Bottom: active banner (fixed) OR draggable bottom sheet ──
           if (active != null)
             Positioned(
@@ -518,6 +491,33 @@ class _HomeTabState extends State<_HomeTab> {
                 ),
               ),
             ),
+
+          // ── Locate-me FAB — rendered last so it always floats above the sheet ──
+          Positioned(
+            right: 16,
+            bottom: active != null ? 200 : 320,
+            child: GestureDetector(
+              onTap: _locateMe,
+              child: Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(60),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  PhosphorIconsRegular.crosshair,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

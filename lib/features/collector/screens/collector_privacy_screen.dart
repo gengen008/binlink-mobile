@@ -33,7 +33,7 @@ const _sections = [
   _PolicySection(
     heading: '1. Information We Collect',
     body:
-        'BinLink collects information you provide during registration and while using the app, including:\n• Full name, phone number, and email address\n• Vehicle type and plate number\n• GPS location during active pickups\n• Bank or MoMo account details for payout processing\n• Photos uploaded during pickups (before/after)\n• Pickup history and earnings records',
+        'BinLink collects information you provide during registration and while using the app, including:\n• Full name, phone number, and email address\n• Vehicle type and plate number\n• GPS location during active pickups\n• Bank or MoMo account details for payout processing\n• Pickup history and earnings records',
   ),
   _PolicySection(
     heading: '2. How We Use Your Information',
@@ -51,27 +51,22 @@ const _sections = [
         'We share the minimum necessary data with third parties:\n• Households see your name, phone, and live location during active pickups\n• Paystack and MoMo operators process payout transactions\n• Firebase handles push notification delivery\n• Termii handles SMS delivery\n\nWe never sell your personal data to advertisers or third parties.',
   ),
   _PolicySection(
-    heading: '5. Photos and Media',
-    body:
-        'Before and after photos you upload during pickups are stored securely on BinLink servers. They are used solely for job verification and dispute resolution. Photos are retained for 12 months and then automatically deleted.',
-  ),
-  _PolicySection(
-    heading: '6. Data Retention',
+    heading: '5. Data Retention',
     body:
         'Account data is retained while your account is active. Earnings and payout records are retained for 5 years for accounting and regulatory compliance. You may request account deletion at any time by contacting support@binlink.eco.',
   ),
   _PolicySection(
-    heading: '7. Security',
+    heading: '6. Security',
     body:
         'All data is transmitted over HTTPS with TLS encryption. Passwords are hashed using bcrypt (12 rounds). JWT tokens expire every 15 minutes. We employ rate limiting, IP monitoring, and other technical controls to protect your account.',
   ),
   _PolicySection(
-    heading: '8. Your Rights',
+    heading: '7. Your Rights',
     body:
         'You have the right to access, correct, or delete your personal data. You may deactivate your account at any time from the app. For any privacy-related requests, contact us at privacy@binlink.eco.',
   ),
   _PolicySection(
-    heading: '9. Contact',
+    heading: '8. Contact',
     body:
         'BinLink Eco Ltd.\nAccra, Ghana\nEmail: privacy@binlink.eco\nCollector Support: collectors@binlink.eco\nPhone: +233 55 123 4567\n\nLast updated: June 2026',
   ),

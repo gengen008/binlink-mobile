@@ -104,11 +104,11 @@ const _faqs = [
   ),
   _FaqItem(
     'What happens after I accept a job?',
-    'After accepting:\n1. Tap "En Route" when you start heading to the pickup.\n2. Tap "I\'ve Arrived" when you reach the household.\n3. Take a "before" photo of the waste.\n4. Collect the waste, then tap "Complete Pickup".\n5. Take an optional "after" photo.\nThe household is notified at each step.',
+    'After accepting:\n1. Tap "En Route" when you start heading to the pickup.\n2. Use the in-app navigation or the Navigate button to get directions.\n3. Tap "I\'ve Arrived" when you reach the household.\n4. Collect the waste, enter the actual weight, then tap "Complete Pickup".\nThe household is notified at each step.',
   ),
   _FaqItem(
     'How do I complete a pickup correctly?',
-    'Make sure you:\n• Mark "En Route" before leaving\n• Arrive at the correct address (confirm with the household if needed)\n• Upload the before-photo when prompted\n• Only mark "Complete" once the waste is fully collected\n\nIncomplete or fraudulent pickups may result in account suspension.',
+    'Make sure you:\n• Mark "En Route" before leaving and use the Navigate button for directions\n• Arrive at the correct address (confirm with the household if needed)\n• Enter the actual waste weight accurately when completing\n• Only mark "Complete" once the waste is fully collected\n\nIncomplete or fraudulent pickups may result in account suspension.',
   ),
   _FaqItem(
     'How and when do I get paid?',
