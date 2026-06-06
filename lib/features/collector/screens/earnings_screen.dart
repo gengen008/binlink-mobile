@@ -46,7 +46,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
             Expanded(
               child: prov.loading && prov.loadingWallet
                   ? const Center(child: CircularProgressIndicator(
-                      color: AppColors.steelBlue, strokeWidth: 2))
+                      color: AppColors.primary, strokeWidth: 2))
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                       children: [
@@ -58,7 +58,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                   label: "Today's Earnings",
                                   value: Fmt.currency(prov.todayEarnings),
                                   sub: '${prov.todayPickups} pickups',
-                                  color: AppColors.steelBlue,
+                                  color: AppColors.primary,
                                   icon: PhosphorIconsFill.coins,
                                 ),
                               ),
@@ -259,17 +259,15 @@ class _EarningsBanner extends StatelessWidget {
                           color: AppColors.primary,
                           borderRadius: AppRadius.buttonBR,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(PhosphorIconsFill.arrowCircleRight,
+                            const Icon(PhosphorIconsFill.arrowCircleRight,
                                 color: AppColors.white, size: 14),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text('Payout',
-                                style: TextStyle(
-                                  fontFamily: 'PlusJakartaSans',
+                                style: AppTextStyles.caption.copyWith(
                                   color: AppColors.white,
-                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                 )),
                           ],
@@ -466,7 +464,7 @@ class _PickupEarningTile extends StatelessWidget {
       child: Row(
         children: [
           const Icon(PhosphorIconsFill.trashSimple,
-              color: AppColors.steelBlue, size: 18),
+              color: AppColors.primary, size: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -650,10 +648,8 @@ class _PayoutSheetState extends State<_PayoutSheet> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5, color: AppColors.white),
                             )
-                          : const Text('Confirm Payout', style: TextStyle(
-                              fontFamily: 'PlusJakartaSans',
+                          : Text('Confirm Payout', style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.white,
-                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                             )),
                     ),
@@ -683,7 +679,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.steelBlue),
+      borderSide: const BorderSide(color: AppColors.primary),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: AppRadius.lgBR,

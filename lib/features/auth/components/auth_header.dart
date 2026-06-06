@@ -12,7 +12,7 @@ Widget authHeader(BuildContext context) {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: AppColors.steelBlue.withAlpha(18),
+            color: AppColors.primary.withAlpha(18),
             shape: BoxShape.circle,
           ),
           child: ClipOval(
@@ -34,7 +34,7 @@ Widget authHeader(BuildContext context) {
         Text(
           'Eco Waste Collection',
           style: AppTextStyles.caption.copyWith(
-            color: AppColors.steelBlue,
+            color: AppColors.primary,
             letterSpacing: 0.4,
           ),
         ),

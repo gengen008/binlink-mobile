@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.steelBlue,
+                      color: AppColors.primary,
                       width: 2.5,
                     ),
                   ),
@@ -129,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.steelBlue,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),

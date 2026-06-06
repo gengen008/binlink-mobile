@@ -204,17 +204,17 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                             const Spacer(),
                             Text('${_maxCapacity.toInt()}kg',
                                 style: AppTextStyles.monoSm.copyWith(
-                                  color: AppColors.iceBlue,
+                                  color: AppColors.primaryLight,
                                 )),
                           ],
                         ),
                         const SizedBox(height: 8),
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: AppColors.steelBlue,
+                            activeTrackColor: AppColors.primary,
                             inactiveTrackColor: AppColors.border,
-                            thumbColor: AppColors.steelBlue,
-                            overlayColor: AppColors.steelBlue.withAlpha(30),
+                            thumbColor: AppColors.primary,
+                            overlayColor: AppColors.primary.withAlpha(30),
                             trackHeight: 4,
                           ),
                           child: Slider(

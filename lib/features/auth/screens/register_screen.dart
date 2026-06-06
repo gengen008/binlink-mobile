@@ -234,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Text(
                           'Sign In',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.steelBlue,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

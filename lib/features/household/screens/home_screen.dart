@@ -166,11 +166,11 @@ class _NavItem extends StatelessWidget {
                 ),
               ),
               Icon(sel ? iconFill : icon,
-                  color: sel ? AppColors.steelBlue : AppColors.muted, size: 22),
+                  color: sel ? AppColors.primary : AppColors.muted, size: 22),
               const SizedBox(height: 3),
               Text(label,
                   style: AppTextStyles.caption.copyWith(
-                    color: sel ? AppColors.steelBlue : AppColors.muted,
+                    color: sel ? AppColors.primary : AppColors.muted,
                     fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 10,
                   )),
@@ -434,7 +434,7 @@ class _HomeTabState extends State<_HomeTab> {
                             label: 'Request Now',
                             subtitle: '~15 min arrival',
                             icon: PhosphorIconsFill.trashSimple,
-                            accent: AppColors.steelBlue,
+                            accent: AppColors.primary,
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -450,7 +450,7 @@ class _HomeTabState extends State<_HomeTab> {
                             label: 'Schedule',
                             subtitle: 'Pick a date',
                             icon: PhosphorIconsRegular.calendarCheck,
-                            accent: AppColors.skyBlue,
+                            accent: AppColors.muted,
                             outlined: true,
                             onTap: () => Navigator.push(
                               context,
@@ -543,7 +543,7 @@ class _HomeTabState extends State<_HomeTab> {
                                   ),
                                   child: const Icon(
                                     PhosphorIconsRegular.crosshair,
-                                    color: AppColors.steelBlue,
+                                    color: AppColors.primary,
                                     size: 20,
                                   ),
                                 ),
@@ -579,7 +579,7 @@ class _HomeTabState extends State<_HomeTab> {
                           icon: PhosphorIconsFill.trashSimple,
                           label: 'Household',
                           price: 'GHC 30',
-                          color: AppColors.steelBlue,
+                          color: AppColors.primary,
                           mode: 'immediate',
                         ),
                         SizedBox(width: 8),
@@ -631,7 +631,7 @@ class _HomeTabState extends State<_HomeTab> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(PhosphorIconsRegular.mapPin,
-                                color: AppColors.steelBlue, size: 16),
+                                color: AppColors.primary, size: 16),
                             const SizedBox(width: 6),
                             Text(
                               'Saved Addresses',
@@ -925,7 +925,7 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(PhosphorIconsRegular.arrowRight,
-                      color: AppColors.steelBlue, size: 18),
+                      color: AppColors.primary, size: 18),
                 ),
               ],
             ),
@@ -998,49 +998,36 @@ class _WasteTypeCard extends StatelessWidget {
           MaterialPageRoute(builder: (_) => BookScreen(mode: mode)),
         );
       },
-      child: ClipRect(
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: Container(
-          height: 120,
-          width: 110,
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.steelBlue),
-            borderRadius: const BorderRadius.all(Radius.circular(25)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                height: 67,
-                width: 67,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFF5F6F5),
-                ),
-                child: Icon(icon, color: color, size: 26),
+      child: Container(
+        height: 100,
+        width: 100,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 22),
+            const Spacer(),
+            Text(
+              label,
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.secondary,
+                fontSize: 12,
               ),
-              const SizedBox(height: 5),
-              Text(
-                label,
-                style: AppTextStyles.caption.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.midnightNavy,
-                ),
+            ),
+            Text(
+              price,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.muted,
+                fontSize: 10,
               ),
-              const SizedBox(height: 5),
-              Text(
-                price,
-                style: AppTextStyles.caption.copyWith(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF999393),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1092,7 +1079,7 @@ class _HistoryTab extends StatelessWidget {
                     const SizedBox(
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.steelBlue,
+                        strokeWidth: 2, color: AppColors.primary,
                       ),
                     ),
                 ],
@@ -1374,7 +1361,7 @@ class _SubscriptionCard extends StatelessWidget {
           color: AppColors.card,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isActive ? AppColors.steelBlue.withAlpha(100) : AppColors.border,
+            color: isActive ? AppColors.primary.withAlpha(100) : AppColors.border,
             width: isActive ? 1.5 : 1,
           ),
         ),
@@ -1383,12 +1370,12 @@ class _SubscriptionCard extends StatelessWidget {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: AppColors.steelBlue.withAlpha(25),
+                color: AppColors.primary.withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 _planIcons[plan] ?? PhosphorIconsRegular.repeat,
-                color: AppColors.steelBlue, size: 20,
+                color: AppColors.primary, size: 20,
               ),
             ),
             const SizedBox(width: 12),
@@ -1427,7 +1414,7 @@ class _SubscriptionCard extends StatelessWidget {
                     Text(
                       'Next: ${Fmt.shortDate(nextDate)}',
                       style: AppTextStyles.caption.copyWith(
-                          fontSize: 10, color: AppColors.steelBlue),
+                          fontSize: 10, color: AppColors.primary),
                     )
                   else
                     Text(
@@ -1587,13 +1574,13 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
               children: [
                 Text('Price per pickup', style: AppTextStyles.h4),
                 Text(Fmt.currency(price),
-                    style: AppTextStyles.monoLg.copyWith(color: AppColors.iceBlue)),
+                    style: AppTextStyles.monoLg.copyWith(color: AppColors.primaryLight)),
               ],
             ),
             const SizedBox(height: 28),
             if (_loading)
               const Center(child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.steelBlue))
+                  strokeWidth: 2, color: AppColors.primary))
             else ...[
               if (isActive || isPaused)
                 GestureDetector(
@@ -1609,10 +1596,10 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(isPaused ? PhosphorIconsRegular.play : PhosphorIconsRegular.pause,
-                            color: AppColors.skyBlue, size: 18),
+                            color: AppColors.muted, size: 18),
                         const SizedBox(width: 8),
                         Text(isPaused ? 'Resume Subscription' : 'Pause Subscription',
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.skyBlue)),
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.muted)),
                       ],
                     ),
                   ),
@@ -1675,7 +1662,7 @@ class _ImpactCard extends StatelessWidget {
       barRods: [
         BarChartRodData(
           toY: (counts[i] ?? 0).toDouble(),
-          color: AppColors.steelBlue.withAlpha(counts[i]! > 0 ? 220 : 80),
+          color: AppColors.primary.withAlpha(counts[i]! > 0 ? 220 : 80),
           width: 12,
           borderRadius: BorderRadius.circular(4),
         ),
@@ -1729,7 +1716,7 @@ class _ImpactCard extends StatelessWidget {
                 _ImpactChip(
                   value: '${co2.toStringAsFixed(1)} kg',
                   label: 'CO₂ Saved',
-                  color: AppColors.skyBlue,
+                  color: AppColors.muted,
                 ),
                 const SizedBox(width: 8),
                 _ImpactChip(
@@ -1928,7 +1915,7 @@ class _BookingDetailSheet extends StatelessWidget {
                 Text('Total Paid', style: AppTextStyles.h4),
                 Text(Fmt.currency(amount),
                     style: AppTextStyles.monoLg.copyWith(
-                      color: AppColors.iceBlue,
+                      color: AppColors.primaryLight,
                     )),
               ],
             ),
@@ -1949,11 +1936,11 @@ class _BookingDetailSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(PhosphorIconsRegular.downloadSimple,
-                        color: AppColors.skyBlue, size: 18),
+                        color: AppColors.muted, size: 18),
                     const SizedBox(width: 8),
                     Text('Download Receipt',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.skyBlue,
+                          color: AppColors.muted,
                         )),
                   ],
                 ),
@@ -1974,16 +1961,14 @@ class _BookingDetailSheet extends StatelessWidget {
                     color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(PhosphorIconsFill.star, color: AppColors.white, size: 18),
-                      SizedBox(width: 8),
+                      const Icon(PhosphorIconsFill.star, color: AppColors.white, size: 18),
+                      const SizedBox(width: 8),
                       Text('Rate Your Collector',
-                          style: TextStyle(
-                            fontFamily: 'PlusJakartaSans',
+                          style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.white,
-                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                           )),
                     ],
@@ -2189,7 +2174,7 @@ class _RatingSheetState extends State<_RatingSheet> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.steelBlue),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
           ),
         ),
@@ -2214,11 +2199,9 @@ class _RatingSheetState extends State<_RatingSheet> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5, color: AppColors.white,
                         ))
-                    : const Text('Submit Rating',
-                        style: TextStyle(
-                          fontFamily: 'PlusJakartaSans',
+                    : Text('Submit Rating',
+                        style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.white,
-                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                         )),
               ),
@@ -2303,10 +2286,10 @@ class _ProfileTabState extends State<_ProfileTab> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: sel ? AppColors.steelBlue.withAlpha(30) : AppColors.fieldFill,
+                  color: sel ? AppColors.primary.withAlpha(30) : AppColors.fieldFill,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: sel ? AppColors.steelBlue : AppColors.border,
+                    color: sel ? AppColors.primary : AppColors.border,
                   ),
                 ),
                 child: Row(
@@ -2314,12 +2297,12 @@ class _ProfileTabState extends State<_ProfileTab> {
                     Expanded(
                       child: Text(lang,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: sel ? AppColors.steelBlue : AppColors.textPrimary,
+                            color: sel ? AppColors.primary : AppColors.textPrimary,
                           )),
                     ),
                     if (sel)
                       const Icon(PhosphorIconsFill.checkCircle,
-                          color: AppColors.steelBlue, size: 18),
+                          color: AppColors.primary, size: 18),
                   ],
                 ),
               ),
@@ -2404,14 +2387,14 @@ class _ProfileTabState extends State<_ProfileTab> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.steelBlue.withAlpha(20),
+                      color: AppColors.primary.withAlpha(20),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: AppColors.steelBlue.withAlpha(60)),
+                          color: AppColors.primary.withAlpha(60)),
                     ),
                     child: Text(S.of(context).householdMember,
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.steelBlue,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                         )),
                   ),
@@ -2513,11 +2496,11 @@ class _ProfileTabState extends State<_ProfileTab> {
                               Container(
                                 width: 36, height: 36,
                                 decoration: BoxDecoration(
-                                  color: AppColors.skyBlue.withAlpha(20),
+                                  color: AppColors.muted.withAlpha(20),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(PhosphorIconsRegular.moon,
-                                    color: AppColors.skyBlue, size: 18),
+                                    color: AppColors.muted, size: 18),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -2528,8 +2511,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 builder: (_, tp, __) => Switch(
                                   value: tp.isDark,
                                   onChanged: tp.setDark,
-                                  activeThumbColor: AppColors.steelBlue,
-                                  activeTrackColor: AppColors.steelBlue.withAlpha(80),
+                                  activeThumbColor: AppColors.primary,
+                                  activeTrackColor: AppColors.primary.withAlpha(80),
                                   inactiveTrackColor: AppColors.border,
                                   materialTapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
@@ -2554,11 +2537,11 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 Container(
                                   width: 36, height: 36,
                                   decoration: BoxDecoration(
-                                    color: AppColors.skyBlue.withAlpha(20),
+                                    color: AppColors.muted.withAlpha(20),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: const Icon(PhosphorIconsRegular.globe,
-                                      color: AppColors.skyBlue, size: 18),
+                                      color: AppColors.muted, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -2673,7 +2656,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               },
               child: Text('Submit',
                   style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.steelBlue)),
+                      .copyWith(color: AppColors.primary)),
             ),
           ],
         ),
@@ -2772,13 +2755,9 @@ class _EcoWalletCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D2B1A), Color(0xFF0D2137)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.success.withAlpha(80)),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2803,7 +2782,7 @@ class _EcoWalletCard extends StatelessWidget {
                   )),
                   Text('$pts points earned',
                       style: AppTextStyles.monoSm.copyWith(
-                        color: AppColors.white,
+                        color: AppColors.textPrimary,
                       )),
                 ],
               ),
@@ -2868,7 +2847,7 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.skyBlue, size: 18),
+          Icon(icon, color: AppColors.muted, size: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -2883,7 +2862,7 @@ class _InfoRow extends StatelessWidget {
                     style: AppTextStyles.body.copyWith(
                       color: value == 'Not set'
                           ? AppColors.muted
-                          : AppColors.white,
+                          : AppColors.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis),
@@ -2973,11 +2952,11 @@ class _MenuTile extends StatelessWidget {
             Container(
               width: 36, height: 36,
               decoration: BoxDecoration(
-                color: (item.color ?? AppColors.skyBlue).withAlpha(20),
+                color: (item.color ?? AppColors.muted).withAlpha(20),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(item.icon,
-                  color: item.color ?? AppColors.skyBlue, size: 18),
+                  color: item.color ?? AppColors.muted, size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -448,11 +448,11 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.steelBlue,
+                        color: AppColors.primary,
                         borderRadius: AppRadius.lgBR,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.steelBlue.withAlpha(60),
+                            color: AppColors.primary.withAlpha(60),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -481,7 +481,7 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
                                 Text(
                                   active['pickupAddress'] as String? ?? '',
                                   style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.iceBlue,
+                                    color: AppColors.primaryLight,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -615,17 +615,21 @@ class _RequestCardState extends State<_RequestCard> {
   @override
   Widget build(BuildContext context) {
     final prov    = context.read<CollectorProvider>();
-    final binSize = widget.booking['binSize'] as String? ?? '';
-    final address = widget.booking['pickupAddress'] as String? ?? '';
-    final amount  = Fmt.toDouble(widget.booking['totalAmount']);
-    final cat     = widget.booking['wasteCategory'] as String?;
-    final progress = _remaining / _kCountdown;
+    final binSize   = widget.booking['binSize'] as String? ?? '';
+    final address   = widget.booking['pickupAddress'] as String? ?? '';
+    final amount    = Fmt.toDouble(widget.booking['totalAmount']);
+    final cat       = widget.booking['wasteCategory'] as String?;
+    final estKg     = Fmt.toDouble(widget.booking['estimatedWeightKg'], 0);
+    final notes     = widget.booking['addressNotes'] as String?;
+    final timePref  = widget.booking['timePreference'] as String?;
+    final distKm    = Fmt.toDouble(widget.booking['distanceKm'], 0);
+    final progress  = _remaining / _kCountdown;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.secondary,
-        borderRadius: AppRadius.xxlBR,
+        borderRadius: AppRadius.mdBR,
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
@@ -656,7 +660,7 @@ class _RequestCardState extends State<_RequestCard> {
               )),
               const Spacer(),
               Text(Fmt.currency(amount),
-                  style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
+                  style: AppTextStyles.mono.copyWith(color: AppColors.primaryLight)),
               const SizedBox(width: 12),
               // Countdown ring
               SizedBox(
@@ -668,7 +672,7 @@ class _RequestCardState extends State<_RequestCard> {
                       value: progress,
                       strokeWidth: 3,
                       color: progress > 0.4
-                          ? AppColors.steelBlue
+                          ? AppColors.primary
                           : AppColors.danger,
                       backgroundColor: AppColors.border,
                     ),
@@ -709,15 +713,38 @@ class _RequestCardState extends State<_RequestCard> {
           const SizedBox(height: 6),
 
           // Chips
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
             children: [
               _SmallChip(label: Fmt.binSizeLabel(binSize).split(' ').first),
-              if (cat != null) ...[
-                const SizedBox(width: 6),
-                _SmallChip(label: cat.replaceAll('_', ' ')),
-              ],
+              if (cat != null)
+                _SmallChip(label: Fmt.categoryLabel(cat)),
+              if (estKg > 0)
+                _SmallChip(label: '~${estKg.toStringAsFixed(0)} kg'),
+              if (distKm > 0)
+                _SmallChip(label: '${distKm.toStringAsFixed(1)} km'),
+              if (timePref != null)
+                _SmallChip(label: Fmt.timePrefLabel(timePref)),
             ],
           ),
+          if (notes != null && notes.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(PhosphorIconsRegular.note,
+                    color: AppColors.muted, size: 11),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(notes,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.muted, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
+          ],
           const Spacer(),
 
           // Accept / Decline
@@ -763,20 +790,8 @@ class _RequestCardState extends State<_RequestCard> {
                   child: Container(
                     height: 38,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(ctx).primaryColor,
-                          Theme.of(ctx).primaryColor.withAlpha(200),
-                        ],
-                      ),
+                      color: AppColors.primary,
                       borderRadius: AppRadius.mdBR,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(ctx).primaryColor.withAlpha(80),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: Text(S.of(context).acceptJob,
@@ -965,7 +980,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                   child: Row(
                     children: [
                       const Icon(PhosphorIconsFill.truck,
-                          color: AppColors.skyBlue, size: 18),
+                          color: AppColors.muted, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -1122,11 +1137,11 @@ class _ProfileTabState extends State<_ProfileTab> {
                             Container(
                               width: 36, height: 36,
                               decoration: BoxDecoration(
-                                color: AppColors.skyBlue.withAlpha(20),
+                                color: AppColors.muted.withAlpha(20),
                                 borderRadius: AppRadius.mdBR,
                               ),
                               child: const Icon(PhosphorIconsRegular.globe,
-                                  color: AppColors.skyBlue, size: 18),
+                                  color: AppColors.muted, size: 18),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -1267,12 +1282,12 @@ class _MenuSection extends StatelessWidget {
                           Container(
                             width: 36, height: 36,
                             decoration: BoxDecoration(
-                              color: (item.color ?? AppColors.skyBlue)
+                              color: (item.color ?? AppColors.muted)
                                   .withAlpha(20),
                               borderRadius: AppRadius.mdBR,
                             ),
                             child: Icon(item.icon,
-                                color: item.color ?? AppColors.skyBlue,
+                                color: item.color ?? AppColors.muted,
                                 size: 18),
                           ),
                           const SizedBox(width: 12),
@@ -1312,13 +1327,13 @@ class _SmallChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.steelBlue.withAlpha(20),
+        color: AppColors.primary.withAlpha(20),
         borderRadius: AppRadius.smBR,
-        border: Border.all(color: AppColors.steelBlue.withAlpha(40)),
+        border: Border.all(color: AppColors.primary.withAlpha(40)),
       ),
       child: Text(label,
           style: AppTextStyles.caption.copyWith(
-            color: AppColors.steelBlue,
+            color: AppColors.primary,
             fontSize: 11,
           )),
     );

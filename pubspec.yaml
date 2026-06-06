@@ -94,25 +94,21 @@ flutter:
     - .env
     # Images
     - assets/images/app_icon.png
-    - assets/images/defaultavatar.png
-    - assets/images/destination.png
-    - assets/images/house.png
     - assets/images/logo.png
-    # SVG brand assets & domain illustrations
-    - assets/svg/bag.svg
-    - assets/svg/bank.svg
-    - assets/svg/call.svg
-    - assets/svg/card.svg
-    - assets/svg/cash.svg
-    - assets/svg/chat.svg
+    - assets/images/defaultavatar.png
+    # SVG — brand mark
+    - assets/svg/binlink_logo.svg
+    # SVG — map markers
+    - assets/svg/pickup_marker.svg
+    - assets/svg/collector_marker.svg
+    # SVG — empty states
+    - assets/svg/empty_pickups.svg
+    - assets/svg/empty_notifications.svg
+    - assets/svg/empty_earnings.svg
+    # SVG — auth & UI
+    - assets/svg/google.svg
+    - assets/svg/locate.svg
     - assets/svg/drawer.svg
+    - assets/svg/cash.svg
     - assets/svg/envelope.svg
     - assets/svg/globe-africa.svg
-    - assets/svg/google.svg
-    - assets/svg/home.svg
-    - assets/svg/hospital.svg
-    - assets/svg/house.svg
-    - assets/svg/locate.svg
-    - assets/svg/school.svg
-    - assets/svg/shop.svg
-    - assets/svg/stopwatch.svg

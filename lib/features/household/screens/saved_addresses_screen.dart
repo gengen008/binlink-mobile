@@ -64,7 +64,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.midnightNavy),
+                          color: AppColors.secondary),
                     ),
                     Expanded(
                       child: Text('Saved Addresses', style: AppTextStyles.h3),
@@ -74,7 +74,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       child: Container(
                         width: 38, height: 38,
                         decoration: const BoxDecoration(
-                          color: AppColors.midnightNavy,
+                          color: AppColors.secondary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(PhosphorIconsRegular.plus,
@@ -227,9 +227,9 @@ class _AddressTile extends StatelessWidget {
 
   Color _labelColor(String label) {
     switch (label.toUpperCase()) {
-      case 'HOME':   return AppColors.steelBlue;
+      case 'HOME':   return AppColors.primary;
       case 'OFFICE': return AppColors.warning;
-      default:       return AppColors.skyBlue;
+      default:       return AppColors.muted;
     }
   }
 

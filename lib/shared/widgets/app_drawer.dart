@@ -16,14 +16,12 @@
 //
 // BinLink replacements only:
 //   - driver image → initials container (110×110 circle)
-//   - Primarydark → AppColors.midnightNavy
+//   - Primarydark → AppColors.secondary
 //   - Primaryfield → AppColors.border
 //   - Primaryred → AppColors.danger
-//   - social image assets → Phosphor brand icons (same 25×25 dimensions)
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -100,7 +98,7 @@ class AppDrawer extends StatelessWidget {
                                 height: 33,
                                 width: 125,
                                 decoration: BoxDecoration(
-                                  color: AppColors.midnightNavy,
+                                  color: AppColors.secondary,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -168,91 +166,12 @@ class AppDrawer extends StatelessWidget {
 
                   const Spacer(),
 
-                  const AppDotSeparator(
-                    dashWidth: 2.0,
-                    dashHeight: 1.0,
-                    color: AppColors.border,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                  const Divider(height: 24),
+                  _DrawerListTile(
+                    label: 'Log out',
+                    onTap: () => _handleLogout(context, auth),
                   ),
-                  const SizedBox(height: 10),
-
-                  Text(
-                    'Share on:',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.midnightNavy,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 25,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF25D366),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(PhosphorIconsFill.whatsappLogo,
-                            color: Colors.white, size: 14),
-                      ),
-                      const SizedBox(width: 5),
-                      Container(
-                        width: 25,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1DA1F2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(PhosphorIconsFill.twitterLogo,
-                            color: Colors.white, size: 14),
-                      ),
-                      const SizedBox(width: 5),
-                      Container(
-                        width: 25,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1877F2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(PhosphorIconsFill.facebookLogo,
-                            color: Colors.white, size: 14),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50),
-                    child: GestureDetector(
-                      onTap: () => _handleLogout(context, auth),
-                      child: Container(
-                        height: 40,
-                        width: 137,
-                        decoration: BoxDecoration(
-                          color: AppColors.danger,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Log out',
-                              style: AppTextStyles.buttonSecondary.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   const Spacer(),
                 ],
               ),

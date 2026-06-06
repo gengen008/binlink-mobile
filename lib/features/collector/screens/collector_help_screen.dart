@@ -28,7 +28,7 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       "We're here to help you earn more.",
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.steelBlue),
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
                     ),
                     const SizedBox(height: 20),
 
@@ -160,12 +160,12 @@ class _FaqTileState extends State<_FaqTile> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _open
-                ? AppColors.steelBlue.withAlpha(15)
+                ? AppColors.primary.withAlpha(15)
                 : AppColors.fieldFill,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: _open
-                  ? AppColors.steelBlue.withAlpha(80)
+                  ? AppColors.primary.withAlpha(80)
                   : AppColors.fieldFill,
             ),
           ),
@@ -187,7 +187,7 @@ class _FaqTileState extends State<_FaqTile> {
                     _open
                         ? PhosphorIconsRegular.caretUp
                         : PhosphorIconsRegular.caretDown,
-                    color: AppColors.steelBlue,
+                    color: AppColors.primary,
                     size: 18,
                   ),
                 ],

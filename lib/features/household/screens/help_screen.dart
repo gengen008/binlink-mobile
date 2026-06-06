@@ -91,7 +91,7 @@ class _HelpScreenState extends State<HelpScreen> {
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
                                   color: isOpen
-                                      ? AppColors.steelBlue.withAlpha(80)
+                                      ? AppColors.primary.withAlpha(80)
                                       : AppColors.fieldFill,
                                 ),
                               ),

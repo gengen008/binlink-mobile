@@ -133,11 +133,11 @@ class _ChatSheetState extends State<ChatSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.steelBlue.withAlpha(25),
+                        color: AppColors.primary.withAlpha(25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(PhosphorIconsFill.chatCircle,
-                          color: AppColors.steelBlue, size: 18),
+                          color: AppColors.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Text('Live Chat', style: AppTextStyles.h4),
@@ -181,7 +181,7 @@ class _ChatSheetState extends State<ChatSheet> {
             child: _loading
                 ? const Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.steelBlue))
+                        color: AppColors.primary))
                 : _messages.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.all(40),
@@ -263,13 +263,13 @@ class _MessageBubble extends StatelessWidget {
             Container(
               width: 30, height: 30,
               decoration: BoxDecoration(
-                color: AppColors.steelBlue.withAlpha(30),
+                color: AppColors.primary.withAlpha(30),
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: AppColors.steelBlue.withAlpha(60)),
+                    color: AppColors.primary.withAlpha(60)),
               ),
               child: const Icon(PhosphorIconsFill.user,
-                  color: AppColors.skyBlue, size: 14),
+                  color: AppColors.muted, size: 14),
             ),
             const SizedBox(width: 8),
           ],
@@ -278,7 +278,7 @@ class _MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.steelBlue : AppColors.card,
+                color: isMe ? AppColors.primary : AppColors.card,
                 borderRadius: BorderRadius.only(
                   topLeft:     const Radius.circular(18),
                   topRight:    const Radius.circular(18),
@@ -397,7 +397,7 @@ class _ChatInput extends StatelessWidget {
                       padding: EdgeInsets.all(13),
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.steelBlue),
+                          color: AppColors.primary),
                     )
                   : const Icon(PhosphorIconsFill.paperPlaneTilt,
                       color: AppColors.white, size: 20),

@@ -47,7 +47,7 @@ class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.midnightNavy,
+        systemNavigationBarColor: AppColors.secondary,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Material(
@@ -148,7 +148,7 @@ class DrawerMenuButton extends StatelessWidget {
       child: Container(
         width: 45,
         decoration: const BoxDecoration(
-          color: AppColors.steelBlue,
+          color: AppColors.primary,
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
         child: Padding(

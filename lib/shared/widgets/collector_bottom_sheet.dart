@@ -147,7 +147,7 @@ class _CollectorSheet extends StatelessWidget {
                         Text(
                           'New Collector',
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.skyBlue,
+                            color: AppColors.muted,
                           ),
                         ),
                       ],
@@ -181,7 +181,7 @@ class _CollectorSheet extends StatelessWidget {
                   _InfoChip(
                     icon: PhosphorIconsRegular.identificationCard,
                     label: plate,
-                    color: AppColors.skyBlue,
+                    color: AppColors.muted,
                   ),
                 ],
               ],
@@ -219,11 +219,11 @@ class _CollectorSheet extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(PhosphorIconsRegular.phone,
-                              color: AppColors.skyBlue, size: 18),
+                              color: AppColors.muted, size: 18),
                           const SizedBox(width: 8),
                           Text('Call',
                               style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.skyBlue,
+                                color: AppColors.muted,
                               )),
                         ],
                       ),

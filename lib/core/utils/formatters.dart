@@ -59,6 +59,15 @@ class Fmt {
     return fallback;
   }
 
+  static String timePrefLabel(String? pref) {
+    switch ((pref ?? '').toUpperCase()) {
+      case 'MORNING':   return 'Morning (7–11am)';
+      case 'AFTERNOON': return 'Afternoon (12–4pm)';
+      case 'EVENING':   return 'Evening (4–7pm)';
+      default:          return pref ?? '';
+    }
+  }
+
   static String categoryLabel(String? category) {
     switch ((category ?? '').toUpperCase()) {
       case 'HOUSEHOLD':    return 'Household';

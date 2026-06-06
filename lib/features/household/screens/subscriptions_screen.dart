@@ -62,7 +62,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Subscription cancelled'),
-        backgroundColor: AppColors.steelBlue,
+        backgroundColor: AppColors.primary,
       ),
     );
   }
@@ -80,7 +80,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       body: prov.loading
             ? const Center(
                 child: CircularProgressIndicator(
-                    color: AppColors.steelBlue, strokeWidth: 2),
+                    color: AppColors.primary, strokeWidth: 2),
               )
             : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
@@ -101,7 +101,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                       delay: const Duration(milliseconds: 100),
                       child: Text('Active Plans',
                           style: AppTextStyles.h4.copyWith(
-                              color: AppColors.skyBlue)),
+                              color: AppColors.muted)),
                     ),
                     const SizedBox(height: 12),
 
@@ -153,14 +153,14 @@ class _InfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.steelBlue.withAlpha(15),
+        color: AppColors.primary.withAlpha(15),
         borderRadius: AppRadius.mdBR,
-        border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
+        border: Border.all(color: AppColors.primary.withAlpha(60)),
       ),
       child: Row(
         children: [
           const Icon(PhosphorIconsFill.info,
-              color: AppColors.steelBlue, size: 20),
+              color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -231,7 +231,7 @@ class _SubCard extends StatelessWidget {
         border: Border.all(
           color: isPaused
               ? AppColors.border
-              : AppColors.steelBlue.withAlpha(60),
+              : AppColors.primary.withAlpha(60),
         ),
       ),
       child: Column(
@@ -243,12 +243,12 @@ class _SubCard extends StatelessWidget {
               Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.steelBlue.withAlpha(20),
+                  color: AppColors.primary.withAlpha(20),
                   borderRadius: AppRadius.smBR,
-                  border: Border.all(color: AppColors.steelBlue.withAlpha(50)),
+                  border: Border.all(color: AppColors.primary.withAlpha(50)),
                 ),
                 child: const Icon(PhosphorIconsFill.recycle,
-                    color: AppColors.steelBlue, size: 20),
+                    color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -362,7 +362,7 @@ class _PricingCard extends StatelessWidget {
           Row(
             children: [
               const Icon(PhosphorIconsFill.wallet,
-                  color: AppColors.skyBlue, size: 18),
+                  color: AppColors.muted, size: 18),
               const SizedBox(width: 8),
               Text('Pickup Pricing', style: AppTextStyles.h4),
             ],
@@ -410,7 +410,7 @@ class _PriceRow extends StatelessWidget {
           Text(label,
               style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
           Text(price,
-              style: AppTextStyles.mono.copyWith(color: AppColors.iceBlue)),
+              style: AppTextStyles.mono.copyWith(color: AppColors.primaryLight)),
         ],
       ),
     );

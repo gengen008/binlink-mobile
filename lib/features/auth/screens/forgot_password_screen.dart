@@ -121,7 +121,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   child: Text(
                                     'Back to Sign In',
                                     style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.steelBlue,
+                                      color: AppColors.primary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

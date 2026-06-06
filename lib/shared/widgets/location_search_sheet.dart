@@ -190,10 +190,10 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.steelBlue.withAlpha(100)),
+                border: Border.all(color: AppColors.primary.withAlpha(100)),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.steelBlue.withAlpha(30),
+                    color: AppColors.primary.withAlpha(30),
                     blurRadius: 12,
                   ),
                 ],
@@ -210,9 +210,9 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                     padding: const EdgeInsets.all(12),
                     child: _searching
                         ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.steelBlue))
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
                         : const Icon(PhosphorIconsRegular.magnifyingGlass,
-                            color: AppColors.steelBlue, size: 18),
+                            color: AppColors.primary, size: 18),
                   ),
                   suffixIcon: _ctrl.text.isNotEmpty
                       ? GestureDetector(
@@ -245,25 +245,25 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.steelBlue.withAlpha(15),
+                  color: AppColors.primary.withAlpha(15),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
+                  border: Border.all(color: AppColors.primary.withAlpha(60)),
                 ),
                 child: Row(
                   children: [
                     _locating
                         ? const SizedBox(width: 20, height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: AppColors.steelBlue))
+                                strokeWidth: 2, color: AppColors.primary))
                         : const Icon(PhosphorIconsFill.crosshair,
-                            color: AppColors.steelBlue, size: 20),
+                            color: AppColors.primary, size: 20),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Use my current location',
                             style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.steelBlue,
+                              color: AppColors.primary,
                             )),
                         Text('Auto-detect GPS location',
                             style: AppTextStyles.caption),
@@ -318,7 +318,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                             border: Border.all(color: AppColors.border),
                           ),
                           child: const Icon(PhosphorIconsRegular.mapPin,
-                              color: AppColors.steelBlue, size: 18),
+                              color: AppColors.primary, size: 18),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

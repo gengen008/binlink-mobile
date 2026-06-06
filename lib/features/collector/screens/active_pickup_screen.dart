@@ -358,7 +358,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                             Text(
                               address,
                               style: AppTextStyles.caption.copyWith(
-                                color: AppColors.steelBlue,
+                                color: AppColors.primary,
                                 fontSize: 10,
                               ),
                               maxLines: 1,
@@ -379,13 +379,13 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: AppColors.steelBlue.withAlpha(25),
+                          color: AppColors.primary.withAlpha(25),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: AppColors.steelBlue.withAlpha(60)),
+                              color: AppColors.primary.withAlpha(60)),
                         ),
                         child: const Icon(PhosphorIconsFill.chatCircle,
-                            color: AppColors.steelBlue, size: 18),
+                            color: AppColors.primary, size: 18),
                       ),
                     ),
                   ],
@@ -419,15 +419,13 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(PhosphorIconsFill.clock,
-                          color: AppColors.iceBlue, size: 14),
+                          color: AppColors.primaryLight, size: 14),
                       const SizedBox(width: 6),
                       Text(
                         _etaLabel!,
-                        style: const TextStyle(
+                        style: AppTextStyles.caption.copyWith(
                           color: Colors.white,
-                          fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          fontFamily: 'PlusJakartaSans',
                         ),
                       ),
                       if (_distLabel != null) ...[
@@ -439,15 +437,13 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                         ),
                         const SizedBox(width: 10),
                         const Icon(PhosphorIconsFill.navigationArrow,
-                            color: AppColors.skyBlue, size: 14),
+                            color: AppColors.muted, size: 14),
                         const SizedBox(width: 5),
                         Text(
                           _distLabel!,
-                          style: TextStyle(
+                          style: AppTextStyles.caption.copyWith(
                             color: Colors.white.withAlpha(200),
-                            fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'PlusJakartaSans',
                           ),
                         ),
                       ],
@@ -508,19 +504,17 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                         ),
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(PhosphorIconsFill.navigationArrow,
+                        const Icon(PhosphorIconsFill.navigationArrow,
                             color: Colors.white, size: 18),
-                        SizedBox(width: 7),
+                        const SizedBox(width: 7),
                         Text(
                           'Navigate',
-                          style: TextStyle(
+                          style: AppTextStyles.caption.copyWith(
                             color: Colors.white,
-                            fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            fontFamily: 'PlusJakartaSans',
                           ),
                         ),
                       ],
@@ -660,7 +654,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                 Row(
                   children: [
                     const Icon(PhosphorIconsRegular.scales,
-                        color: AppColors.skyBlue, size: 15),
+                        color: AppColors.muted, size: 15),
                     const SizedBox(width: 6),
                     Text('Actual Weight (kg)',
                         style: AppTextStyles.label),
@@ -699,7 +693,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: AppRadius.mdBR,
                       borderSide:
-                          const BorderSide(color: AppColors.steelBlue),
+                          const BorderSide(color: AppColors.primary),
                     ),
                   ),
                 ),
@@ -800,7 +794,7 @@ class _HouseholdCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(PhosphorIconsRegular.mapPin,
-                            color: AppColors.skyBlue, size: 13),
+                            color: AppColors.muted, size: 13),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(address,
@@ -839,7 +833,7 @@ class _HouseholdCard extends StatelessWidget {
               _InfoChip(
                 label: Fmt.binSizeLabel(binSize),
                 icon: PhosphorIconsFill.trashSimple,
-                color: AppColors.steelBlue,
+                color: AppColors.primary,
               ),
               const SizedBox(width: 10),
               _InfoChip(
@@ -879,18 +873,16 @@ class _ExceptionButton extends StatelessWidget {
           borderRadius: AppRadius.lgBR,
           border: Border.all(color: AppColors.danger.withAlpha(80)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(PhosphorIconsRegular.warning,
+            const Icon(PhosphorIconsRegular.warning,
                 color: AppColors.danger, size: 16),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               'Report Exception',
-              style: TextStyle(
-                fontFamily: 'PlusJakartaSans',
+              style: AppTextStyles.body.copyWith(
                 color: AppColors.danger,
-                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1056,7 +1048,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: AppRadius.lgBR,
                   borderSide:
-                      const BorderSide(color: AppColors.steelBlue),
+                      const BorderSide(color: AppColors.primary),
                 ),
               ),
             ),

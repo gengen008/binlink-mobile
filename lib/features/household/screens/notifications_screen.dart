@@ -55,7 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: _loading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: AppColors.steelBlue, strokeWidth: 2,
+                  color: AppColors.primary, strokeWidth: 2,
                 ),
               )
             : _notifs.isEmpty
@@ -84,14 +84,14 @@ class _EmptyState extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(PhosphorIconsRegular.bell,
-                color: AppColors.steelBlue, size: 32),
+                color: AppColors.primary, size: 32),
           ),
           const SizedBox(height: 16),
           Text('No notifications yet',
-              style: AppTextStyles.h4.copyWith(color: AppColors.midnightNavy)),
+              style: AppTextStyles.h4.copyWith(color: AppColors.secondary)),
           const SizedBox(height: 6),
           Text("You're all caught up!",
-              style: AppTextStyles.caption.copyWith(color: AppColors.midnightNavy)),
+              style: AppTextStyles.caption.copyWith(color: AppColors.secondary)),
         ],
       ),
     );

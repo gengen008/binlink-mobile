@@ -329,7 +329,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           ? FloatingActionButton(
               onPressed: () => showChatSheet(context,
                   bookingId: widget.bookingId, myRole: 'HOUSEHOLD'),
-              backgroundColor: AppColors.steelBlue,
+              backgroundColor: AppColors.primary,
               child: const Icon(PhosphorIconsFill.chatCircle,
                   color: AppColors.white, size: 24),
             )
@@ -341,7 +341,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(
-                      color: AppColors.steelBlue))
+                      color: AppColors.primary))
                   : Stack(
                       children: [
                         // MapLibre map
@@ -378,7 +378,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                                       color: AppColors.secondary.withAlpha(220),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
-                                          color: AppColors.steelBlue
+                                          color: AppColors.primary
                                               .withAlpha(60)),
                                     ),
                                     child: Text(
@@ -405,7 +405,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 color: AppColors.secondary.withAlpha(230),
                                 borderRadius: AppRadius.fullBR,
                                 border: Border.all(
-                                    color: AppColors.steelBlue.withAlpha(80)),
+                                    color: AppColors.primary.withAlpha(80)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -440,7 +440,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                         width: 80, height: 3,
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                          color: AppColors.steelBlue.withAlpha(120),
+                          color: AppColors.primary.withAlpha(120),
                           borderRadius: const BorderRadius.all(Radius.circular(80)),
                         ),
                       ),
@@ -510,7 +510,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                             const SizedBox(width: 8),
                             _ActionCircle(
                               icon: PhosphorIconsFill.navigationArrow,
-                              color: AppColors.steelBlue,
+                              color: AppColors.primary,
                               onTap: () {
                                 final lat = (_booking!['pickupLat'] as num?)?.toDouble();
                                 final lng = (_booking!['pickupLng'] as num?)?.toDouble();
@@ -529,7 +529,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     Row(
                       children: [
                         const Icon(PhosphorIconsRegular.mapPin,
-                            color: AppColors.skyBlue, size: 16),
+                            color: AppColors.muted, size: 16),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -582,8 +582,8 @@ class _StatusMessage extends StatelessWidget {
     final (icon, msg, color) = switch (status) {
       'SEARCHING'  => (PhosphorIconsRegular.magnifyingGlass, 'Searching for a nearby collector...', AppColors.warning),
       'PENDING'    => (PhosphorIconsRegular.clock,           'Waiting for a collector to accept...', AppColors.warning),
-      'ASSIGNED'   => (PhosphorIconsFill.userCheck,          'A collector has been assigned!',       AppColors.steelBlue),
-      'ACCEPTED'   => (PhosphorIconsFill.checkCircle,        'Collector accepted your request!',     AppColors.steelBlue),
+      'ASSIGNED'   => (PhosphorIconsFill.userCheck,          'A collector has been assigned!',       AppColors.primary),
+      'ACCEPTED'   => (PhosphorIconsFill.checkCircle,        'Collector accepted your request!',     AppColors.primary),
       'ON_THE_WAY' => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
       'EN_ROUTE'   => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
       'ARRIVED'    => (PhosphorIconsFill.mapPin,             'Collector has arrived!',               AppColors.success),

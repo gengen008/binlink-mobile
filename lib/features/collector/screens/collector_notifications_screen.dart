@@ -59,7 +59,7 @@ class _CollectorNotificationsScreenState
       body: _loading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: AppColors.steelBlue, strokeWidth: 2,
+                  color: AppColors.primary, strokeWidth: 2,
                 ),
               )
             : _notifs.isEmpty

@@ -59,7 +59,7 @@ const List<_WasteCategory> _kCategories = [
     key: 'HOUSEHOLD',
     label: 'Household Waste',
     icon: PhosphorIconsFill.trashSimple,
-    color: AppColors.steelBlue,
+    color: AppColors.primary,
     desc: 'General home rubbish',
   ),
   _WasteCategory(
@@ -74,7 +74,7 @@ const List<_WasteCategory> _kCategories = [
     key: 'GLASS',
     label: 'Glass',
     icon: PhosphorIconsFill.wine,
-    color: AppColors.skyBlue,
+    color: AppColors.muted,
     desc: 'Bottles, jars, windows',
     earnsPoints: true,
   ),
@@ -637,13 +637,13 @@ class _Step2Volume extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: sel
                               ? AppColors.white.withAlpha(20)
-                              : AppColors.steelBlue.withAlpha(20),
+                              : AppColors.primary.withAlpha(20),
                           borderRadius: AppRadius.mdBR,
                         ),
                         child: Icon(PhosphorIconsFill.trashSimple,
                             color: sel
                                 ? AppColors.white
-                                : AppColors.steelBlue,
+                                : AppColors.primary,
                             size: 22),
                       ),
                       const SizedBox(width: 14),
@@ -672,7 +672,7 @@ class _Step2Volume extends StatelessWidget {
                                   child: Text(s['volume'] as String,
                                       style: AppTextStyles.caption.copyWith(
                                         color: sel
-                                            ? AppColors.iceBlue
+                                            ? AppColors.primaryLight
                                             : AppColors.muted,
                                         fontSize: 10,
                                       )),
@@ -683,7 +683,7 @@ class _Step2Volume extends StatelessWidget {
                             Text(s['desc'] as String,
                                 style: AppTextStyles.caption.copyWith(
                                   color: sel
-                                      ? AppColors.iceBlue
+                                      ? AppColors.primaryLight
                                       : AppColors.muted,
                                 )),
                           ],
@@ -693,7 +693,7 @@ class _Step2Volume extends StatelessWidget {
                           style: AppTextStyles.mono.copyWith(
                             color: sel
                                 ? AppColors.white
-                                : AppColors.iceBlue,
+                                : AppColors.primaryLight,
                           )),
                     ],
                   ),
@@ -739,7 +739,7 @@ class _Step2Volume extends StatelessWidget {
                           Text(
                             '+ ${Fmt.currency(extraBags * _kBagPrice)}',
                             style: AppTextStyles.monoSm.copyWith(
-                              color: AppColors.iceBlue,
+                              color: AppColors.primaryLight,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -763,17 +763,17 @@ class _Step2Volume extends StatelessWidget {
                 const Spacer(),
                 Text('~${estWeight}kg',
                     style: AppTextStyles.monoSm.copyWith(
-                      color: AppColors.iceBlue,
+                      color: AppColors.primaryLight,
                     )),
               ],
             ),
             const SizedBox(height: 8),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.steelBlue,
+                activeTrackColor: AppColors.primary,
                 inactiveTrackColor: AppColors.border,
-                thumbColor: AppColors.steelBlue,
-                overlayColor: AppColors.steelBlue.withAlpha(30),
+                thumbColor: AppColors.primary,
+                overlayColor: AppColors.primary.withAlpha(30),
                 trackHeight: 4,
               ),
               child: Slider(
@@ -899,11 +899,11 @@ class _Step3Photos extends StatelessWidget {
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(
-                              color: AppColors.steelBlue.withAlpha(20),
+                              color: AppColors.primary.withAlpha(20),
                               borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsFill.camera,
-                                color: AppColors.steelBlue, size: 22),
+                                color: AppColors.primary, size: 22),
                           ),
                           const SizedBox(height: 8),
                           Text('Camera', style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
@@ -928,11 +928,11 @@ class _Step3Photos extends StatelessWidget {
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(
-                              color: AppColors.skyBlue.withAlpha(20),
+                              color: AppColors.muted.withAlpha(20),
                               borderRadius: AppRadius.mdBR,
                             ),
                             child: const Icon(PhosphorIconsFill.images,
-                                color: AppColors.skyBlue, size: 22),
+                                color: AppColors.muted, size: 22),
                           ),
                           const SizedBox(height: 8),
                           Text('Gallery', style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
@@ -1065,21 +1065,21 @@ class _Step3Schedule extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.steelBlue.withAlpha(15),
+                  color: AppColors.primary.withAlpha(15),
                   borderRadius: AppRadius.xlBR,
                   border: Border.all(
-                      color: AppColors.steelBlue.withAlpha(60)),
+                      color: AppColors.primary.withAlpha(60)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       width: 48, height: 48,
                       decoration: BoxDecoration(
-                        color: AppColors.steelBlue.withAlpha(25),
+                        color: AppColors.primary.withAlpha(25),
                         borderRadius: AppRadius.lgBR,
                       ),
                       child: const Icon(PhosphorIconsFill.lightning,
-                          color: AppColors.steelBlue, size: 24),
+                          color: AppColors.primary, size: 24),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -1202,7 +1202,7 @@ class _Step3Schedule extends StatelessWidget {
                               Text(t['range'] as String,
                                   style: AppTextStyles.caption.copyWith(
                                     color: sel
-                                        ? AppColors.iceBlue
+                                        ? AppColors.primaryLight
                                         : AppColors.muted,
                                     fontSize: 9,
                                   )),
@@ -1346,10 +1346,10 @@ class _Step4AddressState extends State<_Step4Address> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.steelBlue.withAlpha(20),
+                                  color: AppColors.primary.withAlpha(20),
                                   borderRadius: AppRadius.mdBR,
                                   border: Border.all(
-                                      color: AppColors.steelBlue.withAlpha(60)),
+                                      color: AppColors.primary.withAlpha(60)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1360,13 +1360,13 @@ class _Step4AddressState extends State<_Step4Address> {
                                           : label.toUpperCase() == 'OFFICE'
                                               ? PhosphorIconsFill.buildings
                                               : PhosphorIconsFill.mapPin,
-                                      color: AppColors.steelBlue,
+                                      color: AppColors.primary,
                                       size: 14,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(label,
                                         style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.steelBlue,
+                                          color: AppColors.primary,
                                           fontWeight: FontWeight.w700,
                                         )),
                                   ],
@@ -1417,11 +1417,11 @@ class _Step4AddressState extends State<_Step4Address> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(PhosphorIconsRegular.magnifyingGlass,
-                                  color: AppColors.steelBlue, size: 12),
+                                  color: AppColors.primary, size: 12),
                               const SizedBox(width: 5),
                               Text('Tap to search',
                                   style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.steelBlue,
+                                    color: AppColors.primary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                   )),
@@ -1459,17 +1459,15 @@ class _Step4AddressState extends State<_Step4Address> {
                         color: AppColors.secondary,
                         borderRadius: AppRadius.mdBR,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(PhosphorIconsRegular.magnifyingGlass,
+                          const Icon(PhosphorIconsRegular.magnifyingGlass,
                               color: AppColors.white, size: 15),
-                          SizedBox(width: 7),
+                          const SizedBox(width: 7),
                           Text('Search Address',
-                              style: TextStyle(
-                                fontFamily: 'PlusJakartaSans',
+                              style: AppTextStyles.caption.copyWith(
                                 color: AppColors.white,
-                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
                               )),
                         ],
@@ -1484,10 +1482,10 @@ class _Step4AddressState extends State<_Step4Address> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 11),
                     decoration: BoxDecoration(
-                      color: AppColors.steelBlue.withAlpha(20),
+                      color: AppColors.primary.withAlpha(20),
                       borderRadius: AppRadius.mdBR,
                       border: Border.all(
-                          color: AppColors.steelBlue.withAlpha(60)),
+                          color: AppColors.primary.withAlpha(60)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1497,13 +1495,13 @@ class _Step4AddressState extends State<_Step4Address> {
                                 width: 15, height: 15,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppColors.steelBlue))
+                                    color: AppColors.primary))
                             : const Icon(PhosphorIconsFill.crosshair,
-                                color: AppColors.steelBlue, size: 15),
+                                color: AppColors.primary, size: 15),
                         const SizedBox(width: 7),
                         Text('My Location',
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.steelBlue,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                             )),
                       ],
@@ -1538,7 +1536,7 @@ class _Step4AddressState extends State<_Step4Address> {
                   borderRadius: AppRadius.lgBR,
                   border: Border.all(
                     color: widget.addressCtrl.text.isNotEmpty
-                        ? AppColors.steelBlue.withAlpha(100)
+                        ? AppColors.primary.withAlpha(100)
                         : AppColors.border,
                   ),
                 ),
@@ -1709,9 +1707,9 @@ class _Step5Review extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.steelBlue.withAlpha(15),
+                color: AppColors.primary.withAlpha(15),
                 borderRadius: BorderRadius.circular(AppRadius.sheet),
-                border: Border.all(color: AppColors.steelBlue.withAlpha(60)),
+                border: Border.all(color: AppColors.primary.withAlpha(60)),
               ),
               child: Column(
                 children: [
@@ -1733,7 +1731,7 @@ class _Step5Review extends StatelessWidget {
                       Text('Total', style: AppTextStyles.h4),
                       Text(Fmt.currency(total),
                           style: AppTextStyles.monoLg.copyWith(
-                            color: AppColors.iceBlue,
+                            color: AppColors.primaryLight,
                           )),
                     ],
                   ),
@@ -1817,15 +1815,15 @@ class _CountBtn extends StatelessWidget {
         width: 42, height: 42,
         decoration: BoxDecoration(
           color: enabled
-              ? AppColors.steelBlue.withAlpha(25)
+              ? AppColors.primary.withAlpha(25)
               : AppColors.border.withAlpha(40),
           borderRadius: AppRadius.mdBR,
           border: Border.all(
-            color: enabled ? AppColors.steelBlue.withAlpha(60) : AppColors.border,
+            color: enabled ? AppColors.primary.withAlpha(60) : AppColors.border,
           ),
         ),
         child: Icon(icon,
-            color: enabled ? AppColors.steelBlue : AppColors.muted,
+            color: enabled ? AppColors.primary : AppColors.muted,
             size: 18),
       ),
     );

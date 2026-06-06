@@ -84,9 +84,9 @@ class _DatePickerRowState extends State<DatePickerRow> {
                     _dayAbbr(date),
                     style: AppTextStyles.caption.copyWith(
                       color: selected
-                          ? AppColors.iceBlue
+                          ? AppColors.primaryLight
                           : isToday
-                              ? AppColors.skyBlue
+                              ? AppColors.muted
                               : AppColors.muted,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -105,7 +105,7 @@ class _DatePickerRowState extends State<DatePickerRow> {
                     _monthAbbr(date),
                     style: AppTextStyles.caption.copyWith(
                       color: selected
-                          ? AppColors.iceBlue
+                          ? AppColors.primaryLight
                           : AppColors.muted,
                       fontSize: 10,
                     ),

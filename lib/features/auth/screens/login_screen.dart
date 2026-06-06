@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Forgot password?',
                               style: AppTextStyles.caption.copyWith(
-                                color: AppColors.steelBlue,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'Sign up',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.steelBlue,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

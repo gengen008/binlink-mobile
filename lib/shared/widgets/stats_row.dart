@@ -19,7 +19,7 @@ class StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = color ?? AppColors.steelBlue;
+    final accent = color ?? AppColors.primary;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -44,7 +44,7 @@ class StatChip extends StatelessWidget {
             Text(
               value,
               style: AppTextStyles.mono.copyWith(
-                color: AppColors.midnightNavy,
+                color: AppColors.secondary,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
               ),
@@ -78,14 +78,14 @@ class StatsRow extends StatelessWidget {
           icon: PhosphorIconsFill.trashSimple,
           label: 'Pickups',
           value: '$totalPickups',
-          color: AppColors.steelBlue,
+          color: AppColors.primary,
         ),
         const SizedBox(width: 10),
         StatChip(
           icon: PhosphorIconsFill.wallet,
           label: 'Total Spent',
           value: 'GHC ${totalSpent.toStringAsFixed(0)}',
-          color: AppColors.skyBlue,
+          color: AppColors.muted,
         ),
         const SizedBox(width: 10),
         StatChip(

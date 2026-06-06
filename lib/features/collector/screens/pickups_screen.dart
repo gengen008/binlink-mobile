@@ -67,13 +67,13 @@ class _PickupsScreenState extends State<PickupsScreen>
               child: TabBar(
                 controller: _tab,
                 indicator: BoxDecoration(
-                  color: AppColors.midnightNavy,
+                  color: AppColors.secondary,
                   borderRadius: AppRadius.mdBR,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
                 labelColor: Colors.white,
-                unselectedLabelColor: AppColors.midnightNavy,
+                unselectedLabelColor: AppColors.secondary,
                 dividerColor: Colors.transparent,
                 tabs: const [
                   Tab(text: 'Assigned'),
@@ -190,7 +190,7 @@ class _JobsBanner extends StatelessWidget {
                     label: 'Active',
                     count: assignedCount,
                     icon: PhosphorIconsFill.truck,
-                    color: AppColors.steelBlue,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
                   _StatChip(
@@ -282,17 +282,17 @@ class _JobList extends StatelessWidget {
                   color: AppColors.fieldFill,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(emptyIcon, color: AppColors.steelBlue, size: 28),
+                child: Icon(emptyIcon, color: AppColors.primary, size: 28),
               ),
               const SizedBox(height: 16),
               Text(emptyTitle,
                   style: AppTextStyles.h4.copyWith(
-                    color: AppColors.midnightNavy,
+                    color: AppColors.secondary,
                   )),
               const SizedBox(height: 6),
               Text(emptySubtitle,
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.midnightNavy,
+                    color: AppColors.secondary,
                   ),
                   textAlign: TextAlign.center),
             ],
@@ -314,7 +314,7 @@ class _JobList extends StatelessWidget {
             height: 30,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              color: AppColors.midnightNavy,
+              color: AppColors.secondary,
               borderRadius: BorderRadius.circular(5),
             ),
             child: Center(
