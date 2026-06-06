@@ -1,6 +1,3 @@
-// Rydr RyderDrawer — literal transplant.
-//
-// Rydr source: rydr_drawer.dart
 //   Container(w/1.5, margin.right:30) > ClipRRect(only topRight/bottomRight:10)
 //   > Drawer > Padding(top:70) > Column(mainAxisAlignment:end, [
 //     Row(center, profile_column),
@@ -35,7 +32,7 @@ import '../../core/utils/formatters.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'app_dot_separator.dart';
 
-/// Household side drawer — LITERAL Rydr RyderDrawer widget-tree transplant.
+/// Household side drawer.
 ///
 /// [onTabSwitch] — optional callback to switch the home screen tab index.
 class AppDrawer extends StatelessWidget {
@@ -78,7 +75,6 @@ class AppDrawer extends StatelessWidget {
                     children: [
                       Column(
                         children: [
-                          // Rydr: Padding(h:30, Container(Image 110×110, driverpic))
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 30),
                             child: Container(

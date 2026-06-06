@@ -139,101 +139,78 @@ class _JobsBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
-        ),
+        color: AppColors.card,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -30, right: -30,
-            child: Container(
-              width: 130, height: 130,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.steelBlue.withAlpha(18),
-              ),
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  // Title row
-                  Row(
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('My Pickups', style: AppTextStyles.h2.copyWith(color: AppColors.white)),
-                          Text('Active jobs & history',
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.skyBlue)),
-                        ],
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: onRefresh,
-                        child: Container(
-                          width: 36, height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.steelBlue.withAlpha(25),
-                            borderRadius: AppRadius.smBR,
-                            border: Border.all(
-                                color: AppColors.steelBlue.withAlpha(60)),
-                          ),
-                          child: loading
-                              ? const Padding(
-                                  padding: EdgeInsets.all(9),
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.steelBlue),
-                                )
-                              : const Icon(PhosphorIconsRegular.arrowClockwise,
-                                  color: AppColors.steelBlue, size: 16),
-                        ),
-                      ),
+                      Text('My Pickups', style: AppTextStyles.h2),
+                      Text('Active jobs & history',
+                          style: AppTextStyles.caption),
                     ],
                   ),
-
-                  const SizedBox(height: 14),
-
-                  // Stats chips
-                  Row(
-                    children: [
-                      _StatChip(
-                        label: 'Active',
-                        count: assignedCount,
-                        icon: PhosphorIconsFill.truck,
-                        color: AppColors.steelBlue,
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: onRefresh,
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.fieldFill,
+                        borderRadius: AppRadius.smBR,
+                        border: Border.all(color: AppColors.border),
                       ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        label: 'Pending',
-                        count: pendingCount,
-                        icon: PhosphorIconsFill.clock,
-                        color: AppColors.warning,
-                      ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        label: 'Done',
-                        count: completedCount,
-                        icon: PhosphorIconsFill.checkCircle,
-                        color: AppColors.success,
-                      ),
-                    ],
+                      child: loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(9),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppColors.primary),
+                            )
+                          : const Icon(PhosphorIconsRegular.arrowClockwise,
+                              color: AppColors.muted, size: 16),
+                    ),
                   ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  _StatChip(
+                    label: 'Active',
+                    count: assignedCount,
+                    icon: PhosphorIconsFill.truck,
+                    color: AppColors.steelBlue,
+                  ),
+                  const SizedBox(width: 8),
+                  _StatChip(
+                    label: 'Pending',
+                    count: pendingCount,
+                    icon: PhosphorIconsFill.clock,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: 8),
+                  _StatChip(
+                    label: 'Done',
+                    count: completedCount,
+                    icon: PhosphorIconsFill.checkCircle,
+                    color: AppColors.success,
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

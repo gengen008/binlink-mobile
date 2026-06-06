@@ -1,11 +1,3 @@
-// Rydr notifications.dart — literal transplant (collector flavour).
-//
-// Same widget tree as household NotificationsScreen:
-//   Scaffold(midnightNavy) > AppScaffoldBar > Container(bgGradient)
-//   > _loading spinner | _EmptyState | _NotifList(FadeInUp 2000ms + date chips)
-//
-// Card: AppNotificationCard (Rydr exact — h:65, fieldFill, NO border)
-// Date chip: NotificationDateChip (Rydr exact — 90×30, midnightNavy)
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';

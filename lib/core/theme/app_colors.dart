@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// BinLink Eco — Design System Color Tokens
 ///
-/// Navy / steel-blue palette per brand spec.
+/// Clean operational palette: white surfaces, near-black text, green CTA.
 /// #021024 navy, #052659 deep ocean, #5483B3 steel, #7DA0CA sky, #C1E8FF ice
 class AppColors {
   AppColors._();
@@ -10,7 +10,7 @@ class AppColors {
   // ── Brand palette ──────────────────────────────────────────────────────────
   static const Color primary   = Color(0xFF16A34A); // eco green (CTA / brand buttons)
   static const Color accent    = Color(0xFF22C55E); // lighter green (hover / accent)
-  static const Color secondary = Color(0xFF021024); // midnight navy
+  static const Color secondary = Color(0xFF021024); // midnight navy (text / dark surfaces)
 
   // ── Steel-blue range (brand spec) ─────────────────────────────────────────
   static const Color midnightNavy = Color(0xFF021024); // #021024
@@ -31,11 +31,12 @@ class AppColors {
   static const Color card         = Color(0xFFFFFFFF); // card / sheet bg
   static const Color cardElevated = Color(0xFFF1F5F9); // subtle elevated card
   static const Color border       = Color(0xFFE2E8F0); // divider / outline
-  static const Color borderActive = steelBlue;         // focus ring
+  static const Color borderActive = primary;            // focus ring
 
   // ── AppBar / Navigation ────────────────────────────────────────────────────
-  static const Color appBarBg     = secondary;
-  static const Color appBarAction = deepOcean;
+  static const Color appBarBg     = card;     // white appbar for most screens
+  static const Color appBarAction = surface;  // subtle action button bg
+
   static const Color navBarBg     = card;
 
   // ── Drawer ─────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ class AppColors {
 
   // ── Text ─────────────────────────────────────────────────────────────────
   static const Color textPrimary   = secondary;
-  static const Color textSecondary = steelBlue; // steel-blue accent text
+  static const Color textSecondary = steelBlue;  // accent / interactive text
   static const Color textBody      = secondary;
   static const Color textMuted     = muted;
   static const Color textOnDark    = white;
@@ -86,28 +87,10 @@ class AppColors {
     }
   }
 
-  // ── Gradients ─────────────────────────────────────────────────────────────
-  static const LinearGradient bgGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFF8FAFC), Color(0xFFEFF6FF)], // soft blue tint
-  );
-
+  // ── Gradients (accent use only — not for full-screen backgrounds) ──────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [primary, accent],
-  );
-
-  static const LinearGradient cardGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [card, cardElevated],
-  );
-
-  static const LinearGradient walletGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [midnightNavy, deepOcean],
   );
 }

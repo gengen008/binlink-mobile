@@ -175,173 +175,115 @@ class _EarningsBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF052659), Color(0xFF0A2D5A)],
-        ),
-        border: Border(
-          bottom: BorderSide(color: AppColors.border),
-        ),
+        color: AppColors.card,
+        border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
-      child: Stack(
-        children: [
-          // Decorative circles
-          Positioned(
-            top: -40, right: -40,
-            child: Container(
-              width: 160, height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.steelBlue.withAlpha(20),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -30, left: -30,
-            child: Container(
-              width: 120, height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.skyBlue.withAlpha(12),
-              ),
-            ),
-          ),
-
-          // Content
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row
+              Row(
                 children: [
-                  // Title row
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppColors.steelBlue.withAlpha(30),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: AppColors.steelBlue.withAlpha(80)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(PhosphorIconsFill.wallet,
-                                color: AppColors.steelBlue, size: 12),
-                            const SizedBox(width: 5),
-                            Text('Wallet',
-                                style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.steelBlue,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: onRefresh,
-                        child: Container(
-                          width: 36, height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.steelBlue.withAlpha(25),
-                            borderRadius: AppRadius.smBR,
-                            border: Border.all(
-                                color: AppColors.steelBlue.withAlpha(60)),
-                          ),
-                          child: loading
-                              ? const Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.steelBlue),
-                                )
-                              : const Icon(PhosphorIconsRegular.arrowClockwise,
-                                  color: AppColors.steelBlue, size: 16),
-                        ),
-                      ),
+                      const Icon(PhosphorIconsFill.wallet,
+                          color: AppColors.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Text('Earnings',
+                          style: AppTextStyles.h3.copyWith(
+                              color: AppColors.secondary)),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Balance
-                  Text('Available Balance',
-                      style: AppTextStyles.caption
-                          .copyWith(color: AppColors.skyBlue, fontSize: 11)),
-                  const SizedBox(height: 4),
-                  Text(
-                    Fmt.currency(available),
-                    style: AppTextStyles.monoLg.copyWith(
-                        fontSize: 34, letterSpacing: -0.5,
-                        color: AppColors.white),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Pending + Withdrawn chips
-                  Row(
-                    children: [
-                      _BannerStat(
-                          label: 'Pending',
-                          value: Fmt.currency(pending),
-                          color: AppColors.warning),
-                      const SizedBox(width: 10),
-                      _BannerStat(
-                          label: 'Withdrawn',
-                          value: Fmt.currency(withdrawn),
-                          color: AppColors.skyBlue),
-                      const Spacer(),
-
-                      // Payout CTA button
-                      GestureDetector(
-                        onTap: available > 0 ? onPayout : null,
-                        child: Opacity(
-                          opacity: available > 0 ? 1.0 : 0.4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: available > 0
-                                  ? [
-                                      BoxShadow(
-                                        color: AppColors.primary.withAlpha(80),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(PhosphorIconsFill.arrowCircleRight,
-                                    color: AppColors.white, size: 14),
-                                SizedBox(width: 6),
-                                Text('Payout',
-                                    style: TextStyle(
-                                      fontFamily: 'PlusJakartaSans',
-                                      color: AppColors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: onRefresh,
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.fieldFill,
+                        borderRadius: AppRadius.smBR,
+                        border: Border.all(color: AppColors.border),
                       ),
-                    ],
+                      child: loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppColors.primary),
+                            )
+                          : const Icon(PhosphorIconsRegular.arrowClockwise,
+                              color: AppColors.muted, size: 16),
+                    ),
                   ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              // Balance
+              const Text('Available Balance',
+                  style: AppTextStyles.caption),
+              const SizedBox(height: 4),
+              Text(
+                Fmt.currency(available),
+                style: AppTextStyles.monoLg.copyWith(
+                    fontSize: 34, letterSpacing: -0.5),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Pending + Withdrawn + Payout row
+              Row(
+                children: [
+                  _BannerStat(
+                      label: 'Pending',
+                      value: Fmt.currency(pending),
+                      color: AppColors.warning),
+                  const SizedBox(width: 10),
+                  _BannerStat(
+                      label: 'Withdrawn',
+                      value: Fmt.currency(withdrawn),
+                      color: AppColors.muted),
+                  const Spacer(),
+
+                  GestureDetector(
+                    onTap: available > 0 ? onPayout : null,
+                    child: Opacity(
+                      opacity: available > 0 ? 1.0 : 0.4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: AppRadius.buttonBR,
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(PhosphorIconsFill.arrowCircleRight,
+                                color: AppColors.white, size: 14),
+                            SizedBox(width: 6),
+                            Text('Payout',
+                                style: TextStyle(
+                                  fontFamily: 'PlusJakartaSans',
+                                  color: AppColors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

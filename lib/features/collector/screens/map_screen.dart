@@ -289,7 +289,7 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
 
     return Stack(
       children: [
-        // Full-screen map (Rydr: FadeIn 1500ms)
+        // Full-screen map
         FadeIn(
           duration: const Duration(milliseconds: 1500),
           child: MapLibreMap(
@@ -307,7 +307,7 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
           ),
         ),
 
-        // ── AppBar (Rydr: solid dark Material bar — greeting left, toggle right) ──
+        // ── AppBar overlay ────────────────────────────────────────────────────
         Positioned(
           top: 0, left: 0, right: 0,
           child: Column(
@@ -330,7 +330,7 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hello, ${user?.fullName?.split(' ').first ?? 'Collector'} 👋🏾',
+                                  'Hello, ${user?.fullName?.split(' ').first ?? 'Collector'}',
                                   style: AppTextStyles.appBarTitle,
                                 ),
                                 const SizedBox(height: 2),
@@ -395,7 +395,7 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
                             ),
                           ),
 
-                          // Online/Offline power toggle (Rydr: 45x45 rounded action button)
+                          // Online/Offline power toggle
                           GestureDetector(
                             onTap: () {
                               HapticFeedback.mediumImpact();
@@ -448,19 +448,12 @@ class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.steelBlue,
-                            AppColors.steelBlue.withAlpha(180),
-                          ],
-                        ),
-                        borderRadius: AppRadius.xlBR,
+                        color: AppColors.steelBlue,
+                        borderRadius: AppRadius.lgBR,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.steelBlue.withAlpha(80),
-                            blurRadius: 16,
+                            color: AppColors.steelBlue.withAlpha(60),
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                         ],

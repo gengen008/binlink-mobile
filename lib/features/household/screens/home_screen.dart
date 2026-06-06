@@ -347,7 +347,7 @@ class _HomeTabState extends State<_HomeTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hello, $firstName 👋🏾',
+                              'Hello, $firstName',
                               style: AppTextStyles.appBarTitle.copyWith(
                                 color: AppColors.secondary,
                               ),

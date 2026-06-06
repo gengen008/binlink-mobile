@@ -7,18 +7,12 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_assets.dart';
 
-/// Rydr-style app bar for all BinLink screens.
+/// BinLink app bar for all screens.
 ///
-/// Rydr pattern (CustomAppBar):
-///  - Dark background
+/// Provides:
 ///  - Back button inside a rounded square container (leadingBox)
 ///  - Title centred
 ///  - Optional trailing action widget
-///
-/// Rydr bugs fixed:
-///  - Used deprecated AppBar.brightness property → replaced with systemOverlayStyle
-///  - No const constructor
-///  - Hardcoded colours and sizes → all tokens
 class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
   const AppScaffoldBar({
     super.key,

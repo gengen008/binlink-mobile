@@ -2,37 +2,37 @@ import 'package:flutter/material.dart';
 
 /// BinLink Eco — Radius Tokens
 ///
-/// Inputs / Cards / Buttons: 20
-/// Sheets (top corners only): 28
+/// Cards / Inputs / Buttons: 12px
+/// Sheets (top corners only): 20px
 class AppRadius {
   AppRadius._();
 
   // ── Raw values ─────────────────────────────────────────────────────────────
-  /// 6px — very small chips, micro badges
-  static const double xs = 6.0;
+  /// 4px — micro badges, tight chips
+  static const double xs = 4.0;
 
-  /// 12px — small badges, status pills
-  static const double sm = 12.0;
+  /// 8px — small badges, status pills
+  static const double sm = 8.0;
 
-  /// 20px — inputs (text fields)
-  static const double field = 20.0;
+  /// 12px — inputs (text fields)
+  static const double field = 12.0;
 
-  /// 20px — standard cards
-  static const double md = 20.0;
+  /// 12px — standard cards
+  static const double md = 12.0;
 
-  /// 20px — buttons
-  static const double button = 20.0;
+  /// 12px — buttons
+  static const double button = 12.0;
 
-  /// 24px — large feature cards
-  static const double lg = 24.0;
+  /// 16px — feature cards, larger containers
+  static const double lg = 16.0;
 
-  /// 28px — bottom sheets top corners
-  static const double sheet = 28.0;
+  /// 20px — bottom sheets top corners
+  static const double sheet = 20.0;
 
-  /// 32px — extra large containers
-  static const double xl  = 32.0;
+  /// 24px — extra large containers
+  static const double xl  = 24.0;
 
-  /// 32px — backward-compat alias for xl
+  /// 24px — backward-compat alias for xl
   static const double xxl = xl;
 
   /// 999px — fully circular (avatars, pill badges)
@@ -60,6 +60,6 @@ class AppRadius {
     bottomRight: Radius.circular(xl),
   );
 
-  // ── Backward-compat aliases used by existing screens ──────────────────────
+  // ── Backward-compat aliases ────────────────────────────────────────────────
   static BorderRadius get xxlBR => BorderRadius.circular(xl);
 }

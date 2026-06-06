@@ -1,17 +1,10 @@
-// Rydr notificationCard() — exact transplant.
-// Rydr source: notifications.dart notificationCard()
-//   Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:sw, br:15, Primaryfield) > Row([
-//     Padding(all:7, Image(rydrlogo)),
-//     Column(center, start, [Text(title,10,w600), SizedBox(5), Text(body,7,w300)])
-//   ])
-
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 
-/// Single notification list card — LITERAL Rydr notificationCard() transplant.
+/// Single notification list card.
 ///
 /// [notification] — map from GET /api/notifications response:
 ///   { id, title, body, type, isRead, createdAt }

@@ -7,7 +7,6 @@ import 'app_text_styles.dart';
 /// BinLink Eco — ThemeData
 ///
 /// Single eco-logistics theme shared across household and collector flavors.
-/// Architecture: Trippo screen hierarchy.
 /// Design: Plus Jakarta Sans, #16A34A primary, #F8FAFC background.
 class AppTheme {
   AppTheme._();
@@ -50,20 +49,20 @@ class AppTheme {
       labelSmall:     AppTextStyles.caption,
     ),
 
-    // ── AppBar — dark slate header ─────────────────────────────────────────
+    // ── AppBar — white clean header ────────────────────────────────────────
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.appBarBg,
-      foregroundColor: Colors.white,
+      foregroundColor: AppColors.secondary,
       elevation: 0,
       scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: AppColors.card,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       titleTextStyle: AppTextStyles.appBarTitle,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: AppColors.secondary),
     ),
 
     // ── Cards — white, 20px radius, light border ───────────────────────────

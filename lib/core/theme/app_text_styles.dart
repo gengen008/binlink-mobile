@@ -47,14 +47,14 @@ class AppTextStyles {
     fontFamily: _sans,
     fontSize: 17,
     fontWeight: FontWeight.w600,
-    color: AppColors.white,
+    color: AppColors.secondary,   // dark text on white appbar
   );
 
   static const TextStyle appBarSub = TextStyle(
     fontFamily: _sans,
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.iceBlue,
+    color: AppColors.muted,       // neutral on white appbar
   );
 
   // ── Drawer ─────────────────────────────────────────────────────────────────

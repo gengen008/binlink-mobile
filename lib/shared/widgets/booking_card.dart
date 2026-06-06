@@ -1,21 +1,3 @@
-// Rydr tripCard() — literal transplant.
-//
-// Rydr source: trip_screen.dart tripCard()
-//   Padding(h:20,v:5) > Container(p:h15,v5, h:65, w:sw, br:15, Primaryfield, NO border)
-//   > Row(spaceBetween, crossStart, [
-//       Row[Padding(all:7, Image(rydrlogo)), Column(center,start,[addr,YMargin(5),date])],
-//       Column(center, end, [price, YMargin(5), "Trip Completed"])
-//     ]).ripple(() { Navigator.push(context, TripHistory()); })
-//
-// BinLink replacements only:
-//   - rydrlogo image → Phosphor trashSimple icon (same Padding(all:7) wrapper, no circle)
-//   - Primaryfield → AppColors.fieldFill
-//   - "Trip Completed" → Fmt.statusLabel(status)
-//   - addr/date from booking map
-//   - Primarydark → AppColors.textPrimary / AppColors.textBody
-//
-// NOTE: Rydr has NO circle icon container, NO border.
-
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
