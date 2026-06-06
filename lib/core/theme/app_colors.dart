@@ -2,31 +2,32 @@ import 'package:flutter/material.dart';
 
 /// BinLink Eco — Design System Color Tokens
 ///
-/// Clean operational palette: white surfaces, near-black text, green CTA.
-/// #021024 navy, #052659 deep ocean, #5483B3 steel, #7DA0CA sky, #C1E8FF ice
+/// Bolt/Uber-inspired neutral system with BinLink green as the sole CTA color.
+/// White surfaces, near-black text, slate neutrals, green for all interactive states.
 class AppColors {
   AppColors._();
 
-  // ── Brand palette ──────────────────────────────────────────────────────────
-  static const Color primary   = Color(0xFF16A34A); // eco green (CTA / brand buttons)
-  static const Color accent    = Color(0xFF22C55E); // lighter green (hover / accent)
-  static const Color secondary = Color(0xFF021024); // midnight navy (text / dark surfaces)
+  // ── Brand ──────────────────────────────────────────────────────────────────
+  static const Color primary      = Color(0xFF16A34A); // BinLink green — all CTAs
+  static const Color primaryLight = Color(0xFFDCFCE7); // light green tint (chips, badges)
+  static const Color primaryMid   = Color(0xFF22C55E); // hover / active green
+  static const Color secondary    = Color(0xFF0F172A); // near-black (text, icons)
 
-  // ── Steel-blue range (brand spec) ─────────────────────────────────────────
-  static const Color midnightNavy = Color(0xFF021024); // #021024
-  static const Color deepOcean    = Color(0xFF052659); // #052659
-  static const Color steelBlue    = Color(0xFF5483B3); // #5483B3
-  static const Color skyBlue      = Color(0xFF7DA0CA); // #7DA0CA
-  static const Color iceBlue      = Color(0xFFC1E8FF); // #C1E8FF
+  // ── Legacy blue range (kept for map overlays / status chips only) ───────────
+  static const Color steelBlue = Color(0xFF5483B3);
+  static const Color skyBlue   = Color(0xFF7DA0CA);
+  static const Color iceBlue   = Color(0xFFC1E8FF);
+  static const Color deepOcean = Color(0xFF052659);
+  static const Color midnightNavy = Color(0xFF021024);
   static const Color white        = Color(0xFFFFFFFF);
 
   // ── Semantic ───────────────────────────────────────────────────────────────
-  static const Color success = Color(0xFF22C55E);
+  static const Color success = Color(0xFF16A34A);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger  = Color(0xFFEF4444);
   static const Color muted   = Color(0xFF64748B);
 
-  // ── Surface hierarchy ──────────────────────────────────────────────────────
+  // ── Surface hierarchy (Uber/Bolt neutral) ──────────────────────────────────
   static const Color surface      = Color(0xFFF8FAFC); // page / scaffold bg
   static const Color card         = Color(0xFFFFFFFF); // card / sheet bg
   static const Color cardElevated = Color(0xFFF1F5F9); // subtle elevated card
@@ -34,14 +35,13 @@ class AppColors {
   static const Color borderActive = primary;            // focus ring
 
   // ── AppBar / Navigation ────────────────────────────────────────────────────
-  static const Color appBarBg     = card;     // white appbar for most screens
-  static const Color appBarAction = surface;  // subtle action button bg
-
+  static const Color appBarBg     = card;
+  static const Color appBarAction = surface;
   static const Color navBarBg     = card;
 
   // ── Drawer ─────────────────────────────────────────────────────────────────
   static const Color drawerBg    = secondary;
-  static const Color drawerItem  = iceBlue;
+  static const Color drawerItem  = Color(0xFFCBD5E1);
   static const Color drawerMuted = Color(0xFF94A3B8);
 
   // ── Form fields ───────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ class AppColors {
   static const Color fieldFillFocused = Color(0xFFE2E8F0);
   static const Color fieldHint        = muted;
 
-  // ── Sheet ─────────────────────────────────────────────────────────────────
+  // ── Sheets ─────────────────────────────────────────────────────────────────
   static const Color sheetBg     = card;
   static const Color sheetHandle = border;
 
@@ -57,11 +57,12 @@ class AppColors {
   static const Color scrim = Color(0x99000000);
 
   // ── Text ─────────────────────────────────────────────────────────────────
-  static const Color textPrimary   = secondary;
-  static const Color textSecondary = steelBlue;  // accent / interactive text
+  static const Color textPrimary   = secondary;           // #0F172A near-black
+  static const Color textSecondary = Color(0xFF475569);   // slate-600 neutral
   static const Color textBody      = secondary;
-  static const Color textMuted     = muted;
+  static const Color textMuted     = muted;               // slate-500
   static const Color textOnDark    = white;
+  static const Color textLink      = primary;             // green links
 
   // ── Status chip ───────────────────────────────────────────────────────────
   static Color statusColor(String status) {
@@ -71,7 +72,7 @@ class AppColors {
         return warning;
       case 'ASSIGNED':
       case 'ACCEPTED':
-        return steelBlue;
+        return primary;
       case 'EN_ROUTE':
       case 'ON_THE_WAY':
         return warning;
@@ -87,10 +88,10 @@ class AppColors {
     }
   }
 
-  // ── Gradients (accent use only — not for full-screen backgrounds) ──────────
+  // ── Gradients ──────────────────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primary, accent],
+    colors: [primary, primaryMid],
   );
 }

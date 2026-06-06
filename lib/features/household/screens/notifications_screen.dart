@@ -52,7 +52,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Notifications'),
-      // Rydr: SingleChildScrollView > Column([YMargin(30), date badge Row, FadeInUp(2000ms, ListView)])
       body: _loading
             ? const Center(
                 child: CircularProgressIndicator(
@@ -99,7 +98,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ── Notification list with date chips (Rydr pattern) ─────────────────────────
 
 class _NotifList extends StatelessWidget {
   const _NotifList({required this.notifs, required this.onMarkRead});
@@ -132,7 +130,6 @@ class _NotifList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _buildRows();
-    // Rydr: FadeInUp(duration: 2000ms) wrapping the notification ListView
     return FadeInUp(
       duration: const Duration(milliseconds: 2000),
       child: ListView.builder(

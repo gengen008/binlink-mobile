@@ -100,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Text(
                   'Eco Waste Collection',
                   style:
-                      AppTextStyles.bodySmall.copyWith(color: AppColors.accent),
+                      AppTextStyles.bodySmall.copyWith(color: AppColors.primaryMid),
                 ),
               ],
             ),

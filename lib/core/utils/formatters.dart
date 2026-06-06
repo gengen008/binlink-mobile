@@ -59,6 +59,19 @@ class Fmt {
     return fallback;
   }
 
+  static String categoryLabel(String? category) {
+    switch ((category ?? '').toUpperCase()) {
+      case 'HOUSEHOLD':    return 'Household';
+      case 'PLASTIC':      return 'Plastic';
+      case 'GLASS':        return 'Glass';
+      case 'METAL':        return 'Metal';
+      case 'ORGANIC':      return 'Organic';
+      case 'CONSTRUCTION': return 'Construction';
+      case 'EWASTE':       return 'E-Waste';
+      default:             return category ?? 'General';
+    }
+  }
+
   static String binSizeLabel(String size) {
     switch (size.toUpperCase()) {
       case 'SMALL':  return 'Small (≤120L)';

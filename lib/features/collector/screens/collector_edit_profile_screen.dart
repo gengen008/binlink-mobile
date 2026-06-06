@@ -141,7 +141,7 @@ class _CollectorEditProfileScreenState
                         const SizedBox(height: 32),
 
                         // Full name
-                        const Text('Full Name', style: AppTextStyles.label),
+                        Text('Full Name', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _nameCtrl,
@@ -158,7 +158,7 @@ class _CollectorEditProfileScreenState
                         const SizedBox(height: 20),
 
                         // Phone
-                        const Text('Phone Number', style: AppTextStyles.label),
+                        Text('Phone Number', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _phoneCtrl,
@@ -172,7 +172,7 @@ class _CollectorEditProfileScreenState
                         const SizedBox(height: 20),
 
                         // Vehicle type
-                        const Text('Vehicle Type', style: AppTextStyles.label),
+                        Text('Vehicle Type', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         Container(
                           decoration: BoxDecoration(
@@ -204,7 +204,7 @@ class _CollectorEditProfileScreenState
                         const SizedBox(height: 20),
 
                         // Vehicle plate
-                        const Text('Vehicle Plate Number', style: AppTextStyles.label),
+                        Text('Vehicle Plate Number', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _plateCtrl,

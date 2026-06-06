@@ -73,7 +73,6 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Rydr drawer pattern — AppDrawer wired to IndexedStack tab switching
       drawer: AppDrawer(onTabSwitch: _switchTab),
       body: IndexedStack(
         index: _tab,
@@ -969,9 +968,7 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
 // (HomeBottomSheet and BookingPlaceHolder removed — replaced by scrollable dashboard layout)
 
 
-// ── Waste type card — LITERAL Rydr FavoriteItems transplant ──────────────────
 //
-// Rydr: ClipRect > Container(h:120,w:110,border:PrimaryColor,br:all(25))
 //   > Column[YMargin(10), Container(67×67,circle,F5F6F5,Padding(18,SvgPicture(icon,26×26))),
 //            YMargin(5), Text(text,10,w600,Primarydark), YMargin(5), Text(time,9,w400,#999393)]
 //   .ripple(() {})
@@ -1001,7 +998,6 @@ class _WasteTypeCard extends StatelessWidget {
           MaterialPageRoute(builder: (_) => BookScreen(mode: mode)),
         );
       },
-      // Rydr: ClipRect > Container(h:120,w:110,border:PrimaryColor,br:all(25)) — NO color fill
       child: ClipRect(
         clipBehavior: Clip.antiAliasWithSaveLayer,
         child: Container(
@@ -1015,9 +1011,7 @@ class _WasteTypeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Rydr: YMargin(10)
               const SizedBox(height: 10),
-              // Rydr: Container(67×67, circle, Color(0xFFF5F6F5))
               Container(
                 height: 67,
                 width: 67,
@@ -1027,9 +1021,7 @@ class _WasteTypeCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 26),
               ),
-              // Rydr: YMargin(5)
               const SizedBox(height: 5),
-              // Rydr: Text(text, montserrat, 10, w600, Primarydark)
               Text(
                 label,
                 style: AppTextStyles.caption.copyWith(
@@ -1038,9 +1030,7 @@ class _WasteTypeCard extends StatelessWidget {
                   color: AppColors.midnightNavy,
                 ),
               ),
-              // Rydr: YMargin(5)
               const SizedBox(height: 5),
-              // Rydr: Text(time, montserrat, 9, w400, #999393)
               Text(
                 price,
                 style: AppTextStyles.caption.copyWith(
@@ -1476,7 +1466,7 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Cancel Subscription', style: AppTextStyles.h3),
+        title: Text('Cancel Subscription', style: AppTextStyles.h3),
         content: Text(
           'This will stop future pickups. Are you sure?',
           style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
@@ -1560,7 +1550,7 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text('Subscription', style: AppTextStyles.h3),
+                Text('Subscription', style: AppTextStyles.h3),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1595,7 +1585,7 @@ class _SubscriptionDetailSheetState extends State<_SubscriptionDetailSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Price per pickup', style: AppTextStyles.h4),
+                Text('Price per pickup', style: AppTextStyles.h4),
                 Text(Fmt.currency(price),
                     style: AppTextStyles.monoLg.copyWith(color: AppColors.iceBlue)),
               ],
@@ -1718,10 +1708,10 @@ class _ImpactCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(PhosphorIconsFill.leaf, color: AppColors.success, size: 16),
-                SizedBox(width: 8),
+                const Icon(PhosphorIconsFill.leaf, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
                 Text('Your Environmental Impact', style: AppTextStyles.label),
               ],
             ),
@@ -1863,7 +1853,7 @@ class _BookingDetailSheet extends StatelessWidget {
             // Status badge
             Row(
               children: [
-                const Text('Booking Details', style: AppTextStyles.h3),
+                Text('Booking Details', style: AppTextStyles.h3),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1935,7 +1925,7 @@ class _BookingDetailSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total Paid', style: AppTextStyles.h4),
+                Text('Total Paid', style: AppTextStyles.h4),
                 Text(Fmt.currency(amount),
                     style: AppTextStyles.monoLg.copyWith(
                       color: AppColors.iceBlue,
@@ -2098,9 +2088,9 @@ class _RatingSheetState extends State<_RatingSheet> {
               color: AppColors.success, size: 36),
         ),
         const SizedBox(height: 16),
-        const Text('Thanks for your feedback!', style: AppTextStyles.h3),
+        Text('Thanks for your feedback!', style: AppTextStyles.h3),
         const SizedBox(height: 6),
-        const Text('Your rating helps us improve the service.',
+        Text('Your rating helps us improve the service.',
             style: AppTextStyles.caption, textAlign: TextAlign.center),
         const SizedBox(height: 24),
       ],
@@ -2125,7 +2115,7 @@ class _RatingSheetState extends State<_RatingSheet> {
         ),
         const SizedBox(height: 20),
 
-        const Text('Rate Your Collector', style: AppTextStyles.h3),
+        Text('Rate Your Collector', style: AppTextStyles.h3),
         const SizedBox(height: 4),
         Text(
           'How was your experience with ${widget.collectorName}?',
@@ -2301,7 +2291,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Language / Langue', style: AppTextStyles.h3),
+        title: Text('Language / Langue', style: AppTextStyles.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _languages.map((lang) {
@@ -2613,7 +2603,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               ),
 
               const SizedBox(height: 24),
-              const Text('BinLink Eco v3.0.0', style: AppTextStyles.caption),
+              Text('BinLink Eco v3.0.0', style: AppTextStyles.caption),
             ],
           ),
         ),
@@ -2630,7 +2620,7 @@ class _ProfileTabState extends State<_ProfileTab> {
           backgroundColor: AppColors.card,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24)),
-          title: const Text('Rate BinLink', style: AppTextStyles.h3),
+          title: Text('Rate BinLink', style: AppTextStyles.h3),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2697,7 +2687,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Sign Out', style: AppTextStyles.h3),
+        title: Text('Sign Out', style: AppTextStyles.h3),
         content: Text(
           'Are you sure you want to sign out?',
           style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),

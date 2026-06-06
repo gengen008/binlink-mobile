@@ -66,7 +66,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       icon: const Icon(PhosphorIconsRegular.arrowLeft,
                           color: AppColors.midnightNavy),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text('Saved Addresses', style: AppTextStyles.h3),
                     ),
                     GestureDetector(
@@ -110,10 +110,10 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                                     color: AppColors.muted, size: 32),
                               ),
                               const SizedBox(height: 20),
-                              const Text('No saved addresses',
+                              Text('No saved addresses',
                                   style: AppTextStyles.h4),
                               const SizedBox(height: 6),
-                              const Text(
+                              Text(
                                 'Add up to 5 addresses for quick booking',
                                 style: AppTextStyles.caption,
                                 textAlign: TextAlign.center,
@@ -293,11 +293,11 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
           ),
           const SizedBox(height: 20),
 
-          const Text('Add Address', style: AppTextStyles.h3),
+          Text('Add Address', style: AppTextStyles.h3),
           const SizedBox(height: 20),
 
           // Label selector
-          const Text('Label', style: AppTextStyles.label),
+          Text('Label', style: AppTextStyles.label),
           const SizedBox(height: 10),
           Row(
             children: _labels.map((l) {
@@ -337,7 +337,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
 
           const SizedBox(height: 16),
 
-          const Text('Address', style: AppTextStyles.label),
+          Text('Address', style: AppTextStyles.label),
           const SizedBox(height: 8),
           AppTextField(
             controller: _addrCtrl,
@@ -350,7 +350,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
 
           const SizedBox(height: 16),
 
-          const Text('Gate Notes (optional)', style: AppTextStyles.label),
+          Text('Gate Notes (optional)', style: AppTextStyles.label),
           const SizedBox(height: 8),
           AppTextField(
             controller: _notesCtrl,

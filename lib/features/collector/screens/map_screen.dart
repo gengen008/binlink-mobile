@@ -814,7 +814,7 @@ class _ProfileTabState extends State<_ProfileTab> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xxl)),
-        title: const Text('Language / Langue', style: AppTextStyles.h3),
+        title: Text('Language / Langue', style: AppTextStyles.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _languages.map((lang) {
@@ -1162,7 +1162,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                           backgroundColor: AppColors.card,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppRadius.xxl)),
-                          title: const Text('Sign Out',
+                          title: Text('Sign Out',
                               style: AppTextStyles.h3),
                           content: Text(
                             'Are you sure you want to sign out?',
@@ -1200,7 +1200,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               ),
 
               const SizedBox(height: 24),
-              const Text('BinLink Collector v3.0.0',
+              Text('BinLink Collector v3.0.0',
                   style: AppTextStyles.caption),
             ],
           ),

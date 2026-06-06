@@ -176,7 +176,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Text('Search Location', style: AppTextStyles.h4),
+                Text('Search Location', style: AppTextStyles.h4),
               ],
             ),
           ),
@@ -265,7 +265,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.steelBlue,
                             )),
-                        const Text('Auto-detect GPS location',
+                        Text('Auto-detect GPS location',
                             style: AppTextStyles.caption),
                       ],
                     ),

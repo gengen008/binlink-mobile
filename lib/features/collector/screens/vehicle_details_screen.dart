@@ -118,7 +118,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Vehicle Type', style: AppTextStyles.label),
+                        Text('Vehicle Type', style: AppTextStyles.label),
                         const SizedBox(height: 12),
 
                         // Type selector
@@ -169,7 +169,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 24),
-                        const Text('Registration Number', style: AppTextStyles.label),
+                        Text('Registration Number', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _regCtrl,
@@ -185,7 +185,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 20),
-                        const Text('Vehicle Color', style: AppTextStyles.label),
+                        Text('Vehicle Color', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _colorCtrl,
@@ -200,7 +200,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            const Text('Max Capacity', style: AppTextStyles.label),
+                            Text('Max Capacity', style: AppTextStyles.label),
                             const Spacer(),
                             Text('${_maxCapacity.toInt()}kg',
                                 style: AppTextStyles.monoSm.copyWith(
@@ -228,7 +228,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         ),
 
                         const SizedBox(height: 20),
-                        const Text('Notes (optional)', style: AppTextStyles.label),
+                        Text('Notes (optional)', style: AppTextStyles.label),
                         const SizedBox(height: 8),
                         AppTextField(
                           controller: _notesCtrl,

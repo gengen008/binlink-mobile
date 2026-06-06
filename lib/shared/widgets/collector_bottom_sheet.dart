@@ -246,12 +246,12 @@ class _CollectorSheet extends StatelessWidget {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(PhosphorIconsFill.trashSimple,
+                          const Icon(PhosphorIconsFill.trashSimple,
                               color: AppColors.white, size: 18),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text('Request Pickup',
                               style: AppTextStyles.button),
                         ],

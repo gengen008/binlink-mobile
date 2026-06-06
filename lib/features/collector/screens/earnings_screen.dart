@@ -80,7 +80,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                           // ── Transaction history ──
                           Row(
                             children: [
-                              const Text('Transaction History', style: AppTextStyles.h4),
+                              Text('Transaction History', style: AppTextStyles.h4),
                               const Spacer(),
                               Text('${prov.walletTransactions.length} entries',
                                   style: AppTextStyles.caption),
@@ -99,7 +99,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                           // ── Completed pickups ──
                           Row(
                             children: [
-                              const Text('Completed Pickups', style: AppTextStyles.h4),
+                              Text('Completed Pickups', style: AppTextStyles.h4),
                               const Spacer(),
                               Text('${prov.completedPickups.length} total',
                                   style: AppTextStyles.caption),
@@ -114,14 +114,14 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                 color: AppColors.fieldFill,
                                 borderRadius: BorderRadius.circular(AppRadius.sheet),
                               ),
-                              child: const Column(
+                              child: Column(
                                 children: [
-                                  Icon(PhosphorIconsRegular.coins,
+                                  const Icon(PhosphorIconsRegular.coins,
                                       color: AppColors.muted, size: 40),
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                                   Text('No pickups yet',
                                       style: AppTextStyles.h4),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text('Go online and accept requests to earn',
                                       style: AppTextStyles.caption,
                                       textAlign: TextAlign.center),
@@ -225,13 +225,11 @@ class _EarningsBanner extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Balance
-              const Text('Available Balance',
-                  style: AppTextStyles.caption),
+              Text('Available Balance', style: AppTextStyles.caption),
               const SizedBox(height: 4),
               Text(
                 Fmt.currency(available),
-                style: AppTextStyles.monoLg.copyWith(
-                    fontSize: 34, letterSpacing: -0.5),
+                style: AppTextStyles.monoLg.copyWith(fontSize: 34),
               ),
 
               const SizedBox(height: 14),
@@ -433,10 +431,10 @@ class _EmptyTransactions extends StatelessWidget {
         borderRadius: AppRadius.lgBR,
         border: Border.all(color: AppColors.border),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(PhosphorIconsRegular.receipt, color: AppColors.muted, size: 22),
-          SizedBox(width: 12),
+          const Icon(PhosphorIconsRegular.receipt, color: AppColors.muted, size: 22),
+          const SizedBox(width: 12),
           Text('No transactions yet', style: AppTextStyles.caption),
         ],
       ),
@@ -586,7 +584,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Request Payout', style: AppTextStyles.h3),
+                    Text('Request Payout', style: AppTextStyles.h3),
                     Text(
                       'Available: ${Fmt.currency(widget.available)}',
                       style: AppTextStyles.caption.copyWith(color: AppColors.success),
@@ -598,7 +596,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
 
             const SizedBox(height: 24),
 
-            const Text('MoMo Number', style: AppTextStyles.label),
+            Text('MoMo Number', style: AppTextStyles.label),
             const SizedBox(height: 8),
             TextFormField(
               controller: _phoneCtrl,
@@ -614,7 +612,7 @@ class _PayoutSheetState extends State<_PayoutSheet> {
 
             const SizedBox(height: 16),
 
-            const Text('Amount (GHC)', style: AppTextStyles.label),
+            Text('Amount (GHC)', style: AppTextStyles.label),
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountCtrl,

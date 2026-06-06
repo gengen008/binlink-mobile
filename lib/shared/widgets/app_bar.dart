@@ -106,7 +106,6 @@ class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ── Back button in Rydr-style rounded container ─────────────────────────────
 
 class _BackButton extends StatelessWidget {
   const _BackButton({this.onBack});
@@ -114,7 +113,6 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Rydr CustomAppBar exact: Container(w:45,h:45, Primaryfield fill, br:all(10))
     //   > Center(Icon(arrow_back_ios, size:18, Primarydark))
     return GestureDetector(
       onTap: onBack ?? () => Navigator.maybePop(context),
@@ -137,7 +135,6 @@ class _BackButton extends StatelessWidget {
   }
 }
 
-// ── Drawer trigger button (matches Rydr home appbar action) ─────────────────
 
 class DrawerMenuButton extends StatelessWidget {
   const DrawerMenuButton({super.key, required this.onTap});
@@ -145,7 +142,6 @@ class DrawerMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Rydr exact: Container(w:45, Primaryfield(PrimaryColor) fill, br:all(8))
     //   > Padding(all:10) > SvgPicture(drawer.svg, 24×24)
     return GestureDetector(
       onTap: onTap,
@@ -171,7 +167,6 @@ class DrawerMenuButton extends StatelessWidget {
 
 // ── Home-style appbar: greeting + subtitle + trailing action ────────────────
 
-/// Two-line title appbar matching Rydr's home_view "Hello, Daniel 👋🏾 / Catch a ride now!"
 class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
   const AppHomeBar({
     super.key,
@@ -208,7 +203,6 @@ class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  // Greeting text — left aligned (Rydr pattern)
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -220,7 +214,6 @@ class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
                       ],
                     ),
                   ),
-                  // Drawer icon (Rydr: rounded square on the right)
                   DrawerMenuButton(onTap: onDrawerOpen),
                 ],
               ),

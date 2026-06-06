@@ -319,7 +319,6 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // ── AppBar (Rydr: dark solid bar, rounded-square back, trailing status badge) ──
       appBar: AppScaffoldBar(
         title: S.of(context).liveTracking,
         trailing: _booking != null
@@ -436,7 +435,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
                 child: Column(
                   children: [
-                    // sheetHeader() — Rydr: 80×2.875, borderRadius: all(80), PrimaryColor.withOpacity(0.5)
                   Center(
                       child: Container(
                         width: 80, height: 3,

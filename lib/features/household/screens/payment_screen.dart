@@ -96,7 +96,6 @@ class _PaymentScreenState extends State<PaymentScreen>
           children: [
             const SizedBox(height: 20),
 
-            // Rydr exact: FadeInUp(1800ms) > Container(340×122, Primarydark, paymentbg)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15.0),
               child: Row(
@@ -159,7 +158,6 @@ class _PaymentScreenState extends State<PaymentScreen>
                   ),
                   const SizedBox(height: 20),
 
-                  // Cash payment row (Rydr dark row)
                   Container(
                     height: 85,
                     width: double.infinity,

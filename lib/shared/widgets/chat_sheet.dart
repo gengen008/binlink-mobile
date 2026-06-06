@@ -140,7 +140,7 @@ class _ChatSheetState extends State<ChatSheet> {
                           color: AppColors.steelBlue, size: 18),
                     ),
                     const SizedBox(width: 12),
-                    const Text('Live Chat', style: AppTextStyles.h4),
+                    Text('Live Chat', style: AppTextStyles.h4),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -200,7 +200,7 @@ class _ChatSheetState extends State<ChatSheet> {
                                   color: AppColors.muted, size: 28),
                             ),
                             const SizedBox(height: 16),
-                            const Text('No messages yet',
+                            Text('No messages yet',
                                 style: AppTextStyles.h4),
                             const SizedBox(height: 6),
                             Text(

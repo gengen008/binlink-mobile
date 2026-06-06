@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_radius.dart';
 import '../../core/utils/formatters.dart';
 
-/// Single notification list card.
+/// Single notification row card.
 ///
-/// [notification] — map from GET /api/notifications response:
+/// [notification] — map from GET /api/notifications:
 ///   { id, title, body, type, isRead, createdAt }
 class AppNotificationCard extends StatelessWidget {
   const AppNotificationCard({
@@ -20,96 +21,116 @@ class AppNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = notification['title'] as String? ?? 'Notification';
-    final body  = notification['body']  as String? ?? '';
+    final title  = notification['title'] as String? ?? 'Notification';
+    final body   = notification['body']  as String? ?? '';
+    final isRead = notification['isRead'] as bool? ?? false;
+    final createdAt = notification['createdAt'] as String?;
 
-    // Rydr exact: Padding(h:20,v:5) > Container(p:h10,v5, h:65, w:sw, br:15, Primaryfield)
-    //   > Row([Padding(all:7, Image(rydrlogo)), Column([title, YMargin(5), body])])
     return GestureDetector(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.0),
-          height: 65,
-          width: MediaQuery.sizeOf(context).width,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15.0),
-            color: AppColors.fieldFill,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isRead ? AppColors.card : AppColors.primaryLight.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.2),
           ),
-          child: Row(
-            children: [
-              // Rydr: Padding(all:7, icon)
-              const Padding(
-                padding: EdgeInsets.all(7.0),
-                child: Icon(PhosphorIconsRegular.bell,
-                    color: AppColors.steelBlue, size: 15),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isRead ? AppColors.fieldFill : AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              // Rydr: Column(center, start, [title, YMargin(5), body])
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Icon(
+                PhosphorIconsRegular.bell,
+                color: isRead ? AppColors.muted : AppColors.primary,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 10.0,
+                    style: AppTextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.midnightNavy,
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (body.isNotEmpty) ...[
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Text(
                       body,
                       style: AppTextStyles.caption.copyWith(
-                        fontSize: 7.0,
-                        fontWeight: FontWeight.w300,
-                        color: AppColors.midnightNavy,
+                        color: AppColors.textMuted,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (createdAt != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      Fmt.shortDate(createdAt),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textMuted,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ],
               ),
-            ],
-          ),
+            ),
+            if (!isRead)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(top: 4, left: 8),
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Date section header — Rydr's date chip pattern ────────────────────────────
-
-/// "10th January 2022" style chip at the top of a notifications date group.
+/// Date section chip — "10 Jan 2026" label above a group of notifications.
 class NotificationDateChip extends StatelessWidget {
   const NotificationDateChip({super.key, required this.date});
   final DateTime date;
 
   @override
   Widget build(BuildContext context) {
-    // Rydr: Container(width:90, height:30, borderRadius:5, color:Primarydark) centered date label
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: Container(
-        width: 90,
-        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.midnightNavy,
-          borderRadius: BorderRadius.circular(5),
+          color: AppColors.fieldFill,
+          borderRadius: BorderRadius.circular(AppRadius.xs),
+          border: Border.all(color: AppColors.border),
         ),
-        child: Center(
-          child: Text(
-            Fmt.date(date),
-            style: AppTextStyles.chip.copyWith(
-              color: const Color(0xFFF3F3C1),
-              fontSize: 9,
-              fontWeight: FontWeight.w300,
-            ),
+        child: Text(
+          Fmt.date(date),
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w500,
+            fontSize: 11,
           ),
         ),
       ),

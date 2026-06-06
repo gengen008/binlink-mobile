@@ -151,7 +151,7 @@ class _JobsBanner extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('My Pickups', style: AppTextStyles.h2),
@@ -301,7 +301,6 @@ class _JobList extends StatelessWidget {
       );
     }
 
-    // Rydr: date badge row above list + FadeInUp(2000ms) on ListView
     final now = DateTime.now();
     final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     final dateLabel = '${now.day} ${months[now.month - 1]} ${now.year}';
@@ -346,120 +345,118 @@ class _JobList extends StatelessWidget {
   }
 }
 
-// ── Job card — LITERAL Rydr tripCard() transplant ────────────────────────────
-//
-// Rydr source: trip_screen.dart tripCard()
-//   Padding(h:20,v:5) > Container(p:h15,v5, h:65, w:sw, br:15, Primaryfield)
-//   > Row(spaceBetween, crossStart, [
-//       Row[Padding(all:7, Image(rydrlogo)), Column(center,start,[addr,YMargin(5),date])],
-//       Column(center, end, [price, YMargin(5), "Trip Completed"])
-//     ]).ripple(() { Navigator.push(context, TripHistory()); })
-
 class _JobCard extends StatelessWidget {
   const _JobCard({required this.job});
   final Map<String, dynamic> job;
 
   @override
   Widget build(BuildContext context) {
-    final status   = job['status'] as String? ?? '';
-    final address  = job['pickupAddress'] as String? ?? '';
-    final amount   = Fmt.toDouble(job['totalAmount']);
-    final date     = job['createdAt'] as String?;
-    final isActive = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
+    final status      = job['status'] as String? ?? '';
+    final address     = job['pickupAddress'] as String? ?? '—';
+    final amount      = Fmt.toDouble(job['totalAmount']);
+    final date        = job['createdAt'] as String?;
+    final category    = job['wasteCategory'] as String?;
+    final binSize     = job['binSize'] as String?;
+    final isActive    = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED'].contains(status);
+    final statusColor = AppColors.statusColor(status);
 
-    // Rydr: Padding(horizontal:20, vertical:5)
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      child: GestureDetector(
-        onTap: () {
-          if (isActive) {
-            Navigator.push(context,
-                MaterialPageRoute(
-                  builder: (_) => ActivePickupScreen(booking: job),
-                ));
-          } else {
-            _showDetail(context);
-          }
-        },
-        child: Container(
-          // Rydr: padding:h15,v5 — height:65 — w:screenWidth — br:15 — Primaryfield — NO border
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5.0),
-          height: 65,
-          width: MediaQuery.sizeOf(context).width,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15.0),
-            color: AppColors.fieldFill,
+    return GestureDetector(
+      onTap: () {
+        if (isActive) {
+          Navigator.push(context,
+              MaterialPageRoute(
+                builder: (_) => ActivePickupScreen(booking: job),
+              ));
+        } else {
+          _showDetail(context);
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: AppRadius.mdBR,
+          border: Border.all(
+            color: isActive
+                ? AppColors.primary.withValues(alpha: 0.3)
+                : AppColors.border,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Rydr: Row[Padding(all:7, Image(rydrlogo)), Column[addr, YMargin(5), date]]
-              Row(
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primaryLight : AppColors.fieldFill,
+                borderRadius: AppRadius.smBR,
+              ),
+              child: Icon(
+                PhosphorIconsRegular.trashSimple,
+                color: isActive ? AppColors.primary : AppColors.muted,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rydr: Padding(all:7, Image(rydrlogo)) → plain icon, no circle container
-                  const Padding(
-                    padding: EdgeInsets.all(7.0),
-                    child: Icon(PhosphorIconsFill.trashSimple,
-                        color: AppColors.steelBlue, size: 15),
+                  Text(
+                    address,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
                     children: [
-                      // Rydr: Text(address, montserrat, 10, w600, Primarydark)
-                      Text(
-                        address,
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.midnightNavy,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 5),
-                      // Rydr: Text(date, montserrat, 7, w300, Primarydark)
-                      Text(
-                        date != null ? Fmt.shortDate(date) : '',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w300,
-                          color: AppColors.midnightNavy,
-                        ),
-                      ),
+                      if (category != null)
+                        _MiniChip(Fmt.categoryLabel(category)),
+                      if (binSize != null)
+                        _MiniChip(Fmt.binSizeLabel(binSize)),
+                      if (date != null)
+                        _MiniChip(Fmt.shortDate(date)),
                     ],
                   ),
                 ],
               ),
-              // Rydr: Column(center, end, [price, YMargin(5), "Trip Completed"])
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Rydr: Text(price, montserrat, 10, w600, Primarydark)
-                  Text(
-                    Fmt.currency(amount),
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.midnightNavy,
-                    ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  Fmt.currency(amount * 0.9),
+                  style: AppTextStyles.monoSm.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 5),
-                  // Rydr: Text("Trip Completed", montserrat, 7, w300, Primarydark)
-                  Text(
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: AppRadius.xsBR,
+                  ),
+                  child: Text(
                     Fmt.statusLabel(status),
                     style: AppTextStyles.caption.copyWith(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w300,
-                      color: AppColors.midnightNavy,
+                      color: statusColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -492,7 +489,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                const Text('Pickup Details', style: AppTextStyles.h3),
+                Text('Pickup Details', style: AppTextStyles.h3),
                 const Spacer(),
                 StatusBadge(status: status),
               ],
@@ -506,9 +503,9 @@ class _JobCard extends StatelessWidget {
             const Divider(color: AppColors.border),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Earnings', style: AppTextStyles.h4),
+              Text('Earnings', style: AppTextStyles.h4),
               Text(Fmt.currency(amount * 0.9),
-                  style: AppTextStyles.monoLg.copyWith(color: AppColors.iceBlue)),
+                  style: AppTextStyles.monoLg.copyWith(color: AppColors.success)),
             ]),
           ],
         ),
@@ -549,6 +546,25 @@ class _DetailTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MiniChip extends StatelessWidget {
+  const _MiniChip(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.fieldFill,
+        borderRadius: AppRadius.xsBR,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(label,
+          style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.textMuted)),
     );
   }
 }

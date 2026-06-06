@@ -3,9 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 
-/// Drag handle for modal bottom sheets — Rydr's sheetHeader pattern.
 ///
-/// Rydr: bare function sheetHeader() returning a Container.
 /// Fixed: proper StatelessWidget with const constructor, tokens.
 ///
 /// Usage:
@@ -34,7 +32,6 @@ class AppSheetHandle extends StatelessWidget {
       ),
       child: Center(
         child: Container(
-          // Rydr dimensions: 80px wide, 2.875px tall
           width: AppSpacing.sheetHandleW,
           height: AppSpacing.sheetHandleH,
           decoration: BoxDecoration(

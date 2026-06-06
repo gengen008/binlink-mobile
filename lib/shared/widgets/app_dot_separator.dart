@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-/// Dashed horizontal separator — merged Rydr DotWidget + DrawerDots pattern.
 ///
-/// Rydr bugs fixed:
 ///  - Two separate classes (DotWidget, DrawerDots) doing the same thing — unified.
 ///  - totalWidth ~/ (dashWidth + emptyWidth) can return 0 → divide-by-zero guard.
 ///  - Hardcoded totalWidth (150px) doesn't respond to container width → LayoutBuilder.

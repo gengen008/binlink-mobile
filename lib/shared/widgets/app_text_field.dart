@@ -5,14 +5,11 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_text_styles.dart';
 
-/// BinLink text field — Rydr CustomTextFieldWidget pattern with improvements.
 ///
-/// Rydr bugs fixed:
 ///  - No label support → added
 ///  - No validator → added
 ///  - No obscure text toggle → added
 ///  - No focused fill state → added (AppColors.fieldFillFocused)
-///  - Hardcoded radius → AppRadius.field (9px matches Rydr)
 ///  - No autofillHints → added
 class AppTextField extends StatefulWidget {
   const AppTextField({
@@ -113,7 +110,6 @@ class _AppTextFieldState extends State<AppTextField> {
           style: AppTextStyles.body.copyWith(color: widget.textColor),
           decoration: InputDecoration(
             hintText: widget.hint,
-            // Rydr field pattern: explicit fill colours per focus state
             filled: true,
             fillColor: widget.fillColor ?? (_focused
                 ? AppColors.fieldFillFocused
@@ -130,7 +126,6 @@ class _AppTextFieldState extends State<AppTextField> {
                     ),
                   )
                 : widget.suffixIcon,
-            // Rydr radius = 9px (AppRadius.field)
             border: OutlineInputBorder(
               borderRadius: AppRadius.fieldBR,
               borderSide: const BorderSide(color: AppColors.border),

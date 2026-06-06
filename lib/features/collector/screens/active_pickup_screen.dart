@@ -662,7 +662,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     const Icon(PhosphorIconsRegular.scales,
                         color: AppColors.skyBlue, size: 15),
                     const SizedBox(width: 6),
-                    const Text('Actual Weight (kg)',
+                    Text('Actual Weight (kg)',
                         style: AppTextStyles.label),
                     const SizedBox(width: 4),
                     Text('*required',
@@ -724,11 +724,11 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
               borderRadius: AppRadius.xlBR,
               border: Border.all(color: AppColors.success.withAlpha(60)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(PhosphorIconsFill.checkCircle,
+                const Icon(PhosphorIconsFill.checkCircle,
                     color: AppColors.success, size: 28),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text('Pickup completed successfully!',
                       style: AppTextStyles.h4),
@@ -974,7 +974,7 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
                     color: AppColors.danger, size: 20),
               ),
               const SizedBox(width: 14),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Report Exception', style: AppTextStyles.h3),

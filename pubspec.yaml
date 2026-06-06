@@ -34,7 +34,7 @@ dependencies:
   # SVG icons (Phosphor)
   phosphor_flutter: ^2.1.0
 
-  # Fonts
+  # Fonts — loaded at runtime from Google Fonts CDN; cached after first run
   google_fonts: ^6.2.1
 
   # Utilities
@@ -92,26 +92,27 @@ flutter:
 
   assets:
     - .env
-    - assets/images/
-    - assets/jsons/
-    - assets/svg/
-
-  fonts:
-    - family: PlusJakartaSans
-      fonts:
-        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
-          weight: 800
-    - family: DMMono
-      fonts:
-        - asset: assets/fonts/DMMono-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/DMMono-Medium.ttf
-          weight: 500
+    # Images
+    - assets/images/app_icon.png
+    - assets/images/defaultavatar.png
+    - assets/images/destination.png
+    - assets/images/house.png
+    - assets/images/logo.png
+    # SVG brand assets & domain illustrations
+    - assets/svg/bag.svg
+    - assets/svg/bank.svg
+    - assets/svg/call.svg
+    - assets/svg/card.svg
+    - assets/svg/cash.svg
+    - assets/svg/chat.svg
+    - assets/svg/drawer.svg
+    - assets/svg/envelope.svg
+    - assets/svg/globe-africa.svg
+    - assets/svg/google.svg
+    - assets/svg/home.svg
+    - assets/svg/hospital.svg
+    - assets/svg/house.svg
+    - assets/svg/locate.svg
+    - assets/svg/school.svg
+    - assets/svg/shop.svg
+    - assets/svg/stopwatch.svg

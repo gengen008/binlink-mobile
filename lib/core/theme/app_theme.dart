@@ -25,7 +25,7 @@ class AppTheme {
 
     colorScheme: const ColorScheme.light(
       primary:          AppColors.primary,
-      secondary:        AppColors.accent,
+      secondary:        AppColors.primaryMid,
       surface:          AppColors.surface,
       error:            AppColors.danger,
       onPrimary:        Colors.white,
@@ -34,9 +34,7 @@ class AppTheme {
       onError:          Colors.white,
     ),
 
-    fontFamily: 'PlusJakartaSans',
-
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       displayLarge:   AppTextStyles.h1,
       displayMedium:  AppTextStyles.h2,
       displaySmall:   AppTextStyles.h3,
@@ -50,19 +48,19 @@ class AppTheme {
     ),
 
     // ── AppBar — white clean header ────────────────────────────────────────
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: AppColors.appBarBg,
       foregroundColor: AppColors.secondary,
       elevation: 0,
       scrolledUnderElevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle(
+      systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: AppColors.card,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       titleTextStyle: AppTextStyles.appBarTitle,
-      iconTheme: IconThemeData(color: AppColors.secondary),
+      iconTheme: const IconThemeData(color: AppColors.secondary),
     ),
 
     // ── Cards — white, 20px radius, light border ───────────────────────────

@@ -292,7 +292,6 @@ class _BookScreenState extends State<BookScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // ── AppBar (Rydr: dark solid bar, rounded-square back button, left-aligned title) ──
       appBar: AppScaffoldBar(
         centerTitle: false,
         onBack: () {
@@ -306,7 +305,7 @@ class _BookScreenState extends State<BookScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Book a Pickup', style: AppTextStyles.appBarTitle),
+            Text('Book a Pickup', style: AppTextStyles.appBarTitle),
             Text(
               'Step ${_step + 1} of 6 — ${_kStepLabels[_step]}',
               style: AppTextStyles.appBarSub,
@@ -451,7 +450,7 @@ class _Step1Category extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('What are you disposing?',
+            Text('What are you disposing?',
                 style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text('Select the primary waste type',
@@ -590,7 +589,7 @@ class _Step2Volume extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('How much waste?', style: AppTextStyles.h3),
+            Text('How much waste?', style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text('Select bin size and extras',
                 style: AppTextStyles.body.copyWith(
@@ -598,7 +597,7 @@ class _Step2Volume extends StatelessWidget {
                 )),
 
             const SizedBox(height: 20),
-            const Text('Bin Size', style: AppTextStyles.label),
+            Text('Bin Size', style: AppTextStyles.label),
             const SizedBox(height: 12),
 
             // Bin size cards
@@ -707,7 +706,7 @@ class _Step2Volume extends StatelessWidget {
             // Extra bags
             Row(
               children: [
-                const Text('Extra Bags', style: AppTextStyles.label),
+                Text('Extra Bags', style: AppTextStyles.label),
                 const Spacer(),
                 Text('GHC ${_kBagPrice.toStringAsFixed(0)} each',
                     style: AppTextStyles.monoSm),
@@ -760,7 +759,7 @@ class _Step2Volume extends StatelessWidget {
             // Estimated weight slider
             Row(
               children: [
-                const Text('Estimated Weight', style: AppTextStyles.label),
+                Text('Estimated Weight', style: AppTextStyles.label),
                 const Spacer(),
                 Text('~${estWeight}kg',
                     style: AppTextStyles.monoSm.copyWith(
@@ -785,8 +784,8 @@ class _Step2Volume extends StatelessWidget {
                 onChanged: (v) => onWeight(v.toInt()),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -831,7 +830,7 @@ class _Step3Photos extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Add Waste Photos', style: AppTextStyles.h3),
+            Text('Add Waste Photos', style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text(
               'Optional — helps collector prepare for pickup',
@@ -1026,7 +1025,7 @@ class _Step3Schedule extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('When should we come?', style: AppTextStyles.h3),
+            Text('When should we come?', style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text('Choose immediate or scheduled pickup',
                 style: AppTextStyles.body.copyWith(
@@ -1087,7 +1086,7 @@ class _Step3Schedule extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Immediate Pickup',
+                          Text('Immediate Pickup',
                               style: AppTextStyles.h4),
                           const SizedBox(height: 4),
                           Text(
@@ -1106,7 +1105,7 @@ class _Step3Schedule extends StatelessWidget {
               ),
             ] else ...[
               const SizedBox(height: 24),
-              const Text('Select Date', style: AppTextStyles.label),
+              Text('Select Date', style: AppTextStyles.label),
               const SizedBox(height: 12),
               DatePickerRow(
                 selectedDate: selectedDate,
@@ -1115,7 +1114,7 @@ class _Step3Schedule extends StatelessWidget {
 
               const SizedBox(height: 24),
               // Recurring frequency
-              const Text('Pickup Frequency', style: AppTextStyles.label),
+              Text('Pickup Frequency', style: AppTextStyles.label),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8, runSpacing: 8,
@@ -1157,7 +1156,7 @@ class _Step3Schedule extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-              const Text('Preferred Time', style: AppTextStyles.label),
+              Text('Preferred Time', style: AppTextStyles.label),
               const SizedBox(height: 12),
               Row(
                 children: _timePrefs.map((t) {
@@ -1308,7 +1307,7 @@ class _Step4AddressState extends State<_Step4Address> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Where is the pickup?', style: AppTextStyles.h3),
+            Text('Where is the pickup?', style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text('Confirm your location or enter address',
                 style: AppTextStyles.body.copyWith(
@@ -1325,7 +1324,7 @@ class _Step4AddressState extends State<_Step4Address> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Saved Addresses', style: AppTextStyles.label),
+                    Text('Saved Addresses', style: AppTextStyles.label),
                     const SizedBox(height: 8),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -1517,7 +1516,7 @@ class _Step4AddressState extends State<_Step4Address> {
             const SizedBox(height: 16),
 
             // Address display / manual override
-            const Text('Pickup Address', style: AppTextStyles.label),
+            Text('Pickup Address', style: AppTextStyles.label),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () async {
@@ -1570,7 +1569,7 @@ class _Step4AddressState extends State<_Step4Address> {
             ),
 
             const SizedBox(height: 16),
-            const Text('Gate / Access Notes (optional)',
+            Text('Gate / Access Notes (optional)',
                 style: AppTextStyles.label),
             const SizedBox(height: 8),
             AppTextField(
@@ -1646,7 +1645,7 @@ class _Step5Review extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Review & Pay', style: AppTextStyles.h3),
+            Text('Review & Pay', style: AppTextStyles.h3),
             const SizedBox(height: 6),
             Text('Double-check your booking details',
                 style: AppTextStyles.body.copyWith(
@@ -1731,7 +1730,7 @@ class _Step5Review extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total', style: AppTextStyles.h4),
+                      Text('Total', style: AppTextStyles.h4),
                       Text(Fmt.currency(total),
                           style: AppTextStyles.monoLg.copyWith(
                             color: AppColors.iceBlue,
@@ -1743,7 +1742,7 @@ class _Step5Review extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
-            const Text('Payment Method', style: AppTextStyles.label),
+            Text('Payment Method', style: AppTextStyles.label),
             const SizedBox(height: 12),
 
             // Payment method tiles

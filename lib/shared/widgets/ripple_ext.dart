@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Widget.ripple() extension — Rydr's home_extention.dart pattern.
 ///
 /// Adds a full-cover InkWell ripple effect over any widget without
 /// requiring the widget to be wrapped in a GestureDetector or InkWell.
 ///
-/// Rydr bugs fixed:
 ///  - Used deprecated MaterialStateProperty.all → WidgetStateProperty.all
 ///  - Empty Container() as TextButton child → replaced with SizedBox.shrink()
 ///  - No haptic feedback option → added [haptic] parameter

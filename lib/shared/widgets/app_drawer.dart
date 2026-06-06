@@ -20,7 +20,6 @@
 //   - Primaryfield → AppColors.border
 //   - Primaryred → AppColors.danger
 //   - social image assets → Phosphor brand icons (same 25×25 dimensions)
-//   - Rydr signOut() → AuthProvider.signOut() + Navigator.pushNamedAndRemoveUntil
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,24 +47,19 @@ class AppDrawer extends StatelessWidget {
     final initials = Fmt.initials(name);
 
     return Container(
-      // Rydr: width = MediaQuery.of(context).size.width / 1.5, margin.right:30
       width: MediaQuery.sizeOf(context).width / 1.5,
       margin: const EdgeInsets.only(right: 30),
       child: ClipRRect(
-        // Rydr: only(topRight:10, bottomRight:10)
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(10),
           bottomRight: Radius.circular(10),
         ),
-        // Rydr: Drawer widget — white background (Rydr default)
         child: Drawer(
           backgroundColor: Colors.white,
           child: SafeArea(
             child: Padding(
-              // Rydr: Padding(top: 70)
               padding: const EdgeInsets.only(top: 70),
               child: Column(
-                // Rydr: mainAxisAlignment: end — with Spacer() widgets below
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
 
@@ -95,11 +89,9 @@ class AppDrawer extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          // Rydr: Text(name, montserrat, 15, w600, Primarydark)
                           Text(name, style: AppTextStyles.drawerTitle,
                               textAlign: TextAlign.center),
                           const SizedBox(height: 15),
-                          // Rydr: Padding(h:50, Container(h:33, w:125, Primarydark, br:8, "Edit Profile"))
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 50),
                             child: GestureDetector(
@@ -111,7 +103,7 @@ class AppDrawer extends StatelessWidget {
                                   color: AppColors.midnightNavy,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text('Edit Profile',
@@ -127,7 +119,6 @@ class AppDrawer extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 10),
-                  // Rydr: DrawerDots(dashColor:Primaryfield, dashHeight:1.0, dashWidth:2.0)
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
@@ -137,7 +128,6 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // ── Menu items ─────────────────────────────────────────────
-                  // Rydr: Padding(left:25, Column([DrawerListTile...]))
                   Padding(
                     padding: const EdgeInsets.only(left: 25),
                     child: Column(
@@ -178,7 +168,6 @@ class AppDrawer extends StatelessWidget {
 
                   const Spacer(),
 
-                  // Rydr: DrawerDots(dashColor:Primaryfield, dashHeight:1.0, dashWidth:2.0)
                   const AppDotSeparator(
                     dashWidth: 2.0,
                     dashHeight: 1.0,
@@ -187,7 +176,6 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Rydr: Text("Share on:", montserrat, 10, w400, Primarydark)
                   Text(
                     'Share on:',
                     style: AppTextStyles.caption.copyWith(
@@ -198,7 +186,6 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Rydr: Row(center, [Container(25×25,whatsapp), XMargin(5), Container(25×25,twitter), XMargin(5), Container(25×25,facebook)])
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -238,7 +225,6 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Rydr: Padding(h:50, Container(h:40,w:137,Primaryred,br:8,"Log out").ripple(signOut))
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 50),
                     child: GestureDetector(
@@ -293,9 +279,7 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-// ── Drawer list tile — LITERAL Rydr DrawerListTile transplant ─────────────────
 //
-// Rydr: ListTile(onTap: onPressed, title: Text(title, montserrat, 12, w600, Primarydark))
 
 class _DrawerListTile extends StatelessWidget {
   const _DrawerListTile({required this.label, required this.onTap});

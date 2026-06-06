@@ -37,7 +37,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBR),
-        title: const Text('Cancel Plan', style: AppTextStyles.h4),
+        title: Text('Cancel Plan', style: AppTextStyles.h4),
         content: Text(
           'Are you sure you want to cancel your subscription? You can still book one-off pickups.',
           style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
@@ -359,11 +359,11 @@ class _PricingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(PhosphorIconsFill.wallet,
+              const Icon(PhosphorIconsFill.wallet,
                   color: AppColors.skyBlue, size: 18),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text('Pickup Pricing', style: AppTextStyles.h4),
             ],
           ),

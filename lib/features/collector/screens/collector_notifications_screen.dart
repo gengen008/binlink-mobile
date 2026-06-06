@@ -92,7 +92,7 @@ class _EmptyState extends StatelessWidget {
           Text('No notifications yet',
               style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 6),
-          const Text('Go online to start receiving job alerts.',
+          Text('Go online to start receiving job alerts.',
               style: AppTextStyles.caption),
         ],
       ),
@@ -100,7 +100,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ── Notification list with date chips (Rydr pattern) ─────────────────────────
 
 class _NotifList extends StatelessWidget {
   const _NotifList({required this.notifs, required this.onMarkRead});
@@ -132,7 +131,6 @@ class _NotifList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _buildRows();
-    // Rydr: FadeInUp(duration: 2000ms) wrapping the notification ListView
     return FadeInUp(
       duration: const Duration(milliseconds: 2000),
       child: ListView.builder(
