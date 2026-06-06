@@ -63,7 +63,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
+                      icon: Icon(PhosphorIconsRegular.arrowLeft,
                           color: AppColors.secondary),
                     ),
                     Expanded(
@@ -73,7 +73,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       onTap: _showAddSheet,
                       child: Container(
                         width: 38, height: 38,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.secondary,
                           shape: BoxShape.circle,
                         ),

@@ -60,8 +60,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     await context.read<HouseholdProvider>().cancelSubscription(id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Subscription cancelled'),
+      SnackBar(
+        content: const Text('Subscription cancelled'),
         backgroundColor: AppColors.primary,
       ),
     );
@@ -78,7 +78,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Payments & Plans'),
       body: prov.loading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
                     color: AppColors.primary, strokeWidth: 2),
               )
@@ -159,7 +159,7 @@ class _InfoBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(PhosphorIconsFill.info,
+          Icon(PhosphorIconsFill.info,
               color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
@@ -247,7 +247,7 @@ class _SubCard extends StatelessWidget {
                   borderRadius: AppRadius.smBR,
                   border: Border.all(color: AppColors.primary.withAlpha(50)),
                 ),
-                child: const Icon(PhosphorIconsFill.recycle,
+                child: Icon(PhosphorIconsFill.recycle,
                     color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),

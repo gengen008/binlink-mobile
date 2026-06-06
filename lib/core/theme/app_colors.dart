@@ -1,63 +1,60 @@
 import 'package:flutter/material.dart';
+import '../config/app_flavor.dart';
 
-/// BinLink Eco — Design System Color Tokens
-///
-/// Bolt/Uber-inspired neutral system with BinLink green as the sole CTA color.
-/// White surfaces, near-black text, slate neutrals, green for all interactive states.
+/// BinLink "Base" Design System — Color Tokens
+/// 
+/// Updated for V3: Flavor-aware color palette.
 class AppColors {
   AppColors._();
 
-  // ── Brand ──────────────────────────────────────────────────────────────────
-  static const Color primary      = Color(0xFF16A34A); // BinLink green — all CTAs
-  static const Color primaryLight = Color(0xFFDCFCE7); // light green tint (chips, badges)
-  static const Color primaryMid   = Color(0xFF22C55E); // hover / active green
-  static const Color secondary    = Color(0xFF111827); // near-black charcoal (text, icons)
-  static const Color white        = Color(0xFFFFFFFF);
+  // ── Brand Identity ─────────────────────────────────────────────────────────
+  static const Color navy         = Color(0xFF021024); // Darkest background
+  static const Color deepOcean    = Color(0xFF052659); // Secondary surface
+  static const Color iceBlue      = Color(0xFFC1E8FF); // Highlights / chips
+  
+  // ── Flavor Colors ──────────────────────────────────────────────────────────
+  static const Color steelBlue    = Color(0xFF5483B3); // Household Primary
+  static const Color skyBlue      = Color(0xFF7DA0CA); // Household Secondary
+  
+  static const Color collectorPrimary = Color(0xFFF59E0B); // Collector Primary (Amber)
+  static const Color collectorAccent  = Color(0xFFD97706); // Collector Darker Amber
 
-  // ── Semantic ───────────────────────────────────────────────────────────────
-  static const Color success = Color(0xFF16A34A);
+  // ── Dynamic Primary (Flavor Based) ────────────────────────────────────────
+  static Color get primary => FlavorConfig.isHousehold ? steelBlue : collectorPrimary;
+  static Color get secondary => FlavorConfig.isHousehold ? skyBlue : collectorAccent;
+
+  // ── Surface & Neutral ──────────────────────────────────────────────────────
+  static const Color background   = Color(0xFFFFFFFF); // Pure White
+  static const Color surface      = Color(0xFFF6F6F6); // Light Gray Surface
+  static const Color border       = Color(0xFFE5E7EB); // Subtle Borders
+  static const Color divider      = Color(0xFFEEEEEE);
+
+  // ── Text ──────────────────────────────────────────────────────────────────
+  static const Color textPrimary   = Color(0xFF111111); // Near-Black
+  static const Color textSecondary = Color(0xFF6B7280); // Gray
+  static const Color textOnDark    = Color(0xFFFFFFFF);
+
+  // ── Status & States ───────────────────────────────────────────────────────
+  static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger  = Color(0xFFEF4444);
-  static const Color muted   = Color(0xFF64748B);
+  static const Color info    = Color(0xFF3B82F6);
+  static const Color white   = Color(0xFFFFFFFF);
 
-  // ── Surface hierarchy (Uber/Bolt neutral) ──────────────────────────────────
-  static const Color surface      = Color(0xFFF6F7F8); // page / scaffold bg
-  static const Color card         = Color(0xFFFFFFFF); // card / sheet bg
-  static const Color cardElevated = Color(0xFFF9FAFB); // subtle elevated card
-  static const Color border       = Color(0xFFE5E7EB); // divider / outline (Grey 200)
-  static const Color borderActive = primary;            // focus ring
+  // ── Semantic Aliases ──────────────────────────────────────────────────────
+  static Color get primaryLight     => primary.withAlpha(30);
+  static const Color textMuted        = Color(0xFF6B7280);
+  static const Color card             = background;
+  static const Color cardElevated     = Color(0xFFF9FAFB);
+  static const Color appBarBg         = background;
+  static const Color appBarAction     = surface;
+  static const Color fieldFill        = surface;
+  static const Color fieldFillFocused = background;
+  static const Color fieldHint        = textSecondary;
+  static const Color sheetHandle      = Color(0xFFD1D5DB);
+  static Color get borderActive       => primary;
+  static const Color muted            = textSecondary;
 
-  // ── AppBar / Navigation ────────────────────────────────────────────────────
-  static const Color appBarBg     = card;
-  static const Color appBarAction = surface;
-  static const Color navBarBg     = card;
-
-  // ── Drawer ─────────────────────────────────────────────────────────────────
-  static const Color drawerBg    = secondary;
-  static const Color drawerItem  = Color(0xFF9CA3AF); // Grey 400
-  static const Color drawerMuted = Color(0xFF6B7280); // Grey 500
-
-  // ── Form fields ───────────────────────────────────────────────────────────
-  static const Color fieldFill        = Color(0xFFF3F4F6); // Grey 100
-  static const Color fieldFillFocused = Color(0xFFFFFFFF);
-  static const Color fieldHint        = Color(0xFF9CA3AF);
-
-  // ── Sheets ─────────────────────────────────────────────────────────────────
-  static const Color sheetBg     = card;
-  static const Color sheetHandle = Color(0xFFD1D5DB); // Grey 300
-
-  // ── Scrim ─────────────────────────────────────────────────────────────────
-  static const Color scrim = Color(0x99000000);
-
-  // ── Text ─────────────────────────────────────────────────────────────────
-  static const Color textPrimary   = secondary;           // #111827 near-black
-  static const Color textSecondary = Color(0xFF4B5563);   // Grey 600
-  static const Color textBody      = secondary;
-  static const Color textMuted     = Color(0xFF6B7280);   // Grey 500
-  static const Color textOnDark    = Color(0xFFFFFFFF);
-  static const Color textLink      = primary;             // green links
-
-  // ── Status chip ───────────────────────────────────────────────────────────
   static Color statusColor(String status) {
     switch (status.toUpperCase()) {
       case 'PENDING':
@@ -65,7 +62,7 @@ class AppColors {
         return warning;
       case 'ASSIGNED':
       case 'ACCEPTED':
-        return primary;
+        return success;
       case 'EN_ROUTE':
       case 'ON_THE_WAY':
         return warning;
@@ -77,14 +74,7 @@ class AppColors {
       case 'CANCELLED':
         return danger;
       default:
-        return const Color(0xFF9CA3AF);
+        return textSecondary;
     }
   }
-
-  // ── Gradients (Minimal use only) ──────────────────────────────────────────
-  static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primary, primaryMid],
-  );
 }

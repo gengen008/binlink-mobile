@@ -136,7 +136,7 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadius.fieldBR,
-              borderSide: const BorderSide(color: AppColors.borderActive, width: 1.5),
+              borderSide: BorderSide(color: AppColors.borderActive, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: AppRadius.fieldBR,
@@ -194,7 +194,7 @@ class OtpField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.fieldBR,
-          borderSide: const BorderSide(color: AppColors.borderActive, width: 1.5),
+          borderSide: BorderSide(color: AppColors.borderActive, width: 1.5),
         ),
       ),
       onChanged: (v) {

@@ -136,7 +136,7 @@ class _ChatSheetState extends State<ChatSheet> {
                         color: AppColors.primary.withAlpha(25),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(PhosphorIconsFill.chatCircle,
+                      child: Icon(PhosphorIconsFill.chatCircle,
                           color: AppColors.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
@@ -179,7 +179,7 @@ class _ChatSheetState extends State<ChatSheet> {
           // Messages
           Flexible(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
                         color: AppColors.primary))
                 : _messages.isEmpty
@@ -393,8 +393,8 @@ class _ChatInput extends StatelessWidget {
                       ],
               ),
               child: sending
-                  ? const Padding(
-                      padding: EdgeInsets.all(13),
+                  ? Padding(
+                      padding: const EdgeInsets.all(13),
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: AppColors.primary),

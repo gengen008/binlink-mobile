@@ -242,13 +242,13 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(color: Colors.white, borderRadius: AppRadius.mdBR, border: Border.all(color: AppColors.border)),
       child: Column(
         children: [
-          SvgPicture.asset(asset, height: 80),
-          const SizedBox(height: 16),
-          Text(label, style: AppTextStyles.meta),
+          SvgPicture.asset(asset, height: 160),
+          const SizedBox(height: 24),
+          Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
         ],
       ),
     );

@@ -1,0 +1,38 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Map Background -->
+  <rect width="300" height="300" rx="40" fill="#F3F4F6"/>
+  <path d="M0 60H300M0 120H300M0 180H300M0 240H300" stroke="#E5E7EB" stroke-width="1.5"/>
+  <path d="M60 0V300M120 0V300M180 0V300M240 0V300" stroke="#E5E7EB" stroke-width="1.5"/>
+  
+  <!-- Path -->
+  <path d="M60 240H120V120H240" stroke="#16A34A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 8">
+    <animate attributeName="stroke-dashoffset" from="16" to="0" dur="2s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Pickup Pin (House) -->
+  <g transform="translate(45, 225)">
+    <path d="M0 15C0 15 15 0 15 -10C15 -18 8 -25 0 -25C-8 -25 -15 -18 -15 -10C-15 0 0 15 0 15Z" fill="#111827" stroke="white" stroke-width="2"/>
+    <rect x="-6" y="-14" width="12" height="10" fill="white"/>
+  </g>
+  
+  <!-- Moving Collector (Truck Dot) -->
+  <g>
+    <circle cx="0" cy="0" r="12" fill="#16A34A">
+      <animateMotion path="M60 240H120V120H240" dur="6s" repeatCount="indefinite" rotate="auto" />
+    </circle>
+    <circle cx="0" cy="0" r="20" stroke="#16A34A" stroke-width="2" opacity="0.3">
+      <animateMotion path="M60 240H120V120H240" dur="6s" repeatCount="indefinite" rotate="auto" />
+      <animate attributeName="r" values="12;25;12" dur="1.5s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- Phone Inset -->
+  <g transform="translate(200, 20)">
+    <rect width="60" height="100" rx="8" fill="#111827"/>
+    <rect x="4" y="8" width="52" height="84" rx="4" fill="white"/>
+    <circle cx="30" cy="40" r="15" fill="#DCFCE7"/>
+    <path d="M25 40L28 45L35 35" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="15" y="65" width="30" height="4" rx="2" fill="#E5E7EB"/>
+    <rect x="15" y="75" width="20" height="4" rx="2" fill="#E5E7EB"/>
+  </g>
+</svg>

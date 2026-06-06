@@ -19,9 +19,12 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="false">
 
+<meta-data
+    android:name="com.google.android.geo.API_KEY"
+    android:value="AIzaSyDcWdZ1Uoz8Zda1cG_fofOwyqcQ3U0lQpA" />
+
 <activity
-            android:name=".MainActivity"
-            android:exported="true"
+    android:name=".MainActivity"            android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"

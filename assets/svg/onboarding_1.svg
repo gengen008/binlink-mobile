@@ -1,0 +1,37 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky/Background -->
+  <circle cx="150" cy="150" r="140" fill="#DCFCE7" fill-opacity="0.5"/>
+  
+  <!-- Street -->
+  <path d="M0 220L300 180V240L0 280V220Z" fill="#E5E7EB"/>
+  <path d="M0 225L300 185" stroke="white" stroke-width="2" stroke-dasharray="10 10"/>
+  
+  <!-- House (Isometric) -->
+  <path d="M60 180V120L120 100V160L60 180Z" fill="#F9FAFB" stroke="#111827" stroke-width="2"/>
+  <path d="M120 100L180 120V180L120 160V100Z" fill="#F3F4F6" stroke="#111827" stroke-width="2"/>
+  <path d="M60 120L120 100L180 120L120 140L60 120Z" fill="#111827"/>
+  
+  <!-- Door -->
+  <path d="M140 145V172L160 178V151L140 145Z" fill="#16A34A"/>
+  
+  <!-- Bin at gate -->
+  <path d="M210 200V220L230 215V195L210 200Z" fill="#16A34A" stroke="#111827" stroke-width="1.5"/>
+  <path d="M210 200L230 195L235 200L215 205L210 200Z" fill="#111827"/>
+  
+  <!-- Hand and Phone -->
+  <g transform="translate(180, 100) rotate(15)">
+    <!-- Arm -->
+    <path d="M20 120C20 120 10 100 0 80" stroke="#FDE68A" stroke-width="12" stroke-linecap="round"/>
+    <!-- Phone -->
+    <rect x="-15" y="-30" width="40" height="80" rx="6" fill="#111827"/>
+    <rect x="-11" y="-24" width="32" height="68" rx="4" fill="#FFFFFF"/>
+    <!-- App UI Mock -->
+    <rect x="-6" y="-15" width="22" height="6" rx="1" fill="#16A34A"/>
+    <rect x="-6" y="-5" width="22" height="30" rx="2" fill="#F3F4F6"/>
+    
+    <!-- Glow -->
+    <circle cx="5" cy="10" r="40" fill="#16A34A" fill-opacity="0.15">
+      <animate attributeName="r" values="35;45;35" dur="3s" repeatCount="indefinite" />
+    </circle>
+  </g>
+</svg>

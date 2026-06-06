@@ -93,7 +93,7 @@ class _CollectorEditProfileScreenState
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft,
+                      icon: Icon(PhosphorIconsRegular.arrowLeft,
                           color: AppColors.secondary),
                     ),
                     Expanded(

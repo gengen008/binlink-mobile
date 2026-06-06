@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/formatters.dart';
@@ -55,7 +57,13 @@ class CollectorProfileTab extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.fullName ?? 'Collector', style: AppTextStyles.section),
+                        Row(
+                          children: [
+                            Text(user?.fullName ?? 'Collector', style: AppTextStyles.section),
+                            const SizedBox(width: 4),
+                            SvgPicture.asset(AppAssets.verifiedBadge, width: 16, height: 16),
+                          ],
+                        ),
                         Text(user?.email ?? '', style: AppTextStyles.meta),
                       ],
                     ),

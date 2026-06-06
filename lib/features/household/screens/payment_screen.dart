@@ -151,7 +151,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                     ),
                     child: Row(
                       children: [
-                        const Icon(PhosphorIconsFill.money,
+                        Icon(PhosphorIconsFill.money,
                             color: AppColors.primary, size: 28),
                         const SizedBox(width: 16),
                         Expanded(
@@ -245,7 +245,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                         shape: BoxShape.circle,
                         color: AppColors.primary.withAlpha(20),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           PhosphorIconsFill.checkCircle,
                           color: AppColors.primary,

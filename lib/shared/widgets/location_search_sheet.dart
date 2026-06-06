@@ -209,9 +209,9 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12),
                     child: _searching
-                        ? const SizedBox(width: 18, height: 18,
+                        ? SizedBox(width: 18, height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
-                        : const Icon(PhosphorIconsRegular.magnifyingGlass,
+                        : Icon(PhosphorIconsRegular.magnifyingGlass,
                             color: AppColors.primary, size: 18),
                   ),
                   suffixIcon: _ctrl.text.isNotEmpty
@@ -252,10 +252,10 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                 child: Row(
                   children: [
                     _locating
-                        ? const SizedBox(width: 20, height: 20,
+                        ? SizedBox(width: 20, height: 20,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: AppColors.primary))
-                        : const Icon(PhosphorIconsFill.crosshair,
+                        : Icon(PhosphorIconsFill.crosshair,
                             color: AppColors.primary, size: 20),
                     const SizedBox(width: 12),
                     Column(
@@ -317,7 +317,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: const Icon(PhosphorIconsRegular.mapPin,
+                          child: Icon(PhosphorIconsRegular.mapPin,
                               color: AppColors.primary, size: 18),
                         ),
                         const SizedBox(width: 12),

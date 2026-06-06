@@ -1,21 +1,18 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:image_picker/image_picker.dart';
 import '../providers/collector_provider.dart';
-import '../../../core/routing/routing_service.dart';
-import '../../../core/services/location_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/utils/map_style.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/chat_sheet.dart';
+import '../../../shared/widgets/binlink_map.dart';
 
 class ActivePickupScreen extends StatefulWidget {
   const ActivePickupScreen({super.key, required this.booking});
@@ -28,90 +25,21 @@ class ActivePickupScreen extends StatefulWidget {
 class _ActivePickupScreenState extends State<ActivePickupScreen> {
   late String _currentStatus;
   final _weightCtrl = TextEditingController();
-  MapLibreMapController? _mapCtrl;
-  StreamSubscription? _locationSub;
-  Circle? _collectorDot;
-  Line? _routeLine;
-  String? _etaLabel;
-  DateTime? _lastRouteFetch;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentStatus = widget.booking['status'] as String? ?? 'ACCEPTED';
-  }
-
-  @override
-  void dispose() {
-    _locationSub?.cancel();
-    _weightCtrl.dispose();
-    _mapCtrl?.dispose();
-    super.dispose();
-  }
-
+  final _picker = ImagePicker();
+  
+  String? _beforePhoto;
+  String? _afterPhoto;
+  bool _uploading = false;
+  
   LatLng get _pickupPos => LatLng(
         (widget.booking['pickupLat'] as num?)?.toDouble() ?? 5.6037,
         (widget.booking['pickupLng'] as num?)?.toDouble() ?? -0.1870,
       );
 
-  Future<void> _onMapStyleLoaded() async {
-    if (_mapCtrl == null) return;
-    await _mapCtrl!.addCircle(CircleOptions(
-      geometry: _pickupPos,
-      circleRadius: 18,
-      circleColor: '#16A34A',
-      circleStrokeWidth: 3,
-      circleStrokeColor: '#FFFFFF',
-    ));
-    _startLocationStream();
-  }
-
-  void _startLocationStream() {
-    _locationSub = LocationService.getPositionStream().listen((pos) {
-      final latLng = LatLng(pos.latitude, pos.longitude);
-      _updateMap(latLng);
-    });
-  }
-
-  void _updateMap(LatLng pos) async {
-    if (_mapCtrl == null) return;
-    if (_collectorDot == null) {
-      _collectorDot = await _mapCtrl!.addCircle(CircleOptions(
-        geometry: pos,
-        circleRadius: 10,
-        circleColor: '#111827',
-        circleStrokeWidth: 2,
-        circleStrokeColor: '#FFFFFF',
-      ));
-      _mapCtrl!.animateCamera(CameraUpdate.newLatLngZoom(pos, 15));
-    } else {
-      _mapCtrl!.updateCircle(_collectorDot!, CircleOptions(geometry: pos));
-    }
-    _maybeRefreshRoute(pos);
-  }
-
-  Future<void> _maybeRefreshRoute(LatLng pos) async {
-    if (_mapCtrl == null) return;
-    final now = DateTime.now();
-    if (_lastRouteFetch != null && now.difference(_lastRouteFetch!).inSeconds < 30) return;
-    _lastRouteFetch = now;
-
-    final res = await RoutingService.getRoute(pos, _pickupPos);
-    if (!mounted || _mapCtrl == null) return;
-
-    if (_routeLine == null) {
-      _routeLine = await _mapCtrl!.addLine(LineOptions(
-        geometry: res.points,
-        lineColor: '#16A34A',
-        lineWidth: 4,
-        lineOpacity: 0.7,
-      ));
-    } else {
-      _mapCtrl!.updateLine(_routeLine!, LineOptions(geometry: res.points));
-    }
-    setState(() {
-      _etaLabel = res.etaLabel;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _currentStatus = widget.booking['status'] as String? ?? 'ACCEPTED';
   }
 
   @override
@@ -123,51 +51,64 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // ── Map ───────────────────────────────────────────────────────────
           Positioned.fill(
-            child: MapLibreMap(
-              styleString: kMapStyleUrl,
-              initialCameraPosition: CameraPosition(target: _pickupPos, zoom: 14),
-              onMapCreated: (c) => _mapCtrl = c,
-              onStyleLoadedCallback: _onMapStyleLoaded,
+            child: BinLinkMap(
+              initialPosition: _pickupPos,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('pickup'),
+                  position: _pickupPos,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                ),
+              },
             ),
           ),
 
-          // ── Top Header ──
+          // ── Header ──
           Positioned(
-            top: 0, left: 0, right: 0,
-            child: SafeArea(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.mdBR,
-                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            right: 16,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context), 
+                    icon: const Icon(PhosphorIconsRegular.arrowLeft)
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(PhosphorIconsRegular.arrowLeft)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Active Pickup', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
-                          Text(address, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadius.mdBR,
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                     ),
-                    _etaLabel != null 
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: AppColors.secondary, borderRadius: AppRadius.xsBR),
-                          child: Text(_etaLabel!, style: AppTextStyles.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                        )
-                      : const SizedBox.shrink(),
-                  ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Pickup Detail', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+                        Text(address, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => _showExceptionSheet(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
+                    child: const Icon(PhosphorIconsFill.warningCircle, color: Colors.white, size: 24),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -188,8 +129,8 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: AppColors.primaryLight,
-                        child: Text(Fmt.initials(hhName), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary)),
+                        backgroundColor: AppColors.surface,
+                        child: Text(Fmt.initials(hhName)),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -203,11 +144,11 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                       ),
                       IconButton(
                         onPressed: () => showChatSheet(context, bookingId: widget.booking['id'], myRole: 'COLLECTOR'),
-                        icon: const Icon(PhosphorIconsFill.chatCircle, color: AppColors.primary),
+                        icon: Icon(PhosphorIconsFill.chatCircle, color: AppColors.primary),
                       ),
                       IconButton(
                         onPressed: () => launchUrl(Uri.parse('tel:${widget.booking['household']?['phone'] ?? ''}')),
-                        icon: const Icon(PhosphorIconsFill.phone, color: AppColors.primary),
+                        icon: Icon(PhosphorIconsFill.phone, color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -228,28 +169,147 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                         setState(() => _currentStatus = 'ARRIVED');
                       },
                     ),
-                  if (_currentStatus == 'ARRIVED') ...[
-                    AppTextField(
-                      controller: _weightCtrl,
-                      label: 'Actual Weight (kg)',
-                      hint: 'Enter collected weight',
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
-                    AppButton(
-                      label: 'Complete Pickup',
-                      onPressed: () async {
-                        final w = double.tryParse(_weightCtrl.text) ?? 0;
-                        if (w <= 0) return;
-                        await prov.updateStatus(widget.booking['id'], 'complete', actualWeightKg: w);
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                      },
-                    ),
+                  if (_currentStatus == 'ARRIVED' || _currentStatus == 'COLLECTING') ...[
+                    if (_beforePhoto == null)
+                      AppButton(
+                        label: _uploading ? 'Uploading...' : 'Take Before Photo',
+                        icon: const Icon(PhosphorIconsFill.camera),
+                        onPressed: _uploading ? null : () => _takePhoto('before'),
+                      )
+                    else if (_currentStatus == 'ARRIVED')
+                      AppButton(
+                        label: 'Start Collecting',
+                        onPressed: () async {
+                          await prov.updateStatus(widget.booking['id'], 'collecting');
+                          setState(() => _currentStatus = 'COLLECTING');
+                        },
+                      )
+                    else if (_afterPhoto == null)
+                      AppButton(
+                        label: _uploading ? 'Uploading...' : 'Take After Photo',
+                        icon: const Icon(PhosphorIconsFill.camera),
+                        onPressed: _uploading ? null : () => _takePhoto('after'),
+                      )
+                    else ...[
+                      AppTextField(
+                        controller: _weightCtrl,
+                        label: 'Actual Weight (kg)',
+                        hint: 'Enter collected weight',
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      AppButton(
+                        label: 'Complete Pickup',
+                        onPressed: () async {
+                          final w = double.tryParse(_weightCtrl.text) ?? 0;
+                          if (w <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter valid weight'))
+                            );
+                            return;
+                          }
+                          await prov.updateStatus(widget.booking['id'], 'complete', actualWeightKg: w);
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
                   ],
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _takePhoto(String type) async {
+    final prov = context.read<CollectorProvider>();
+    final file = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+    if (file == null) return;
+
+    setState(() => _uploading = true);
+    final url = await prov.uploadPhoto(widget.booking['id'], type, file.path);
+    setState(() {
+      _uploading = false;
+      if (url != null) {
+        if (type == 'before') _beforePhoto = url;
+        if (type == 'after') _afterPhoto = url;
+      }
+    });
+  }
+
+  void _showExceptionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _ExceptionSheet(
+        onReport: (reason, note) async {
+          await context.read<CollectorProvider>().reportException(widget.booking['id'], reason, note);
+          if (context.mounted) {
+            Navigator.pop(context);
+            Navigator.pop(context); // Exit active pickup screen
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _ExceptionSheet extends StatefulWidget {
+  const _ExceptionSheet({required this.onReport});
+  final Function(String, String?) onReport;
+
+  @override
+  State<_ExceptionSheet> createState() => _ExceptionSheetState();
+}
+
+class _ExceptionSheetState extends State<_ExceptionSheet> {
+  String? _reason;
+  final _noteCtrl = TextEditingController();
+
+  final _reasons = [
+    {'label': 'Gate Locked', 'value': 'GATE_LOCKED'},
+    {'label': 'Bin Not Ready', 'value': 'BIN_NOT_READY'},
+    {'label': 'Overfilled Load', 'value': 'OVERFILLED'},
+    {'label': 'Hazardous Material', 'value': 'HAZARDOUS'},
+    {'label': 'No Access', 'value': 'NO_ACCESS'},
+    {'label': 'Other', 'value': 'OTHER'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Report Exception', style: AppTextStyles.title),
+          const SizedBox(height: 8),
+          Text('Why are you unable to complete this pickup?', style: AppTextStyles.meta),
+          const SizedBox(height: 24),
+          ..._reasons.map((r) => RadioListTile<String>(
+            title: Text(r['label']!, style: AppTextStyles.bodyMedium),
+            value: r['value']!,
+            groupValue: _reason,
+            onChanged: (v) => setState(() => _reason = v),
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppColors.danger,
+          )),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _noteCtrl,
+            label: 'Additional Note (Optional)',
+            hint: 'Describe the issue...',
+            maxLines: 2,
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            label: 'Submit Report',
+            variant: AppButtonVariant.danger,
+            onPressed: _reason == null ? null : () => widget.onReport(_reason!, _noteCtrl.text),
           ),
         ],
       ),

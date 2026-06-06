@@ -27,7 +27,7 @@ class WasteCategory {
   final String desc;
 }
 
-const List<WasteCategory> kCategories = [
+final List<WasteCategory> kCategories = [
   WasteCategory(
     key: 'HOUSEHOLD',
     label: 'Household',
@@ -268,7 +268,7 @@ class _BinOption extends StatelessWidget {
                 ),
               ),
               if (isSelected)
-                const Icon(PhosphorIconsFill.checkCircle, color: AppColors.primary),
+                Icon(PhosphorIconsFill.checkCircle, color: AppColors.primary),
             ],
           ),
         ),
@@ -491,7 +491,7 @@ class StepAddress extends StatelessWidget {
               onPressed: onLocate,
               icon: locating 
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(PhosphorIconsRegular.crosshair, color: AppColors.primary),
+                : Icon(PhosphorIconsRegular.crosshair, color: AppColors.primary),
             ),
           ),
           const SizedBox(height: 16),

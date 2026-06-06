@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Bolt/Uber-style sonar animation used when a booking is in PENDING/SEARCHING state.
 ///
@@ -10,10 +11,10 @@ class SearchingRadarWidget extends StatefulWidget {
   const SearchingRadarWidget({
     super.key,
     this.radius       = 70.0,
-    this.ringColor    = const Color(0xFF16A34A),
+    Color? ringColor,
     this.strokeWidth  = 2.0,
     this.duration     = const Duration(milliseconds: 2000),
-  });
+  }) : ringColor = ringColor ?? AppColors.steelBlue;
 
   final double radius;
   final Color  ringColor;

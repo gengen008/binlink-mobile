@@ -282,7 +282,22 @@ class CollectorProvider extends ChangeNotifier {
     }
   }
 
-  // ── Exception / photo reporting stubs ──────────────────────────────────────
+  // ── Exception / photo reporting ───────────────────────────────────────────
+  Future<String?> uploadPhoto(String bookingId, String type, String filePath) async {
+    try {
+      final fileName = filePath.split('/').last;
+      final formData = FormData.fromMap({
+        'type': type,
+        'photo': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+
+      final res = await ApiClient.upload('/api/bookings/$bookingId/photos', formData);
+      return res.data['data']?['url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> reportException(
       String bookingId, String reason, String? note) async {
     try {

@@ -1,4 +1,4 @@
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Route result returned by any routing provider.
 class RouteResult {

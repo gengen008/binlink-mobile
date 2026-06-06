@@ -14,6 +14,12 @@ class AppAssets {
   // ── Avatars ───────────────────────────────────────────────────────────────
   static const userAvatar  = 'assets/images/defaultavatar.png';
 
+  // ── Onboarding ──────────────────────────────────────────────────────────
+  static const onboarding1 = 'assets/svg/onboarding_1.svg';
+  static const onboarding2 = 'assets/svg/onboarding_2.svg';
+  static const onboarding3 = 'assets/svg/onboarding_3.svg';
+  static const onboarding4 = 'assets/svg/onboarding_4.svg';
+
   // ── Map markers ───────────────────────────────────────────────────────────
   static const pickupMarker    = 'assets/svg/pickup_marker.svg';
   static const collectorMarker = 'assets/svg/collector_marker.svg';

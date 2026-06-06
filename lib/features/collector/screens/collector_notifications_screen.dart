@@ -57,7 +57,7 @@ class _CollectorNotificationsScreenState
       backgroundColor: Colors.white,
       appBar: const AppScaffoldBar(title: 'Notifications'),
       body: _loading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
                   color: AppColors.primary, strokeWidth: 2,
                 ),

@@ -122,7 +122,7 @@ class _BackButton extends StatelessWidget {
           color: AppColors.appBarAction,
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
         ),
-        child: const Center(
+        child: Center(
           child: Icon(
             PhosphorIconsRegular.arrowLeft,
             size: 18,
@@ -147,9 +147,9 @@ class DrawerMenuButton extends StatelessWidget {
       child: Container(
         width: 45,
         height: 45,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.primary,
-          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          borderRadius: const BorderRadius.all(Radius.circular(8.0)),
         ),
         child: Center(
           child: SvgPicture.asset(
