@@ -38,21 +38,16 @@ All assets used in this project are listed below with source, license, and date.
 | File | Source | License | Notes |
 |------|--------|---------|-------|
 | `google.svg` | Google Brand Resources | [Google Brand Permissions](https://about.google/brand-resource-center/) | Use only for "Sign in with Google" button per guidelines |
-| `globe-africa.svg` | BinLink internal / custom | Proprietary | App splash / onboarding illustration |
+| `binlink_logo.svg` | BinLink internal | Proprietary | Brand mark — bin icon + wordmark |
+| `pickup_marker.svg` | BinLink internal | Proprietary | Map marker for pickup location |
+| `collector_marker.svg` | BinLink internal | Proprietary | Map marker for collector position |
+| `empty_pickups.svg` | BinLink internal | Proprietary | Empty state for pickup history |
+| `empty_notifications.svg` | BinLink internal | Proprietary | Empty state for notifications |
+| `empty_earnings.svg` | BinLink internal | Proprietary | Empty state for earnings screen |
+| `globe-africa.svg` | BinLink internal / custom | Proprietary | Auth screen illustration |
 | `locate.svg` | BinLink internal / custom | Proprietary | Map locate-me button |
 | `drawer.svg` | BinLink internal / custom | Proprietary | Sidebar menu icon |
-| `stopwatch.svg` | BinLink internal / custom | Proprietary | Timer illustration |
 | `cash.svg` | BinLink internal / custom | Proprietary | Payment / wallet illustration |
-| `home.svg` | BinLink internal / custom | Proprietary | Home address type icon |
-| `shop.svg` | BinLink internal / custom | Proprietary | Shop address type icon |
-| `hospital.svg` | BinLink internal / custom | Proprietary | Hospital address type icon |
-| `school.svg` | BinLink internal / custom | Proprietary | School address type icon |
-| `house.svg` | BinLink internal / custom | Proprietary | House illustration |
-| `bag.svg` | BinLink internal / custom | Proprietary | Waste bag illustration |
-| `bank.svg` | BinLink internal / custom | Proprietary | Bank address type icon |
-| `call.svg` | BinLink internal / custom | Proprietary | Call action icon |
-| `card.svg` | BinLink internal / custom | Proprietary | Payment card illustration |
-| `chat.svg` | BinLink internal / custom | Proprietary | Chat / message illustration |
 | `envelope.svg` | BinLink internal / custom | Proprietary | Email / notification illustration |
 
 ---
@@ -65,6 +60,17 @@ All assets used in this project are listed below with source, license, and date.
 | `assets/images/main.jpg` | Unused background image |
 | `assets/images/Citybackground.jpg` | Unused background image |
 | `assets/jsons/dribbble.json` | Template/placeholder Lottie animation not used in production |
+| `assets/svg/bag.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/bank.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/call.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/card.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/chat.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/home.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/hospital.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/house.svg` | Unused + contained base64-embedded PNG violating SVG purity rule |
+| `assets/svg/school.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/shop.svg` | Unused — no code reference, no pubspec entry |
+| `assets/svg/stopwatch.svg` | Unused — no code reference, no pubspec entry |
 
 ---
 
