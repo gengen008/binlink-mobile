@@ -28,8 +28,6 @@ All assets used in this project are listed below with source, license, and date.
 | `app_icon.png` | BinLink internal | Proprietary | App launcher icon — replace with official brand asset |
 | `logo.png` | BinLink internal | Proprietary | In-app logo — replace with official brand asset |
 | `defaultavatar.png` | BinLink internal | Proprietary | Fallback user avatar |
-| `destination.png` | BinLink internal | Proprietary | Map destination marker |
-| `house.png` | BinLink internal | Proprietary | Map home-location marker |
 
 ---
 
@@ -71,6 +69,8 @@ All assets used in this project are listed below with source, license, and date.
 | `assets/svg/school.svg` | Unused — no code reference, no pubspec entry |
 | `assets/svg/shop.svg` | Unused — no code reference, no pubspec entry |
 | `assets/svg/stopwatch.svg` | Unused — no code reference, no pubspec entry |
+| `assets/images/destination.png` | Unused ride-hailing era asset, no code reference |
+| `assets/images/house.png` | Unused ride-hailing era asset, no code reference |
 
 ---
 
