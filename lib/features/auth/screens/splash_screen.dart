@@ -1,9 +1,8 @@
 // Trippo exact: Scaffold(dark) > centered bold app name on dark bg.
-// BinLink: secondary (#0F172A) scaffold + logo circle + name + Lottie eco animation.
+// BinLink: secondary (#0F172A) scaffold + logo circle + name + pulsing eco ring.
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
@@ -19,11 +18,27 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseCtrl;
+  late final Animation<double> _pulse;
   @override
   void initState() {
     super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
     _initApp();
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _initApp() async {
@@ -94,14 +109,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
           const Spacer(),
 
-          // Lottie eco animation at bottom
+          // Pulsing eco ring — indicates loading without a broken Lottie
           FadeInUp(
             duration: const Duration(milliseconds: 600),
-            child: Lottie.asset(
-              RydrAssets.lottieSplash,
-              width: 80,
-              height: 80,
-              fit: BoxFit.contain,
+            child: AnimatedBuilder(
+              animation: _pulse,
+              builder: (_, __) => Opacity(
+                opacity: _pulse.value,
+                child: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.steelBlue,
+                      width: 2.5,
+                    ),
+                  ),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.steelBlue,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
 

@@ -11,6 +11,7 @@ class SocketService {
   SocketService._();
 
   static sio.Socket? _socket;
+  static Timer? _heartbeatTimer;
 
   // ── Health stream ─────────────────────────────────────────────────────────
   static final _healthController =
@@ -77,6 +78,7 @@ class SocketService {
 
   // ── Disconnect ────────────────────────────────────────────────────────────
   static void disconnect() {
+    _stopHeartbeat();
     try {
       _socket?.disconnect();
     } catch (_) {}
@@ -130,15 +132,34 @@ class SocketService {
   }
 
   // ── Collector controls ────────────────────────────────────────────────────
-  static void goOnline([Function(dynamic)? ack]) =>
-      emit('collector:go-online', null, ack);
+  static void goOnline([Function(dynamic)? ack]) {
+    emit('collector:go-online', null, ack);
+    _startHeartbeat();
+  }
 
-  static void goOffline([Function(dynamic)? ack]) =>
-      emit('collector:go-offline', null, ack);
+  static void goOffline([Function(dynamic)? ack]) {
+    _stopHeartbeat();
+    emit('collector:go-offline', null, ack);
+  }
 
   /// Broadcast collector GPS position. Debounced on server side (10m min move).
   static void broadcastLocation(String bookingId, double lat, double lng) {
     emit('collector:location', {'bookingId': bookingId, 'lat': lat, 'lng': lng});
+  }
+
+  // ── Heartbeat ─────────────────────────────────────────────────────────────
+  static void _startHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_socket?.connected == true) {
+        _socket!.emit('collector:heartbeat', {});
+      }
+    });
+  }
+
+  static void _stopHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────

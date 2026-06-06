@@ -65,6 +65,17 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     ));
   }
 
+  Future<void> _navigateToPickup() async {
+    final lat = _pickupPos.latitude;
+    final lng = _pickupPos.longitude;
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   LatLng get _pickupPos => LatLng(
     (widget.booking['pickupLat'] as num?)?.toDouble() ?? 5.6037,
     (widget.booking['pickupLng'] as num?)?.toDouble() ?? -0.1870,
@@ -259,24 +270,66 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
               ),
             ),
 
-            // ── Map ──
+            // ── Map + Navigate button ──
             SizedBox(
               height: 200,
-              child: MapLibreMap(
-                styleString: kMapStyleUrl,
-                initialCameraPosition: CameraPosition(
-                  target: _pickupPos,
-                  zoom: 15.0,
-                ),
-                onMapCreated: (c) => _mapCtrl = c,
-                onStyleLoadedCallback: _onMapStyleLoaded,
-                scrollGesturesEnabled: false,
-                zoomGesturesEnabled: false,
-                rotateGesturesEnabled: false,
-                tiltGesturesEnabled: false,
-                doubleClickZoomEnabled: false,
-                myLocationEnabled: false,
-                compassEnabled: false,
+              child: Stack(
+                children: [
+                  MapLibreMap(
+                    styleString: kMapStyleUrl,
+                    initialCameraPosition: CameraPosition(
+                      target: _pickupPos,
+                      zoom: 15.0,
+                    ),
+                    onMapCreated: (c) => _mapCtrl = c,
+                    onStyleLoadedCallback: _onMapStyleLoaded,
+                    scrollGesturesEnabled: true,
+                    zoomGesturesEnabled: true,
+                    rotateGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
+                    doubleClickZoomEnabled: false,
+                    myLocationEnabled: true,
+                    myLocationTrackingMode: MyLocationTrackingMode.none,
+                    compassEnabled: false,
+                  ),
+                  // Navigate button overlay — opens Google Maps turn-by-turn
+                  Positioned(
+                    right: 12, bottom: 12,
+                    child: GestureDetector(
+                      onTap: _navigateToPickup,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(80),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(PhosphorIconsFill.navigationArrow,
+                                color: Colors.white, size: 16),
+                            SizedBox(width: 6),
+                            Text('Navigate',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'PlusJakartaSans',
+                                )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 

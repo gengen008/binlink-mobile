@@ -582,12 +582,18 @@ class _StatusMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, msg, color) = switch (status) {
-      'PENDING'   => (PhosphorIconsRegular.clock,    'Waiting for a collector to accept...', AppColors.warning),
-      'ACCEPTED'  => (PhosphorIconsFill.checkCircle, 'Collector accepted your request!',     AppColors.steelBlue),
-      'EN_ROUTE'  => (PhosphorIconsFill.truck,       'Collector is on the way to you!',      AppColors.warning),
-      'ARRIVED'   => (PhosphorIconsFill.mapPin,      'Collector has arrived!',               AppColors.success),
-      'COMPLETED' => (PhosphorIconsFill.sparkle,     'Pickup complete — great job!',         AppColors.success),
-      _           => (PhosphorIconsRegular.question, status,                                 AppColors.muted),
+      'SEARCHING'  => (PhosphorIconsRegular.magnifyingGlass, 'Searching for a nearby collector...', AppColors.warning),
+      'PENDING'    => (PhosphorIconsRegular.clock,           'Waiting for a collector to accept...', AppColors.warning),
+      'ASSIGNED'   => (PhosphorIconsFill.userCheck,          'A collector has been assigned!',       AppColors.steelBlue),
+      'ACCEPTED'   => (PhosphorIconsFill.checkCircle,        'Collector accepted your request!',     AppColors.steelBlue),
+      'ON_THE_WAY' => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
+      'EN_ROUTE'   => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
+      'ARRIVED'    => (PhosphorIconsFill.mapPin,             'Collector has arrived!',               AppColors.success),
+      'COLLECTING' => (PhosphorIconsFill.trashSimple,        'Collecting your waste now...',         AppColors.success),
+      'COLLECTED'  => (PhosphorIconsFill.checkCircle,        'Waste collected — en route to depot!', AppColors.success),
+      'COMPLETED'  => (PhosphorIconsFill.sparkle,            'Pickup complete — great job!',         AppColors.success),
+      'CANCELLED'  => (PhosphorIconsRegular.xCircle,         'This booking was cancelled.',          AppColors.danger),
+      _            => (PhosphorIconsRegular.question,        status,                                 AppColors.muted),
     };
     return Row(
       children: [

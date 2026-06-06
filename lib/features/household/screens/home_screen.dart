@@ -49,6 +49,12 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   }
 
   Future<void> _init() async {
+    // Fast path: show last known position immediately so the map isn't Accra
+    final lastKnown = await LocationService.getLastKnownPosition();
+    if (lastKnown != null && mounted) {
+      setState(() => _myPos = LatLng(lastKnown.latitude, lastKnown.longitude));
+    }
+    // Accurate fix: get current GPS (may take a few seconds)
     final pos = await LocationService.getCurrentPosition();
     if (pos != null && mounted) {
       setState(() => _myPos = LatLng(pos.latitude, pos.longitude));
@@ -484,23 +490,34 @@ class _HomeTabState extends State<_HomeTab> {
             ),
           ),
 
-          // ── Bottom: active banner OR Rydr bottom sheet ─────────────
-          Positioned(
-            left: 0, right: 0, bottom: 0,
-            child: active != null
-                ? SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: _ActiveBookingBanner(booking: active),
-                    ),
-                  )
-                : FadeInUp(
-                    delay: const Duration(milliseconds: 1000),
-                    duration: const Duration(milliseconds: 2000),
-                    child: const _HomeBottomSheet(),
-                  ),
-          ),
+          // ── Bottom: active banner (fixed) OR draggable bottom sheet ──
+          if (active != null)
+            Positioned(
+              left: 0, right: 0, bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: _ActiveBookingBanner(booking: active),
+                ),
+              ),
+            ),
+          if (active == null)
+            Positioned.fill(
+              child: FadeInUp(
+                delay: const Duration(milliseconds: 1000),
+                duration: const Duration(milliseconds: 2000),
+                child: DraggableScrollableSheet(
+                  initialChildSize: 0.30,
+                  minChildSize: 0.13,
+                  maxChildSize: 0.65,
+                  snap: true,
+                  snapSizes: const [0.13, 0.30, 0.65],
+                  builder: (_, scrollCtrl) =>
+                      _HomeBottomSheet(scrollCtrl: scrollCtrl),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -756,18 +773,14 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner> {
 //            YMargin(10), Padding(h:30,Container(h:40,Secondarygrey,br:10,"Set locations"))])]
 
 class _HomeBottomSheet extends StatelessWidget {
-  const _HomeBottomSheet();
+  const _HomeBottomSheet({required this.scrollCtrl});
+  final ScrollController scrollCtrl;
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    return AnimatedContainer(
-      curve: Curves.easeInOut,
-      duration: const Duration(milliseconds: 100),
-      alignment: Alignment.bottomCenter,
-      height: 300,
+    return Container(
       width: w,
-      // Rydr: color: ColorPath.Primarywhite (white)
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -775,110 +788,104 @@ class _HomeBottomSheet extends StatelessWidget {
           topRight: Radius.circular(25.0),
         ),
       ),
-      child: Column(
+      child: ListView(
+        controller: scrollCtrl,
+        physics: const ClampingScrollPhysics(),
+        padding: EdgeInsets.zero,
         children: [
           const SizedBox(height: 7),
           // Handle — Rydr: Container(80, 2.875, all(80), PrimaryColor.0.5)
-          Container(
-            width: 80,
-            height: 2.875,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(80)),
-              color: AppColors.steelBlue.withAlpha(128),
+          Center(
+            child: Container(
+              width: 80,
+              height: 2.875,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(80)),
+                color: AppColors.steelBlue.withAlpha(128),
+              ),
             ),
           ),
           const SizedBox(height: 20),
-          SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              children: [
-                // CustomPlaceHolder equivalent — BinLink: "Book a pickup" tappable pill
-                const _BookingPlaceHolder(),
-                const SizedBox(height: 10),
-                // FavoriteItems ListView — Rydr: h:130, w:screenWidth, Padding(h:30)
-                SizedBox(
-                  height: 130,
-                  width: w,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const RangeMaintainingScrollPhysics(),
-                      children: const [
-                        _WasteTypeCard(
-                          icon: PhosphorIconsFill.trashSimple,
-                          label: 'Household',
-                          price: 'GHC 30',
-                          color: AppColors.steelBlue,
-                          mode: 'immediate',
-                        ),
-                        SizedBox(width: 8),
-                        _WasteTypeCard(
-                          icon: PhosphorIconsFill.recycle,
-                          label: 'Plastic',
-                          price: 'GHC 30',
-                          color: AppColors.success,
-                          mode: 'immediate',
-                        ),
-                        SizedBox(width: 8),
-                        _WasteTypeCard(
-                          icon: PhosphorIconsFill.leaf,
-                          label: 'Organic',
-                          price: 'GHC 40',
-                          color: Color(0xFF34D399),
-                          mode: 'immediate',
-                        ),
-                        SizedBox(width: 8),
-                        _WasteTypeCard(
-                          icon: PhosphorIconsFill.laptop,
-                          label: 'E-Waste',
-                          price: 'GHC 50',
-                          color: Color(0xFFA78BFA),
-                          mode: 'scheduled',
-                        ),
-                      ],
-                    ),
+          // CustomPlaceHolder equivalent — BinLink: "Book a pickup" tappable pill
+          const _BookingPlaceHolder(),
+          const SizedBox(height: 10),
+          // FavoriteItems ListView — Rydr: h:130, w:screenWidth, Padding(h:30)
+          SizedBox(
+            height: 130,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const RangeMaintainingScrollPhysics(),
+                children: const [
+                  _WasteTypeCard(
+                    icon: PhosphorIconsFill.trashSimple,
+                    label: 'Household',
+                    price: 'GHC 30',
+                    color: AppColors.steelBlue,
+                    mode: 'immediate',
                   ),
-                ),
-                const SizedBox(height: 10),
-                // "Set favorite locations" → BinLink: "Saved Addresses"
-                // Rydr: Padding(h:30) Container(h:40, w:sw-100, Secondarygrey, br:10,
-                //   InkWell(Row(center, Text("Set favorite locations"))))
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const SavedAddressesScreen()),
-                    ),
-                    child: Container(
-                      height: 40,
-                      width: w - 100,
-                      // Rydr: Secondarygrey (dark gray)
-                      decoration: BoxDecoration(
-                        color: AppColors.midnightNavy,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Saved Addresses',
-                            style: AppTextStyles.body.copyWith(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  SizedBox(width: 8),
+                  _WasteTypeCard(
+                    icon: PhosphorIconsFill.recycle,
+                    label: 'Plastic',
+                    price: 'GHC 30',
+                    color: AppColors.success,
+                    mode: 'immediate',
                   ),
-                ),
-              ],
+                  SizedBox(width: 8),
+                  _WasteTypeCard(
+                    icon: PhosphorIconsFill.leaf,
+                    label: 'Organic',
+                    price: 'GHC 40',
+                    color: Color(0xFF34D399),
+                    mode: 'immediate',
+                  ),
+                  SizedBox(width: 8),
+                  _WasteTypeCard(
+                    icon: PhosphorIconsFill.laptop,
+                    label: 'E-Waste',
+                    price: 'GHC 50',
+                    color: Color(0xFFA78BFA),
+                    mode: 'scheduled',
+                  ),
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 10),
+          // "Saved Addresses" button — Rydr: Secondarygrey, br:10
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const SavedAddressesScreen()),
+              ),
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.midnightNavy,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Saved Addresses',
+                      style: AppTextStyles.body.copyWith(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
