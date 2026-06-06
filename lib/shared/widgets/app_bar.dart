@@ -46,9 +46,9 @@ class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.secondary,
-        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Material(
         color: bg,
@@ -113,7 +113,6 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //   > Center(Icon(arrow_back_ios, size:18, Primarydark))
     return GestureDetector(
       onTap: onBack ?? () => Navigator.maybePop(context),
       child: Container(
@@ -147,16 +146,16 @@ class DrawerMenuButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 45,
+        height: 45,
         decoration: const BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
+        child: Center(
           child: SvgPicture.asset(
             AppAssets.drawer,
-            height: 24,
-            width: 24,
+            height: 20,
+            width: 20,
             colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           ),
         ),
@@ -191,7 +190,7 @@ class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
       ),
       child: Material(
         color: bg,
