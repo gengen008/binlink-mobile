@@ -4,7 +4,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/rydr_assets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
@@ -111,10 +110,6 @@ class _PaymentScreenState extends State<PaymentScreen>
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: AppColors.secondary,
-                        image: const DecorationImage(
-                          fit: BoxFit.cover,
-                          image: AssetImage(RydrAssets.paybg),
-                        ),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

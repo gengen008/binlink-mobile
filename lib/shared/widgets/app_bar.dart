@@ -5,7 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/rydr_assets.dart';
+import '../../core/theme/app_assets.dart';
 
 /// Rydr-style app bar for all BinLink screens.
 ///
@@ -164,7 +164,7 @@ class DrawerMenuButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: SvgPicture.asset(
-            RydrAssets.drawer,
+            AppAssets.drawer,
             height: 24,
             width: 24,
             colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),

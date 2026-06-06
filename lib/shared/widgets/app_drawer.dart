@@ -154,7 +154,7 @@ class AppDrawer extends StatelessWidget {
                           },
                         ),
                         _DrawerListTile(
-                          label: 'Trip History',
+                          label: 'Pickup History',
                           onTap: () {
                             Navigator.pop(context);
                             onTabSwitch?.call(1);

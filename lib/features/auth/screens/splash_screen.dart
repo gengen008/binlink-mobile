@@ -1,5 +1,4 @@
-// Trippo exact: Scaffold(dark) > centered bold app name on dark bg.
-// BinLink: secondary (#0F172A) scaffold + logo circle + name + pulsing eco ring.
+// BinLink splash: dark scaffold + logo circle + name + pulsing eco loading ring.
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/rydr_assets.dart';
+import '../../../core/theme/app_assets.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -73,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           const Spacer(),
 
-          // Trippo: centered bold app name; BinLink: logo circle + name
+          // Logo circle + app name
           FadeIn(
             duration: const Duration(milliseconds: 1500),
             child: Column(
@@ -88,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: ClipOval(
                     child: Padding(
                       padding: const EdgeInsets.all(22),
-                      child: Image.asset(RydrAssets.logo, fit: BoxFit.contain),
+                      child: Image.asset(AppAssets.logo, fit: BoxFit.contain),
                     ),
                   ),
                 ),
