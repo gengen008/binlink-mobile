@@ -136,7 +136,7 @@ class _PolicyScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppScaffoldBar(
         title: title,
-        trailing: Icon(icon, color: const Color(0xFF5483B3), size: 20),
+        trailing: Icon(icon, color: AppColors.primary, size: 20),
       ),
       body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),

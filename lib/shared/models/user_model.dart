@@ -5,9 +5,11 @@ class UserModel {
   final String role; // HOUSEHOLD | COLLECTOR | ADMIN
   final String? fullName;
   final String? address;
+  final String? profilePhoto;
   final String status; // PENDING | ACTIVE | SUSPENDED
   final bool isOnline;
   final double rating;
+  final double totalEarned;
   final int totalPickups;
   final String? vehicleType;
   final String? vehiclePlate;
@@ -26,9 +28,11 @@ class UserModel {
     this.email,
     this.fullName,
     this.address,
+    this.profilePhoto,
     this.status = 'ACTIVE',
     this.isOnline = false,
     this.rating = 5.0,
+    this.totalEarned = 0.0,
     this.totalPickups = 0,
     this.vehicleType,
     this.vehiclePlate,
@@ -54,9 +58,11 @@ class UserModel {
       role:         json['role'] as String? ?? 'HOUSEHOLD',
       fullName:     json['fullName'] as String?,
       address:      json['address'] as String?,
+      profilePhoto: json['profilePhoto'] as String?,
       status:       json['status'] as String? ?? 'ACTIVE',
       isOnline:     json['isOnline'] as bool? ?? false,
       rating:       (json['rating'] as num?)?.toDouble() ?? 5.0,
+      totalEarned:  (json['totalEarned'] as num?)?.toDouble() ?? 0.0,
       totalPickups: json['totalPickups'] as int? ?? 0,
       vehicleType:      json['vehicleType'] as String?,
       vehiclePlate:     json['vehiclePlate'] as String?,
@@ -72,28 +78,32 @@ class UserModel {
 
   Map<String, dynamic> toJson() => {
     'id': id, 'phone': phone, 'email': email, 'role': role,
-    'fullName': fullName, 'address': address, 'status': status,
-    'isOnline': isOnline, 'rating': rating, 'totalPickups': totalPickups,
+    'fullName': fullName, 'address': address, 'profilePhoto': profilePhoto, 'status': status,
+    'isOnline': isOnline, 'rating': rating, 'totalEarned': totalEarned, 'totalPickups': totalPickups,
     'vehicleType': vehicleType, 'vehiclePlate': vehiclePlate,
     'lastLat': lastLat, 'lastLng': lastLng,
   };
 
   UserModel copyWith({
-    String? phone, String? email, String? fullName, String? address,
-    bool? isOnline, String? vehicleType, String? vehiclePlate,
+    String? phone, String? email, String? fullName, String? address, String? profilePhoto,
+    bool? isOnline, double? rating, double? totalEarned, int? totalPickups,
+    String? vehicleType, String? vehiclePlate,
     double? lastLat, double? lastLng,
     double? currentLoadKg, double? maxCapacityKg,
     int? ecoPoints, double? totalKgRecycled,
   }) {
     return UserModel(
       id: id, role: role, status: status,
-      rating: rating, totalPickups: totalPickups,
       memberSince: memberSince,
       phone:          phone          ?? this.phone,
       email:          email          ?? this.email,
       fullName:       fullName       ?? this.fullName,
       address:        address        ?? this.address,
+      profilePhoto:   profilePhoto   ?? this.profilePhoto,
       isOnline:       isOnline       ?? this.isOnline,
+      rating:         rating         ?? this.rating,
+      totalEarned:    totalEarned    ?? this.totalEarned,
+      totalPickups:   totalPickups   ?? this.totalPickups,
       vehicleType:    vehicleType    ?? this.vehicleType,
       vehiclePlate:   vehiclePlate   ?? this.vehiclePlate,
       lastLat:        lastLat        ?? this.lastLat,

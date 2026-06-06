@@ -63,7 +63,7 @@ class _DatePickerRowState extends State<DatePickerRow> {
                   color: selected
                       ? AppColors.primary
                       : isToday
-                          ? const Color(0xFF5483B3).withAlpha(100)
+                          ? AppColors.primary.withAlpha(100)
                           : AppColors.fieldFill,
                   width: selected ? 1.5 : 1,
                 ),

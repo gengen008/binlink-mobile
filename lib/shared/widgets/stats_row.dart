@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_radius.dart';
 
 class StatChip extends StatelessWidget {
   const StatChip({
@@ -25,8 +26,8 @@ class StatChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withAlpha(60)),
+          borderRadius: AppRadius.mdBR,
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,18 +36,18 @@ class StatChip extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: accent.withAlpha(25),
-                borderRadius: BorderRadius.circular(10),
+                color: accent.withAlpha(20),
+                borderRadius: AppRadius.smBR,
               ),
-              child: Icon(icon, color: accent, size: 17),
+              child: Icon(icon, color: accent, size: 16),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               value,
               style: AppTextStyles.mono.copyWith(
                 color: AppColors.secondary,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 2),
@@ -80,18 +81,18 @@ class StatsRow extends StatelessWidget {
           value: '$totalPickups',
           color: AppColors.primary,
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         StatChip(
           icon: PhosphorIconsFill.wallet,
-          label: 'Total Spent',
-          value: 'GHC ${totalSpent.toStringAsFixed(0)}',
-          color: AppColors.muted,
+          label: 'Spent',
+          value: '₵${totalSpent.toStringAsFixed(0)}',
+          color: AppColors.secondary,
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         StatChip(
           icon: PhosphorIconsFill.leaf,
-          label: 'kg Recycled',
-          value: '${kgRecycled.toStringAsFixed(1)}kg',
+          label: 'Recycled',
+          value: '${kgRecycled.toInt()}kg',
           color: AppColors.success,
         ),
       ],

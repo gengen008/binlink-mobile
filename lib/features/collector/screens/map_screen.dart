@@ -1,30 +1,19 @@
 import 'dart:async';
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/services.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
-import '../providers/collector_provider.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/theme_provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
+
 import '../../../core/l10n/strings.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../core/utils/map_style.dart';
-import '../../../shared/widgets/stats_row.dart';
-import 'active_pickup_screen.dart';
-import 'earnings_screen.dart';
+import '../providers/collector_provider.dart';
+import '../components/collector_map_tab.dart';
 import 'pickups_screen.dart';
-import 'vehicle_details_screen.dart';
-import 'collector_notifications_screen.dart';
-import 'collector_help_screen.dart';
-import 'collector_privacy_screen.dart';
-import 'collector_edit_profile_screen.dart';
+import 'earnings_screen.dart';
+import '../components/collector_profile_tab.dart';
 
 class CollectorMapScreen extends StatefulWidget {
   const CollectorMapScreen({super.key});
@@ -34,8 +23,8 @@ class CollectorMapScreen extends StatefulWidget {
 }
 
 class _CollectorMapScreenState extends State<CollectorMapScreen> {
+  int _currentIndex = 0;
   LatLng _pos = const LatLng(5.6037, -0.1870);
-  int _tab = 0;
   StreamSubscription<Position>? _posSub;
 
   @override
@@ -51,13 +40,11 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
   }
 
   Future<void> _init() async {
-    // Fast first pin — last known position is instant (no GPS wait)
     final last = await LocationService.getLastKnownPosition();
     if (last != null && mounted) {
       setState(() => _pos = LatLng(last.latitude, last.longitude));
     }
-
-    // Accurate fix — runs in parallel, updates marker when ready
+    
     final pos = await LocationService.getCurrentPosition();
     if (pos != null && mounted) {
       setState(() => _pos = LatLng(pos.latitude, pos.longitude));
@@ -65,7 +52,6 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
 
     if (mounted) await context.read<CollectorProvider>().loadDashboard();
 
-    // Live updates — keep truck marker in sync as collector moves
     _posSub = LocationService.getPositionStream().listen((p) {
       if (mounted) setState(() => _pos = LatLng(p.latitude, p.longitude));
     });
@@ -73,1269 +59,96 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
+
     return Scaffold(
       body: IndexedStack(
-        index: _tab,
+        index: _currentIndex,
         children: [
-          _MapTab(pos: _pos),
+          CollectorMapTab(pos: _pos),
           const PickupsScreen(),
           const EarningsScreen(),
-          _ProfileTab(),
+          const CollectorProfileTab(),
         ],
       ),
-      bottomNavigationBar: _BottomNav(
-        current: _tab,
-        onTap: (i) => setState(() => _tab = i),
+      bottomNavigationBar: _CollectorBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        items: [
+          _NavBtn(icon: PhosphorIconsRegular.mapTrifold, activeIcon: PhosphorIconsFill.mapTrifold, label: s.map),
+          _NavBtn(icon: PhosphorIconsRegular.clipboardText, activeIcon: PhosphorIconsFill.clipboardText, label: s.pickups),
+          _NavBtn(icon: PhosphorIconsRegular.coins, activeIcon: PhosphorIconsFill.coins, label: s.earnings),
+          _NavBtn(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsFill.user, label: s.profile),
+        ],
       ),
     );
   }
 }
 
-// ── Bottom navigation ─────────────────────────────────────────────────────────
+class _CollectorBottomNav extends StatelessWidget {
+  const _CollectorBottomNav({
+    required this.currentIndex,
+    required this.onTap,
+    required this.items,
+  });
 
-class _BottomNav extends StatelessWidget {
-  const _BottomNav({required this.current, required this.onTap});
-  final int current;
+  final int currentIndex;
   final ValueChanged<int> onTap;
+  final List<_NavBtn> items;
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
+        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
       ),
       child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            _NavItem(
-              icon: PhosphorIconsRegular.mapTrifold,
-              iconFill: PhosphorIconsFill.mapTrifold,
-              label: s.map,      index: 0, current: current, onTap: onTap,
-            ),
-            _NavItem(
-              icon: PhosphorIconsRegular.clipboardText,
-              iconFill: PhosphorIconsFill.clipboardText,
-              label: s.pickups,  index: 1, current: current, onTap: onTap,
-            ),
-            _NavItem(
-              icon: PhosphorIconsRegular.coins,
-              iconFill: PhosphorIconsFill.coins,
-              label: s.earnings, index: 2, current: current, onTap: onTap,
-            ),
-            _NavItem(
-              icon: PhosphorIconsRegular.user,
-              iconFill: PhosphorIconsFill.user,
-              label: s.profile,  index: 3, current: current, onTap: onTap,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon, required this.iconFill, required this.label,
-    required this.index, required this.current, required this.onTap,
-  });
-  final IconData icon;
-  final IconData iconFill;
-  final String label;
-  final int index;
-  final int current;
-  final ValueChanged<int> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final sel = current == index;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(index),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: sel ? 36 : 0, height: sel ? 4 : 0,
-                margin: const EdgeInsets.only(bottom: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  borderRadius: AppRadius.fullBR,
-                ),
-              ),
-              Icon(sel ? iconFill : icon,
-                  color: sel ? Theme.of(context).primaryColor : AppColors.muted, size: 22),
-              const SizedBox(height: 3),
-              Text(label,
-                  style: AppTextStyles.caption.copyWith(
-                    color: sel ? Theme.of(context).primaryColor : AppColors.muted,
-                    fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 10,
-                  )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── MAP TAB ───────────────────────────────────────────────────────────────────
-
-class _MapTab extends StatefulWidget {
-  const _MapTab({required this.pos});
-  final LatLng pos;
-
-  @override
-  State<_MapTab> createState() => _MapTabState();
-}
-
-class _MapTabState extends State<_MapTab> with TickerProviderStateMixin {
-  MapLibreMapController? _mapCtrl;
-  Circle? _posCircle;
-  bool _styleLoaded = false;
-  bool _lastIsOnline = false;
-
-  // Smooth position interpolation
-  late final AnimationController _posAnim;
-  LatLng? _animFrom;
-  LatLng? _animTo;
-  LatLng? _animCurrent;
-
-  @override
-  void initState() {
-    super.initState();
-    _posAnim = AnimationController(
-      vsync:    this,
-      duration: const Duration(milliseconds: 800),
-    )..addListener(_onPosTick);
-  }
-
-  @override
-  void dispose() {
-    _posAnim.dispose();
-    _mapCtrl?.dispose();
-    super.dispose();
-  }
-
-  void _onPosTick() {
-    if (_animFrom == null || _animTo == null || _posCircle == null) return;
-    final t = CurvedAnimation(parent: _posAnim, curve: Curves.easeOut).value;
-    _animCurrent = LatLng(
-      _animFrom!.latitude  + (_animTo!.latitude  - _animFrom!.latitude)  * t,
-      _animFrom!.longitude + (_animTo!.longitude - _animFrom!.longitude) * t,
-    );
-    _mapCtrl?.updateCircle(_posCircle!, CircleOptions(geometry: _animCurrent!));
-  }
-
-  @override
-  void didUpdateWidget(_MapTab old) {
-    super.didUpdateWidget(old);
-    if (old.pos != widget.pos && _posCircle != null) {
-      _animFrom = _animCurrent ?? old.pos;
-      _animTo   = widget.pos;
-      _posAnim.forward(from: 0);
-      _mapCtrl?.animateCamera(CameraUpdate.newLatLng(widget.pos));
-    }
-  }
-
-  Future<void> _onStyleLoaded() async {
-    if (_mapCtrl == null) return;
-    _styleLoaded = true;
-    final isOnline = context.read<CollectorProvider>().isOnline;
-    _lastIsOnline = isOnline;
-    _posCircle = await _mapCtrl!.addCircle(CircleOptions(
-      geometry: widget.pos,
-      circleRadius: 18,
-      circleColor: isOnline ? '#22C55E' : '#EF4444',
-      circleOpacity: 0.9,
-      circleStrokeWidth: 3,
-      circleStrokeColor: '#FFFFFF',
-      circleStrokeOpacity: 1.0,
-    ));
-  }
-
-  void _locateMe() {
-    HapticFeedback.lightImpact();
-    _mapCtrl?.animateCamera(CameraUpdate.newLatLngZoom(widget.pos, 15.5));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final prov         = context.watch<CollectorProvider>();
-    final user         = context.watch<AuthProvider>().user;
-    final currentLoad  = user?.currentLoadKg ?? 0.0;
-    final maxCapacity  = user?.maxCapacityKg ?? 500.0;
-    final active       = prov.currentActivePickup;
-
-    // Update circle colour when online status changes
-    if (_styleLoaded && _posCircle != null && prov.isOnline != _lastIsOnline) {
-      _lastIsOnline = prov.isOnline;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_posCircle != null) {
-          _mapCtrl?.updateCircle(_posCircle!, CircleOptions(
-            circleColor: prov.isOnline ? '#22C55E' : '#EF4444',
-          ));
-        }
-      });
-    }
-
-    return Stack(
-      children: [
-        // Full-screen map
-        FadeIn(
-          duration: const Duration(milliseconds: 1500),
-          child: MapLibreMap(
-            styleString: kMapStyleUrl,
-            initialCameraPosition: CameraPosition(
-              target: widget.pos,
-              zoom: 14.0,
-            ),
-            onMapCreated: (c) => _mapCtrl = c,
-            onStyleLoadedCallback: _onStyleLoaded,
-            myLocationEnabled: false,
-            compassEnabled: false,
-            rotateGesturesEnabled: false,
-            tiltGesturesEnabled: false,
-          ),
-        ),
-
-        // ── AppBar overlay ────────────────────────────────────────────────────
-        Positioned(
-          top: 0, left: 0, right: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Material(
-                color: AppColors.appBarBg,
-                child: SafeArea(
-                  bottom: false,
-                  child: SizedBox(
-                    height: 70,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          // Greeting column
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Hello, ${user?.fullName?.split(' ').first ?? 'Collector'}',
-                                  style: AppTextStyles.appBarTitle,
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      width: 6, height: 6,
-                                      margin: const EdgeInsets.only(right: 5),
-                                      decoration: BoxDecoration(
-                                        color: prov.isOnline
-                                            ? AppColors.success
-                                            : AppColors.muted,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    Text(
-                                      prov.isOnline
-                                          ? S.of(context).onlineAccepting
-                                          : S.of(context).offline,
-                                      style: AppTextStyles.appBarSub.copyWith(
-                                        color: prov.isOnline
-                                            ? AppColors.success
-                                            : AppColors.muted,
-                                      ),
-                                    ),
-                                    // Capacity pill
-                                    if (prov.isOnline && currentLoad > 0) ...[
-                                      const SizedBox(width: 6),
-                                      Builder(builder: (ctx) {
-                                        final pct = maxCapacity > 0
-                                            ? (currentLoad / maxCapacity).clamp(0.0, 1.0)
-                                            : 0.0;
-                                        final c = pct < 0.7
-                                            ? AppColors.success
-                                            : pct < 0.9
-                                                ? AppColors.warning
-                                                : AppColors.danger;
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: c.withAlpha(25),
-                                            borderRadius: AppRadius.smBR,
-                                            border: Border.all(color: c.withAlpha(80)),
-                                          ),
-                                          child: Text(
-                                            '${(pct * 100).toStringAsFixed(0)}%',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: c,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 9,
-                                            ),
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Online/Offline power toggle
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              prov.toggleOnline();
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 45, height: 45,
-                              decoration: BoxDecoration(
-                                gradient: prov.isOnline
-                                    ? const LinearGradient(
-                                        colors: [Color(0xFF16A34A), AppColors.success],
-                                      )
-                                    : null,
-                                color: prov.isOnline ? null : AppColors.appBarAction,
-                                borderRadius: AppRadius.smBR,
-                                border: Border.all(
-                                  color: prov.isOnline
-                                      ? AppColors.success
-                                      : AppColors.border,
-                                ),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  prov.isOnline
-                                      ? PhosphorIconsFill.power
-                                      : PhosphorIconsRegular.power,
-                                  color: prov.isOnline ? AppColors.white : AppColors.muted,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Active pickup banner (below appbar)
-              if (active != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => ActivePickupScreen(booking: active),
-                        )),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: AppRadius.lgBR,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withAlpha(60),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.white.withAlpha(20),
-                              borderRadius: AppRadius.mdBR,
-                            ),
-                            child: const Icon(PhosphorIconsFill.truck,
-                                color: AppColors.white, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(S.of(context).activePickupBanner,
-                                    style: AppTextStyles.h4.copyWith(
-                                      color: AppColors.white,
-                                    )),
-                                Text(
-                                  active['pickupAddress'] as String? ?? '',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.primaryLight,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(PhosphorIconsRegular.arrowRight,
-                              color: AppColors.white, size: 18),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ), // end Positioned top overlay
-
-        // Locate-me FAB
-        Positioned(
-          right: 16,
-          bottom: prov.pendingRequests.isNotEmpty ? 216 : 80,
-          child: GestureDetector(
-            onTap: _locateMe,
-            child: Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.lgBR,
-                border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(40),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: const Icon(PhosphorIconsRegular.crosshair,
-                  color: AppColors.primary, size: 22),
-            ),
-          ),
-        ),
-
-        // Pending request cards (with countdown)
-        if (prov.pendingRequests.isNotEmpty && prov.isOnline)
-          Positioned(
-            left: 0, right: 0, bottom: 16,
-            child: _PendingRequestsList(
-              requests: prov.pendingRequests,
-              onAccepted: (booking) => Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (_) => ActivePickupScreen(booking: booking),
-                  )),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ── Pending request card with countdown timer ─────────────────────────────────
-
-class _PendingRequestsList extends StatelessWidget {
-  const _PendingRequestsList({
-    required this.requests,
-    required this.onAccepted,
-  });
-  final List<Map<String, dynamic>> requests;
-  final ValueChanged<Map<String, dynamic>> onAccepted;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 192,
-      child: PageView.builder(
-        padEnds: false,
-        controller: PageController(viewportFraction: 0.9),
-        itemCount: requests.length,
-        itemBuilder: (_, i) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _RequestCard(booking: requests[i], onAccepted: onAccepted),
-        ),
-      ),
-    );
-  }
-}
-
-class _RequestCard extends StatefulWidget {
-  const _RequestCard({required this.booking, required this.onAccepted});
-  final Map<String, dynamic> booking;
-  final ValueChanged<Map<String, dynamic>> onAccepted;
-
-  @override
-  State<_RequestCard> createState() => _RequestCardState();
-}
-
-class _RequestCardState extends State<_RequestCard> {
-  static const _kCountdown = 30;
-  int _remaining = _kCountdown;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() => _remaining--);
-      if (_remaining <= 0) {
-        _timer?.cancel();
-        final prov = context.read<CollectorProvider>();
-        prov.declineRequest(widget.booking['id'] as String);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Request expired'),
-              backgroundColor: AppColors.card,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final prov    = context.read<CollectorProvider>();
-    final binSize   = widget.booking['binSize'] as String? ?? '';
-    final address   = widget.booking['pickupAddress'] as String? ?? '';
-    final amount    = Fmt.toDouble(widget.booking['totalAmount']);
-    final cat       = widget.booking['wasteCategory'] as String?;
-    final estKg     = Fmt.toDouble(widget.booking['estimatedWeightKg'], 0);
-    final notes     = widget.booking['addressNotes'] as String?;
-    final timePref  = widget.booking['timePreference'] as String?;
-    final distKm    = Fmt.toDouble(widget.booking['distanceKm'], 0);
-    final progress  = _remaining / _kCountdown;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.secondary,
-        borderRadius: AppRadius.mdBR,
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(60),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header row
-          Row(
-            children: [
-              // New request label
-              Builder(builder: (ctx) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(ctx).primaryColor.withAlpha(25),
-                  borderRadius: AppRadius.smBR,
-                  border: Border.all(color: Theme.of(ctx).primaryColor.withAlpha(60)),
-                ),
-                child: Text(S.of(ctx).newRequest,
-                    style: AppTextStyles.caption.copyWith(
-                      color: Theme.of(ctx).primaryColor,
-                      fontWeight: FontWeight.w700,
-                    )),
-              )),
-              const Spacer(),
-              Text(Fmt.currency(amount),
-                  style: AppTextStyles.mono.copyWith(color: AppColors.primaryLight)),
-              const SizedBox(width: 12),
-              // Countdown ring
-              SizedBox(
-                width: 36, height: 36,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 3,
-                      color: progress > 0.4
-                          ? AppColors.primary
-                          : AppColors.danger,
-                      backgroundColor: AppColors.border,
-                    ),
-                    Text(
-                      '$_remaining',
-                      style: AppTextStyles.caption.copyWith(
-                        color: progress > 0.4
-                            ? AppColors.white
-                            : AppColors.danger,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Address
-          Row(
-            children: [
-              const Icon(PhosphorIconsRegular.mapPin,
-                  color: AppColors.muted, size: 13),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(address,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Chips
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              _SmallChip(label: Fmt.binSizeLabel(binSize).split(' ').first),
-              if (cat != null)
-                _SmallChip(label: Fmt.categoryLabel(cat)),
-              if (estKg > 0)
-                _SmallChip(label: '~${estKg.toStringAsFixed(0)} kg'),
-              if (distKm > 0)
-                _SmallChip(label: '${distKm.toStringAsFixed(1)} km'),
-              if (timePref != null)
-                _SmallChip(label: Fmt.timePrefLabel(timePref)),
-            ],
-          ),
-          if (notes != null && notes.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(PhosphorIconsRegular.note,
-                    color: AppColors.muted, size: 11),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(notes,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.muted, fontSize: 11),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                ),
-              ],
-            ),
-          ],
-          const Spacer(),
-
-          // Accept / Decline
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => prov.declineRequest(
-                      widget.booking['id'] as String),
-                  child: Container(
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.danger.withAlpha(15),
-                      borderRadius: AppRadius.mdBR,
-                      border: Border.all(
-                          color: AppColors.danger.withAlpha(60)),
-                    ),
-                    child: Center(
-                      child: Text(S.of(context).declineJob,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.danger,
-                            fontSize: 13,
-                          )),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: Builder(builder: (ctx) => GestureDetector(
-                  onTap: () async {
-                    HapticFeedback.mediumImpact();
-                    _timer?.cancel();
-                    final prov = context.read<CollectorProvider>();
-                    final ok = await prov
-                        .acceptRequest(widget.booking['id'] as String);
-                    if (ok) {
-                      final pickup = prov.currentActivePickup;
-                      if (pickup != null) widget.onAccepted(pickup);
-                    }
-                  },
-                  child: Container(
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: AppRadius.mdBR,
-                    ),
-                    child: Center(
-                      child: Text(S.of(context).acceptJob,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.white,
-                            fontSize: 13,
-                          )),
-                    ),
-                  ),
-                )),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── PROFILE TAB ───────────────────────────────────────────────────────────────
-
-class _ProfileTab extends StatefulWidget {
-  @override
-  State<_ProfileTab> createState() => _ProfileTabState();
-}
-
-class _ProfileTabState extends State<_ProfileTab> {
-  static const _languages = ['English', 'Français'];
-
-  Future<void> _pickLanguage(BuildContext context) async {
-    final sp = context.read<AppStringsProvider>();
-    final current = sp.langCode;
-    final picked = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xxl)),
-        title: Text('Language / Langue', style: AppTextStyles.h3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _languages.map((lang) {
-            final sel = lang == current;
-            return GestureDetector(
-              onTap: () => Navigator.pop(ctx, lang),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: sel ? AppColors.primary.withAlpha(20) : AppColors.fieldFill,
-                  borderRadius: AppRadius.lgBR,
-                  border: Border.all(color: sel ? AppColors.primary : AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(lang,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: sel ? AppColors.primary : AppColors.secondary,
-                          )),
-                    ),
-                    if (sel)
-                      const Icon(PhosphorIconsFill.checkCircle,
-                          color: AppColors.primary, size: 18),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-    if (picked != null && picked != current) {
-      await sp.setLanguage(picked);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final prov = context.watch<CollectorProvider>();
-    final user = auth.user;
-
-    // Collector stats
-    final earned = prov.completedPickups.fold<double>(
-        0, (s, b) => s + Fmt.toDouble(b['totalAmount']) * 0.9);
-
-    return Container(
-      color: Colors.white,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-          child: Column(
-            children: [
-              // Avatar + name
-              Stack(
-                children: [
-                  Container(
-                    width: 88, height: 88,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(30),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        Fmt.initials(user?.fullName),
-                        style: AppTextStyles.h2.copyWith(
-                          fontSize: 28,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Online status ring
-                  Positioned(
-                    bottom: 2, right: 2,
-                    child: Container(
-                      width: 22, height: 22,
-                      decoration: BoxDecoration(
-                        color: prov.isOnline
-                            ? AppColors.success
-                            : AppColors.muted,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: Colors.white, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(user?.fullName ?? 'Collector', style: AppTextStyles.h3),
-              if (user?.email != null) ...[
-                const SizedBox(height: 4),
-                Text(user!.email!,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textSecondary,
-                    )),
-              ],
-              const SizedBox(height: 8),
-
-              // Rating row
-              if (user != null && user.rating > 0)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ...List.generate(5, (i) => Icon(
-                          i < user.rating.floor()
-                              ? PhosphorIconsFill.star
-                              : PhosphorIconsRegular.star,
-                          color: AppColors.warning,
-                          size: 16,
-                        )),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${user.rating.toStringAsFixed(1)} (${user.totalPickups} jobs)',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-
-              const SizedBox(height: 24),
-
-              // Stats row
-              StatsRow(
-                totalPickups: prov.totalPickups,
-                totalSpent: earned,
-                kgRecycled: prov.totalPickups * 18.0,
-              ),
-
-              const SizedBox(height: 20),
-
-              // Vehicle chip
-              if (user?.vehicleType != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: AppRadius.lgBR,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final isSelected = currentIndex == i;
+              return Expanded(
+                child: InkWell(
+                  onTap: () => onTap(i),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(PhosphorIconsFill.truck,
-                          color: AppColors.muted, size: 18),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Vehicle',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.muted,
-                                )),
-                            Text(
-                              '${user!.vehicleType!.replaceAll('_', ' ')} • ${user.vehiclePlate ?? 'No plate'}',
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                          ],
-                        ),
+                      Icon(
+                        isSelected ? item.activeIcon : item.icon,
+                        color: isSelected ? AppColors.primary : AppColors.textMuted,
+                        size: 24,
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.push(context,
-                            MaterialPageRoute(
-                              builder: (_) => const VehicleDetailsScreen(),
-                            )),
-                        child: const Icon(PhosphorIconsRegular.pencilSimple,
-                            color: AppColors.muted, size: 16),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.label,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isSelected ? AppColors.primary : AppColors.textMuted,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                 ),
-
-              const SizedBox(height: 16),
-
-              // Menu
-              _MenuSection(
-                title: S.of(context).account,
-                items: [
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.userCircle,
-                    label: S.of(context).editProfile,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const CollectorEditProfileScreen(),
-                        )),
-                  ),
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.truck,
-                    label: S.of(context).vehicleDetails,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const VehicleDetailsScreen(),
-                        )),
-                  ),
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.coins,
-                    label: S.of(context).earningsWallet,
-                    onTap: () {/* navigate to earnings screen */},
-                  ),
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.bell,
-                    label: S.of(context).notifications,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const CollectorNotificationsScreen(),
-                        )),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              _MenuSection(
-                title: S.of(context).support,
-                items: [
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.headset,
-                    label: S.of(context).helpSupport,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const CollectorHelpScreen(),
-                        )),
-                  ),
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.shieldCheck,
-                    label: S.of(context).privacyPolicy,
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(
-                          builder: (_) => const CollectorPrivacyScreen(),
-                        )),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              const SizedBox(height: 12),
-
-              // Preferences — dark mode + language
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(AppRadius.sheet),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                      child: Text(S.of(context).preferences,
-                          style: AppTextStyles.caption.copyWith(
-                              color: AppColors.muted,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36, height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withAlpha(20),
-                              borderRadius: AppRadius.mdBR,
-                            ),
-                            child: const Icon(PhosphorIconsRegular.moon,
-                                color: AppColors.warning, size: 18),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(S.of(context).darkMode, style: AppTextStyles.bodyMedium),
-                          ),
-                          Consumer<ThemeProvider>(
-                            builder: (_, tp, __) => Switch(
-                              value: tp.isDark,
-                              onChanged: tp.setDark,
-                              activeThumbColor: AppColors.warning,
-                              activeTrackColor: AppColors.warning.withAlpha(80),
-                              inactiveTrackColor: AppColors.border,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Divider(height: 1, color: AppColors.border),
-                    ),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _pickLanguage(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36, height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.muted.withAlpha(20),
-                                borderRadius: AppRadius.mdBR,
-                              ),
-                              child: const Icon(PhosphorIconsRegular.globe,
-                                  color: AppColors.muted, size: 18),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(S.of(context).language, style: AppTextStyles.bodyMedium),
-                            ),
-                            Text(context.watch<AppStringsProvider>().langCode,
-                                style: AppTextStyles.body.copyWith(
-                                    color: AppColors.muted, fontSize: 13)),
-                            const SizedBox(width: 6),
-                            const Icon(PhosphorIconsRegular.caretRight,
-                                color: AppColors.muted, size: 14),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              _MenuSection(
-                title: 'App',
-                items: [
-                  _MenuItem(
-                    icon: PhosphorIconsRegular.signOut,
-                    label: 'Sign Out',
-                    color: AppColors.danger,
-                    onTap: () async {
-                      final ok = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: AppColors.card,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.xxl)),
-                          title: Text('Sign Out',
-                              style: AppTextStyles.h3),
-                          content: Text(
-                            'Are you sure you want to sign out?',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: Text('Cancel',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.muted,
-                                  )),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: Text('Sign Out',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.danger,
-                                  )),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (ok == true && context.mounted) {
-                        await context.read<AuthProvider>().signOut();
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-              Text('BinLink Collector v3.0.0',
-                  style: AppTextStyles.caption),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Shared profile widgets ────────────────────────────────────────────────────
-
-class _MenuItem {
-  const _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-}
-
-class _MenuSection extends StatelessWidget {
-  const _MenuSection({required this.title, required this.items});
-  final String title;
-  final List<_MenuItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(title,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              )),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(AppRadius.sheet),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            children: List.generate(items.length, (i) {
-              final item   = items[i];
-              final isLast = i == items.length - 1;
-              return Column(
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: item.onTap,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36, height: 36,
-                            decoration: BoxDecoration(
-                              color: (item.color ?? AppColors.muted)
-                                  .withAlpha(20),
-                              borderRadius: AppRadius.mdBR,
-                            ),
-                            child: Icon(item.icon,
-                                color: item.color ?? AppColors.muted,
-                                size: 18),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(item.label,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: item.color ?? AppColors.textPrimary,
-                                )),
-                          ),
-                          const Icon(PhosphorIconsRegular.caretRight,
-                              color: AppColors.muted, size: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (!isLast)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Divider(height: 1, color: AppColors.border),
-                    ),
-                ],
               );
             }),
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _SmallChip extends StatelessWidget {
-  const _SmallChip({required this.label});
+class _NavBtn {
+  const _NavBtn({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+  });
+  final IconData icon;
+  final IconData activeIcon;
   final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(20),
-        borderRadius: AppRadius.smBR,
-        border: Border.all(color: AppColors.primary.withAlpha(40)),
-      ),
-      child: Text(label,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.primary,
-            fontSize: 11,
-          )),
-    );
-  }
 }

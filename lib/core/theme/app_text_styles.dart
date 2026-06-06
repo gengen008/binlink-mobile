@@ -4,136 +4,113 @@ import 'app_colors.dart';
 
 /// BinLink Eco — Typography Tokens
 ///
-/// Plus Jakarta Sans via google_fonts package (UI)
-/// DM Mono via google_fonts package (prices, IDs, distances)
+/// Disciplined Bolt/Uber-style hierarchy.
+/// Font: Plus Jakarta Sans (UI)
+/// Mono: DM Mono (Metrics/Prices)
 class AppTextStyles {
   AppTextStyles._();
 
-  // ── Headings ───────────────────────────────────────────────────────────────
-  static TextStyle get h1 => GoogleFonts.plusJakartaSans(
-        fontSize: 28,
+  // ── Scale ───────────────────────────────────────────────────────────────
+
+  /// 30/700 — Hero headings, large splash text
+  static TextStyle get display => GoogleFonts.plusJakartaSans(
+        fontSize: 30,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
+        letterSpacing: 0,
       );
 
-  static TextStyle get h2 => GoogleFonts.plusJakartaSans(
-        fontSize: 22,
+  /// 20/700 — Main section headers
+  static TextStyle get title => GoogleFonts.plusJakartaSans(
+        fontSize: 20,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
+        letterSpacing: 0,
       );
 
-  static TextStyle get h3 => GoogleFonts.plusJakartaSans(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get h4 => GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  // ── AppBar ─────────────────────────────────────────────────────────────────
-  static TextStyle get appBarTitle => GoogleFonts.plusJakartaSans(
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        color: AppColors.secondary,
-      );
-
-  static TextStyle get appBarSub => GoogleFonts.plusJakartaSans(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: AppColors.muted,
-      );
-
-  // ── Drawer ─────────────────────────────────────────────────────────────────
-  static TextStyle get drawerTitle => GoogleFonts.plusJakartaSans(
+  /// 15/700 — Secondary section headers, emphasized labels
+  static TextStyle get section => GoogleFonts.plusJakartaSans(
         fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: AppColors.white,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+        letterSpacing: 0,
       );
 
-  static TextStyle get drawerItem => GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: AppColors.drawerItem,
-      );
-
-  // ── Body ──────────────────────────────────────────────────────────────────
+  /// 14/400 — Standard body copy
   static TextStyle get body => GoogleFonts.plusJakartaSans(
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.5,
         color: AppColors.textPrimary,
+        letterSpacing: 0,
       );
 
+  /// 14/500 — Medium weight body copy (semi-bold feel)
   static TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
+        letterSpacing: 0,
       );
 
-  static TextStyle get label => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
+  /// 12/500 — Metadata, small labels, secondary info
+  static TextStyle get meta => GoogleFonts.plusJakartaSans(
+        fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: AppColors.textMuted,
+        color: AppColors.textSecondary,
+        letterSpacing: 0,
       );
 
-  static TextStyle get bodySmall => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        height: 1.4,
-        color: AppColors.textBody,
-      );
-
+  /// 11/500 — Captions, micro-copy, chips
   static TextStyle get caption => GoogleFonts.plusJakartaSans(
         fontSize: 11,
-        fontWeight: FontWeight.w400,
-        color: AppColors.textMuted,
-      );
-
-  static TextStyle get chip => GoogleFonts.plusJakartaSans(
-        fontSize: 11,
         fontWeight: FontWeight.w500,
         color: AppColors.textMuted,
+        letterSpacing: 0,
       );
+
+  // ── Semantic Aliases ───────────────────────────────────────────────────────
+  static TextStyle get h1 => display;
+  static TextStyle get h2 => title.copyWith(fontSize: 22);
+  static TextStyle get h3 => section.copyWith(fontSize: 18, fontWeight: FontWeight.w600);
+  static TextStyle get h4 => section.copyWith(fontSize: 16, fontWeight: FontWeight.w600);
+
+  static TextStyle get appBarTitle => title.copyWith(fontSize: 18, fontWeight: FontWeight.w600);
+  static TextStyle get appBarSub   => meta.copyWith(fontWeight: FontWeight.w400);
+
+  static TextStyle get drawerTitle => section.copyWith(color: Colors.white);
+  static TextStyle get drawerItem  => bodyMedium.copyWith(color: AppColors.drawerItem);
+
+  static TextStyle get label => meta;
+  static TextStyle get bodySmall => body.copyWith(fontSize: 13, height: 1.4);
+  static TextStyle get chip => caption;
 
   // ── Buttons ───────────────────────────────────────────────────────────────
   static TextStyle get button => GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
-        color: AppColors.white,
-      );
-
-  static TextStyle get buttonSecondary => GoogleFonts.plusJakartaSans(
         fontSize: 15,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get buttonSm => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: AppColors.white,
+        letterSpacing: 0,
       );
 
-  // ── Mono — prices, distances, times ───────────────────────────────────────
+  static TextStyle get buttonSecondary => bodyMedium;
+  static TextStyle get buttonSm => meta.copyWith(color: AppColors.white, fontWeight: FontWeight.w600);
+
+  // ── Mono — metrics ────────────────────────────────────────────────────────
   static TextStyle get monoLg => GoogleFonts.dmMono(
         fontSize: 24,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get mono => GoogleFonts.dmMono(
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
       );
 
   static TextStyle get monoSm => GoogleFonts.dmMono(
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.textMuted,
       );

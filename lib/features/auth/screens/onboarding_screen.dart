@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 
@@ -20,35 +21,26 @@ Future<void> markOnboardingSeen() async {
 }
 
 class _Page {
-  final IconData icon;
-  final String label;
+  final String asset;
   final String heading;
   final String body;
-  const _Page({
-    required this.icon,
-    required this.label,
-    required this.heading,
-    required this.body,
-  });
+  const _Page({required this.asset, required this.heading, required this.body});
 }
 
 const _pages = [
   _Page(
-    icon: PhosphorIconsRegular.mapPin,
-    label: 'Book',
-    heading: 'Book a pickup\nfrom your address',
+    asset: AppAssets.pickupMarker,
+    heading: 'Book a pickup from your address',
     body: 'Enter your location, choose waste type and bin size. Request a same-day pickup or schedule ahead.',
   ),
   _Page(
-    icon: PhosphorIconsRegular.navigationArrow,
-    label: 'Track',
-    heading: 'Track collector\narrival in real time',
+    asset: AppAssets.truck,
+    heading: 'Track collector arrival in real time',
     body: 'See your assigned collector on the map. Get live ETA updates and call or chat directly.',
   ),
   _Page(
-    icon: PhosphorIconsRegular.receipt,
-    label: 'Manage',
-    heading: 'Pay and manage\nyour pickup history',
+    asset: AppAssets.cash,
+    heading: 'Pay and manage your pickup history',
     body: 'View receipts, track spending, and manage scheduled pickups — all in one place.',
   ),
 ];
@@ -64,122 +56,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _ctrl = PageController();
   int _current = 0;
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _done() async {
-    final nav = Navigator.of(context);
     await markOnboardingSeen();
-    if (!mounted) return;
-    nav.pushReplacementNamed('/login');
-  }
-
-  void _next() {
-    if (_current == _pages.length - 1) {
-      _done();
-    } else {
-      _ctrl.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    if (mounted) Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // Top bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 20, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
-                  Text('BinLink',
-                      style: AppTextStyles.h4.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                      )),
+                  Text('BinLink', style: AppTextStyles.h4.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
                   const Spacer(),
-                  if (_current < _pages.length - 1)
-                    GestureDetector(
-                      onTap: _done,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 8),
-                        child: Text('Skip',
-                            style: AppTextStyles.label
-                                .copyWith(color: AppColors.muted)),
-                      ),
-                    ),
+                  TextButton(onPressed: _done, child: Text('Skip', style: AppTextStyles.meta)),
                 ],
               ),
             ),
-
-            // Step indicator bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              child: Row(
-                children: List.generate(_pages.length, (i) {
-                  return Expanded(
-                    child: Container(
-                      margin: EdgeInsets.only(right: i < _pages.length - 1 ? 6 : 0),
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: i <= _current
-                            ? AppColors.primary
-                            : AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            // Pages
             Expanded(
               child: PageView.builder(
                 controller: _ctrl,
                 itemCount: _pages.length,
-                physics: const BouncingScrollPhysics(),
                 onPageChanged: (i) => setState(() => _current = i),
                 itemBuilder: (_, i) => _OnboardingPage(page: _pages[i]),
               ),
             ),
-
-            // Bottom CTA
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _next,
-                      child: Text(
-                        _current == _pages.length - 1
-                            ? 'Get started'
-                            : 'Continue',
-                        style: AppTextStyles.button,
-                      ),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_pages.length, (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _current == i ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(color: _current == i ? AppColors.primary : AppColors.border, borderRadius: AppRadius.fullBR),
+                    )),
                   ),
-                  if (_current < _pages.length - 1) ...[
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: _done,
-                      child: Text('Skip setup',
-                          style: AppTextStyles.caption
-                              .copyWith(color: AppColors.muted)),
-                    ),
-                  ],
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_current == _pages.length - 1) {
+                        _done();
+                      } else {
+                        _ctrl.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      }
+                    },
+                    child: Text(_current == _pages.length - 1 ? 'Get Started' : 'Continue'),
+                  ),
                 ],
               ),
             ),
@@ -197,40 +128,20 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.all(32),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon in a contained square — no decorative orbs
           Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Icon(page.icon, color: AppColors.primary, size: 32),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: AppRadius.mdBR),
+            child: SvgPicture.asset(page.asset, height: 64, colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn)),
           ),
-
-          const SizedBox(height: 32),
-
-          Text(
-            page.heading,
-            style: AppTextStyles.h2.copyWith(
-              color: AppColors.secondary,
-              height: 1.25,
-            ),
-          ),
-
+          const SizedBox(height: 40),
+          Text(page.heading, style: AppTextStyles.display.copyWith(fontSize: 24)),
           const SizedBox(height: 16),
-
-          Text(
-            page.body,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.6,
-            ),
-          ),
+          Text(page.body, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontSize: 16)),
         ],
       ),
     );

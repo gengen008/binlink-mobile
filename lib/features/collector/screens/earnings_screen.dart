@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/app_bar.dart';
 
 class EarningsScreen extends StatefulWidget {
   const EarningsScreen({super.key});
@@ -28,337 +32,128 @@ class _EarningsScreenState extends State<EarningsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CollectorProvider>(
-      builder: (_, prov, __) => Container(
-        color: Colors.white,
-        child: Column(
-          children: [
-            // ── Branded balance banner ─────────────────────────────────
-            _EarningsBanner(
-              available:  prov.walletAvailable,
-              pending:    prov.walletPending,
-              withdrawn:  prov.walletWithdrawn,
-              loading:    prov.loading || prov.loadingWallet,
-              onRefresh:  () { prov.loadDashboard(); prov.loadWallet(); },
-              onPayout:   () => _showPayoutSheet(context, prov),
-            ),
+    final prov = context.watch<CollectorProvider>();
 
-            Expanded(
-              child: prov.loading && prov.loadingWallet
-                  ? const Center(child: CircularProgressIndicator(
-                      color: AppColors.primary, strokeWidth: 2))
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-                      children: [
-                          // ── Today summary ──
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _SummaryCard(
-                                  label: "Today's Earnings",
-                                  value: Fmt.currency(prov.todayEarnings),
-                                  sub: '${prov.todayPickups} pickups',
-                                  color: AppColors.primary,
-                                  icon: PhosphorIconsFill.coins,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _SummaryCard(
-                                  label: 'Total Pickups',
-                                  value: '${prov.totalPickups}',
-                                  sub: 'all time',
-                                  color: AppColors.success,
-                                  icon: PhosphorIconsFill.truck,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // ── Transaction history ──
-                          Row(
-                            children: [
-                              Text('Transaction History', style: AppTextStyles.h4),
-                              const Spacer(),
-                              Text('${prov.walletTransactions.length} entries',
-                                  style: AppTextStyles.caption),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          if (prov.walletTransactions.isEmpty)
-                            _EmptyTransactions()
-                          else
-                            ...prov.walletTransactions.map(
-                              (tx) => _TransactionTile(tx: tx)),
-
-                          const SizedBox(height: 20),
-
-                          // ── Completed pickups ──
-                          Row(
-                            children: [
-                              Text('Completed Pickups', style: AppTextStyles.h4),
-                              const Spacer(),
-                              Text('${prov.completedPickups.length} total',
-                                  style: AppTextStyles.caption),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          if (prov.completedPickups.isEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: AppColors.fieldFill,
-                                borderRadius: BorderRadius.circular(AppRadius.sheet),
-                              ),
-                              child: Column(
-                                children: [
-                                  const Icon(PhosphorIconsRegular.coins,
-                                      color: AppColors.muted, size: 40),
-                                  const SizedBox(height: 12),
-                                  Text('No pickups yet',
-                                      style: AppTextStyles.h4),
-                                  const SizedBox(height: 4),
-                                  Text('Go online and accept requests to earn',
-                                      style: AppTextStyles.caption,
-                                      textAlign: TextAlign.center),
-                                ],
-                              ),
-                            )
-                          else
-                            ...prov.completedPickups.map(
-                              (b) => _PickupEarningTile(booking: b)),
-                        ],
-                      ),
-            ),
-          ],
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppScaffoldBar(
+        title: 'Earnings',
+        showBack: false,
+        trailing: IconButton(
+          onPressed: () { prov.loadDashboard(); prov.loadWallet(); },
+          icon: const Icon(PhosphorIconsRegular.arrowClockwise),
         ),
       ),
+      body: prov.loadingWallet
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async { prov.loadDashboard(); prov.loadWallet(); },
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  // ── Wallet Balance ──────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary,
+                      borderRadius: AppRadius.mdBR,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(20),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Available Balance', style: AppTextStyles.meta.copyWith(color: Colors.white.withAlpha(160))),
+                        const SizedBox(height: 8),
+                        Text(Fmt.currency(prov.walletAvailable), style: AppTextStyles.display.copyWith(color: Colors.white, fontSize: 32)),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _MiniStat(label: 'Pending', value: Fmt.currency(prov.walletPending), color: AppColors.warning),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _MiniStat(label: 'Withdrawn', value: Fmt.currency(prov.walletWithdrawn), color: Colors.white.withAlpha(160)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        AppButton(
+                          label: 'Request Payout',
+                          onPressed: prov.walletAvailable > 0 ? () => _showPayoutSheet(context, prov) : null,
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: Text(
+                            'Earnings are total amount minus 10% platform fee',
+                            style: AppTextStyles.caption.copyWith(color: Colors.white.withAlpha(100), fontSize: 9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── Recent Transactions ──────────────────────────────────────
+                  Text('Recent Transactions', style: AppTextStyles.section),
+                  const SizedBox(height: 16),
+                  if (prov.walletTransactions.isEmpty)
+                    const _EmptyState(asset: AppAssets.emptyEarnings, label: 'No transactions yet')
+                  else
+                    ...prov.walletTransactions.map((tx) => _TransactionTile(tx: tx)),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // ── Completed Pickups ────────────────────────────────────────
+                  Text('Completed Pickups', style: AppTextStyles.section),
+                  const SizedBox(height: 16),
+                  if (prov.completedPickups.isEmpty)
+                    const _EmptyState(asset: AppAssets.emptyPickups, label: 'No completed pickups')
+                  else
+                    ...prov.completedPickups.map((b) => _PickupEarningTile(booking: b)),
+                ],
+              ),
+            ),
     );
   }
 
-  void _showPayoutSheet(BuildContext ctx, CollectorProvider prov) {
+  void _showPayoutSheet(BuildContext context, CollectorProvider prov) {
     showModalBottomSheet(
-      context: ctx,
-      backgroundColor: Colors.transparent,
+      context: context,
       isScrollControlled: true,
       builder: (_) => _PayoutSheet(
         available: prov.walletAvailable,
-        onSubmit: (number, amount) => prov.requestPayout(number, amount),
+        onSubmit: (phone, amt) => prov.requestPayout(phone, amt),
       ),
     );
   }
 }
 
-// ── Branded earnings banner ────────────────────────────────────────────────
-
-class _EarningsBanner extends StatelessWidget {
-  const _EarningsBanner({
-    required this.available,
-    required this.pending,
-    required this.withdrawn,
-    required this.loading,
-    required this.onRefresh,
-    required this.onPayout,
-  });
-  final double available;
-  final double pending;
-  final double withdrawn;
-  final bool loading;
-  final VoidCallback onRefresh;
-  final VoidCallback onPayout;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title row
-              Row(
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(PhosphorIconsFill.wallet,
-                          color: AppColors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Text('Earnings',
-                          style: AppTextStyles.h3.copyWith(
-                              color: AppColors.secondary)),
-                    ],
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: onRefresh,
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.fieldFill,
-                        borderRadius: AppRadius.smBR,
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: loading
-                          ? const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: AppColors.primary),
-                            )
-                          : const Icon(PhosphorIconsRegular.arrowClockwise,
-                              color: AppColors.muted, size: 16),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Balance
-              Text('Available Balance', style: AppTextStyles.caption),
-              const SizedBox(height: 4),
-              Text(
-                Fmt.currency(available),
-                style: AppTextStyles.monoLg.copyWith(fontSize: 34),
-              ),
-
-              const SizedBox(height: 14),
-
-              // Pending + Withdrawn + Payout row
-              Row(
-                children: [
-                  _BannerStat(
-                      label: 'Pending',
-                      value: Fmt.currency(pending),
-                      color: AppColors.warning),
-                  const SizedBox(width: 10),
-                  _BannerStat(
-                      label: 'Withdrawn',
-                      value: Fmt.currency(withdrawn),
-                      color: AppColors.muted),
-                  const Spacer(),
-
-                  GestureDetector(
-                    onTap: available > 0 ? onPayout : null,
-                    child: Opacity(
-                      opacity: available > 0 ? 1.0 : 0.4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: AppRadius.buttonBR,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(PhosphorIconsFill.arrowCircleRight,
-                                color: AppColors.white, size: 14),
-                            const SizedBox(width: 6),
-                            Text('Payout',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w700,
-                                )),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BannerStat extends StatelessWidget {
-  const _BannerStat(
-      {required this.label, required this.value, required this.color});
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({required this.label, required this.value, required this.color});
   final String label;
   final String value;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withAlpha(18),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withAlpha(60)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: AppTextStyles.caption
-                  .copyWith(color: color, fontSize: 9)),
-          Text(value,
-              style: AppTextStyles.monoSm
-                  .copyWith(color: AppColors.white, fontSize: 12)),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white.withAlpha(120), fontSize: 10)),
+        const SizedBox(height: 2),
+        Text(value, style: AppTextStyles.bodyMedium.copyWith(color: color, fontWeight: FontWeight.w700)),
+      ],
     );
   }
 }
-
-// ── Summary card ───────────────────────────────────────────────────────────
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.label,
-    required this.value,
-    required this.sub,
-    required this.color,
-    required this.icon,
-  });
-  final String label;
-  final String value;
-  final String sub;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withAlpha(15),
-        borderRadius: BorderRadius.circular(AppRadius.sheet),
-        border: Border.all(color: color.withAlpha(60)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 10),
-          Text(value, style: AppTextStyles.mono.copyWith(
-            color: AppColors.textPrimary, fontSize: 18)),
-          const SizedBox(height: 2),
-          Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10)),
-          Text(sub, style: AppTextStyles.caption.copyWith(
-            color: color, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Transaction tile ───────────────────────────────────────────────────────
 
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.tx});
@@ -366,50 +161,39 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type   = tx['type'] as String? ?? 'EARNING';
+    final isPayout = tx['type'] == 'PAYOUT';
     final amount = Fmt.toDouble(tx['amount']);
-    final date   = tx['date'] as String?;
-    final isPayout = type == 'PAYOUT';
+    final date = tx['date'] as String?;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.lgBR,
+        color: Colors.white,
+        borderRadius: AppRadius.mdBR,
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: (isPayout ? AppColors.warning : AppColors.success).withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isPayout ? PhosphorIconsFill.arrowCircleRight : PhosphorIconsFill.coins,
-              color: isPayout ? AppColors.warning : AppColors.success,
-              size: 18,
-            ),
+          Icon(
+            isPayout ? PhosphorIconsRegular.arrowUpRight : PhosphorIconsRegular.arrowDownLeft,
+            color: isPayout ? AppColors.danger : AppColors.success,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(isPayout ? 'Payout' : 'Pickup Earned',
-                    style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
-                if (date != null)
-                  Text(Fmt.shortDate(date), style: AppTextStyles.caption.copyWith(fontSize: 10)),
+                Text(isPayout ? 'Payout' : 'Pickup Earning', style: AppTextStyles.bodyMedium),
+                if (date != null) Text(Fmt.shortDate(date), style: AppTextStyles.meta),
               ],
             ),
           ),
           Text(
-            '${isPayout ? '-' : '+'}${Fmt.currency(amount)}',
+            '${isPayout ? "-" : "+"}${Fmt.currency(amount)}',
             style: AppTextStyles.mono.copyWith(
-              color: isPayout ? AppColors.warning : AppColors.success,
-              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isPayout ? AppColors.danger : AppColors.success,
             ),
           ),
         ],
@@ -417,30 +201,6 @@ class _TransactionTile extends StatelessWidget {
     );
   }
 }
-
-class _EmptyTransactions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.lgBR,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(PhosphorIconsRegular.receipt, color: AppColors.muted, size: 22),
-          const SizedBox(width: 12),
-          Text('No transactions yet', style: AppTextStyles.caption),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Pickup earning tile ────────────────────────────────────────────────────
 
 class _PickupEarningTile extends StatelessWidget {
   const _PickupEarningTile({required this.booking});
@@ -448,246 +208,95 @@ class _PickupEarningTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amount  = Fmt.toDouble(booking['totalAmount']);
-    final address = booking['pickupAddress'] as String? ?? '';
-    final date    = booking['createdAt'] as String?;
-    final earned  = amount * 0.9; // platform takes 10%
+    final amount = Fmt.toDouble(booking['totalAmount']) * 0.9;
+    final address = booking['pickupAddress'] as String? ?? '—';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.lgBR,
+        color: Colors.white,
+        borderRadius: AppRadius.mdBR,
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          const Icon(PhosphorIconsFill.trashSimple,
-              color: AppColors.primary, size: 18),
-          const SizedBox(width: 12),
+          const Icon(PhosphorIconsRegular.truck, color: AppColors.textMuted),
+          const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(address,
-                    style: AppTextStyles.bodyMedium.copyWith(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                if (date != null)
-                  Text(Fmt.shortDate(date),
-                      style: AppTextStyles.caption.copyWith(fontSize: 10)),
-              ],
-            ),
+            child: Text(address, style: AppTextStyles.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           const SizedBox(width: 12),
-          Text(Fmt.currency(earned),
-              style: AppTextStyles.mono.copyWith(
-                color: AppColors.success, fontSize: 14)),
+          Text(Fmt.currency(amount), style: AppTextStyles.mono.copyWith(fontWeight: FontWeight.w700)),
         ],
       ),
     );
   }
 }
 
-// ── Payout sheet ───────────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.asset, required this.label});
+  final String asset;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: AppRadius.mdBR, border: Border.all(color: AppColors.border)),
+      child: Column(
+        children: [
+          SvgPicture.asset(asset, height: 80),
+          const SizedBox(height: 16),
+          Text(label, style: AppTextStyles.meta),
+        ],
+      ),
+    );
+  }
+}
 
 class _PayoutSheet extends StatefulWidget {
   const _PayoutSheet({required this.available, required this.onSubmit});
   final double available;
-  final Future<bool> Function(String momoNumber, double amount) onSubmit;
+  final Future<bool> Function(String, double) onSubmit;
 
   @override
   State<_PayoutSheet> createState() => _PayoutSheetState();
 }
 
 class _PayoutSheetState extends State<_PayoutSheet> {
-  final _phoneCtrl  = TextEditingController();
+  final _numberCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
-  final _formKey    = GlobalKey<FormState>();
-  bool _submitting  = false;
-
-  @override
-  void dispose() {
-    _phoneCtrl.dispose();
-    _amountCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
-    setState(() => _submitting = true);
-    final ok = await widget.onSubmit(_phoneCtrl.text.trim(), amount);
-    if (!mounted) return;
-    if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Payout request submitted!'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-      ));
-      Navigator.pop(context);
-    } else {
-      setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Payout failed. Try again.'),
-        backgroundColor: AppColors.danger,
-        behavior: SnackBarBehavior.floating,
-      ));
-    }
-  }
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.sheetBR,
-      ),
-      padding: EdgeInsets.fromLTRB(
-        24, 20, 24,
-        MediaQuery.of(context).viewInsets.bottom + 40,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: AppRadius.fullBR,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Container(
-                  width: 42, height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withAlpha(25),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.success.withAlpha(80)),
-                  ),
-                  child: const Icon(PhosphorIconsFill.wallet,
-                      color: AppColors.success, size: 20),
-                ),
-                const SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Request Payout', style: AppTextStyles.h3),
-                    Text(
-                      'Available: ${Fmt.currency(widget.available)}',
-                      style: AppTextStyles.caption.copyWith(color: AppColors.success),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            Text('MoMo Number', style: AppTextStyles.label),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _phoneCtrl,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: AppTextStyles.bodyMedium,
-              decoration: _inputDecoration('e.g. 0241234567'),
-              validator: (v) {
-                if (v == null || v.length < 10) return 'Enter a valid phone number';
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            Text('Amount (GHC)', style: AppTextStyles.label),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _amountCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: AppTextStyles.monoSm.copyWith(
-                color: AppColors.textPrimary, fontSize: 16),
-              decoration: _inputDecoration('e.g. 50.00'),
-              validator: (v) {
-                final amt = double.tryParse(v?.trim() ?? '');
-                if (amt == null || amt <= 0) return 'Enter a valid amount';
-                if (amt > widget.available) return 'Exceeds available balance';
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _submitting ? null : _submit,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Center(
-                      child: _submitting
-                          ? const SizedBox(
-                              width: 22, height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: AppColors.white),
-                            )
-                          : Text('Confirm Payout', style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w700,
-                            )),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Request Payout', style: AppTextStyles.h2),
+          const SizedBox(height: 24),
+          AppTextField(controller: _numberCtrl, label: 'MoMo Number', hint: '05XXXXXXX', keyboardType: TextInputType.phone),
+          const SizedBox(height: 16),
+          AppTextField(controller: _amountCtrl, label: 'Amount', hint: 'Max ${widget.available}', keyboardType: TextInputType.number),
+          const SizedBox(height: 24),
+          AppButton(
+            label: 'Submit Request',
+            loading: _loading,
+            onPressed: () async {
+              final amt = double.tryParse(_amountCtrl.text) ?? 0;
+              if (amt <= 0 || amt > widget.available) return;
+              setState(() => _loading = true);
+              final ok = await widget.onSubmit(_numberCtrl.text, amt);
+              if (!context.mounted) return;
+              setState(() => _loading = false);
+              if (ok) Navigator.pop(context);
+            },
+          ),
+        ],
       ),
     );
   }
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-    hintText: hint,
-    hintStyle: AppTextStyles.caption,
-    filled: true,
-    fillColor: AppColors.card,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    border: OutlineInputBorder(
-      borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.border),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.border),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.primary),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.danger),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: AppRadius.lgBR,
-      borderSide: const BorderSide(color: AppColors.danger),
-    ),
-  );
 }

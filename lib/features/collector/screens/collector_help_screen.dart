@@ -237,7 +237,7 @@ class _ContactCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF5483B3), size: 20),
+            Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

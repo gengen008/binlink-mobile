@@ -10,7 +10,7 @@ class SearchingRadarWidget extends StatefulWidget {
   const SearchingRadarWidget({
     super.key,
     this.radius       = 70.0,
-    this.ringColor    = const Color(0xFF5483B3),
+    this.ringColor    = const Color(0xFF16A34A),
     this.strokeWidth  = 2.0,
     this.duration     = const Duration(milliseconds: 2000),
   });

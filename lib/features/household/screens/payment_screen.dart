@@ -1,9 +1,9 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
@@ -97,135 +97,110 @@ class _PaymentScreenState extends State<PaymentScreen>
             const SizedBox(height: 20),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 1800),
-                    child: Container(
-                      width: 340,
-                      height: 122,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: AppColors.secondary,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Amount Due',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFF3F3C1),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            Fmt.currency(amount),
-                            style: AppTextStyles.h1.copyWith(
-                              color: const Color(0xFFF3F3C1),
-                            ),
-                          ),
-                        ],
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  borderRadius: AppRadius.mdBR,
+                  color: AppColors.secondary,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Amount Due',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withAlpha(160),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      Fmt.currency(amount),
+                      style: AppTextStyles.display.copyWith(
+                        color: Colors.white,
+                        fontSize: 32,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 32),
 
             // Payment method section
-            FadeInUp(
-              duration: const Duration(milliseconds: 2000),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  Text(
+                    'Payment Method',
+                    style: AppTextStyles.section,
+                  ),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadius.mdBR,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
                     child: Row(
                       children: [
-                        Text(
-                          'Payment Method',
-                          style: AppTextStyles.h3.copyWith(
-                            color: AppColors.secondary,
+                        const Icon(PhosphorIconsFill.money,
+                            color: AppColors.primary, size: 28),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Pay with Cash',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 20, height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.primary, width: 6),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
 
+                  const SizedBox(height: 16),
+
+                  // Cash instruction
                   Container(
-                    height: 85,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                        color: AppColors.secondary),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.mdBR,
+                      border: Border.all(color: AppColors.border),
+                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const SizedBox(width: 20),
-                            const Icon(PhosphorIconsRegular.money,
-                                color: Color(0xFFF3F3C1), size: 24),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Pay with Cash',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFF3F3C1),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            // ignore: deprecated_member_use
-                            Radio<String>(
-                              activeColor: const Color(0xFFF3F3C1),
-                              value: 'cash',
-                              // ignore: deprecated_member_use
-                              onChanged: (_) {},
-                              // ignore: deprecated_member_use
-                              groupValue: 'cash',
-                            ),
-                            const SizedBox(width: 20),
-                          ],
+                        const Icon(PhosphorIconsRegular.info, size: 16, color: AppColors.textMuted),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
+                            style: AppTextStyles.meta,
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Cash instruction
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.fieldFill,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.secondary,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: AppButton(
-                      label: S.of(context).confirmBooking,
-                      onPressed: _showSuccess,
-                    ),
+                  const SizedBox(height: 32),
+                  AppButton(
+                    label: S.of(context).confirmBooking,
+                    onPressed: _showSuccess,
                   ),
                 ],
               ),
@@ -265,18 +240,16 @@ class _PaymentScreenState extends State<PaymentScreen>
                   child: FadeTransition(
                     opacity: _fadePop,
                     child: Container(
-                      width: 120, height: 120,
+                      width: 100, height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.primary.withAlpha(20),
-                        border: Border.all(
-                            color: AppColors.primary.withAlpha(80), width: 2),
                       ),
                       child: const Center(
                         child: Icon(
-                          PhosphorIconsRegular.checkCircle,
+                          PhosphorIconsFill.checkCircle,
                           color: AppColors.primary,
-                          size: 60,
+                          size: 50,
                         ),
                       ),
                     ),
@@ -290,18 +263,15 @@ class _PaymentScreenState extends State<PaymentScreen>
                   child: Column(
                     children: [
                       Text(S.of(context).pickupConfirmed,
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.secondary,
-                          ),
+                          style: AppTextStyles.title,
                           textAlign: TextAlign.center),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Text(
                         isNow
                             ? 'A collector is being assigned.\nExpected arrival: ~15 minutes.'
                             : 'Your scheduled pickup has been confirmed.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.secondary,
-                          height: 1.6,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -309,74 +279,26 @@ class _PaymentScreenState extends State<PaymentScreen>
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
 
                 // Booking reference card
                 FadeTransition(
                   opacity: _fadePop,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.fieldFill,
-                      borderRadius: BorderRadius.circular(15),
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.mdBR,
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(S.of(context).bookingRef,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.secondary,
-                                )),
-                            Text(
-                              '#$ref',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                          ],
-                        ),
+                        _SuccessRow(label: S.of(context).bookingRef, value: '#$ref', isBold: true),
+                        const Divider(height: 32),
+                        _SuccessRow(label: S.of(context).amountPaid, value: Fmt.currency(amount)),
                         const SizedBox(height: 12),
-                        Container(height: 1, color: AppColors.secondary.withAlpha(40)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(S.of(context).amountPaid,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.secondary,
-                                )),
-                            Text(
-                              Fmt.currency(amount),
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Container(height: 1, color: AppColors.secondary.withAlpha(40)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Payment',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.secondary,
-                                )),
-                            Text(
-                              Fmt.paymentMethodLabel(_paymentMethod),
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                          ],
-                        ),
+                        _SuccessRow(label: 'Payment', value: Fmt.paymentMethodLabel(_paymentMethod)),
                       ],
                     ),
                   ),
@@ -389,51 +311,31 @@ class _PaymentScreenState extends State<PaymentScreen>
                   opacity: _fadePop,
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 0),
-                        child: AppButton(
-                          label: S.of(context).trackPickup,
-                          onPressed: _trackPickup,
-                        ),
+                      AppButton(
+                        label: S.of(context).trackPickup,
+                        onPressed: _trackPickup,
                       ),
 
                       const SizedBox(height: 12),
 
                       // Download Receipt
-                      GestureDetector(
-                        onTap: () => ReceiptService.shareReceipt(widget.booking),
-                        child: Container(
-                          height: 50,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF90D8FF)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(S.of(context).downloadReceipt,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.primary,
-                                  )),
-                            ],
-                          ),
+                      OutlinedButton(
+                        onPressed: () => ReceiptService.shareReceipt(widget.booking),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 54),
                         ),
+                        child: Text(S.of(context).downloadReceipt),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 20),
 
                       // Back to Home
-                      GestureDetector(
-                        onTap: _backToHome,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            S.of(context).backToHome,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.secondary,
-                            ),
+                      TextButton(
+                        onPressed: _backToHome,
+                        child: Text(
+                          S.of(context).backToHome,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -445,6 +347,24 @@ class _PaymentScreenState extends State<PaymentScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SuccessRow extends StatelessWidget {
+  const _SuccessRow({required this.label, required this.value, this.isBold = false});
+  final String label;
+  final String value;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: AppTextStyles.meta),
+        Text(value, style: isBold ? AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700) : AppTextStyles.bodyMedium),
+      ],
     );
   }
 }

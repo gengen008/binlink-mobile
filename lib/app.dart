@@ -51,9 +51,8 @@ class BinLinkApp extends StatelessWidget {
         builder: (_, themeProv, __) => MaterialApp(
           title: FlavorConfig.appName,
           debugShowCheckedModeBanner: false,
-          // Household → steelBlue theme | Collector → amber/driver theme
-          theme: isCollector ? AppTheme.collectorLight : AppTheme.light,
-          darkTheme: isCollector ? AppTheme.collectorDark : AppTheme.dark,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           themeMode: themeProv.themeMode,
           initialRoute: '/splash',
           routes: {

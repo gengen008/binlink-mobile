@@ -126,7 +126,7 @@ class _BackButton extends StatelessWidget {
           child: Icon(
             PhosphorIconsRegular.arrowLeft,
             size: 18,
-            color: Colors.white,
+            color: AppColors.secondary,
           ),
         ),
       ),

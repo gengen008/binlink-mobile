@@ -86,7 +86,7 @@ class _HelpScreenState extends State<HelpScreen> {
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
                                 color: isOpen
-                                    ? const Color(0xFF5483B3).withAlpha(15)
+                                    ? AppColors.primary.withAlpha(15)
                                     : AppColors.fieldFill,
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
@@ -221,7 +221,7 @@ class _ContactRow extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF5483B3), size: 18),
+          Icon(icon, color: AppColors.primary, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

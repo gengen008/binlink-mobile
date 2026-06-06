@@ -160,19 +160,19 @@ class CollectorLayer {
     canvas.drawCircle(
       const Offset(size / 2, size / 2), size / 2 - 1,
       Paint()
-        ..color      = const Color(0x405483B3)
+        ..color      = const Color(0x2016A34A)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
     canvas.drawCircle(
       const Offset(size / 2, size / 2), size / 2 - 5,
-      Paint()..color = const Color(0xFF5483B3),
+      Paint()..color = const Color(0xFF16A34A),
     );
     canvas.drawCircle(
       const Offset(size / 2, size / 2), size / 2 - 5,
       Paint()
-        ..color       = const Color(0xFFC1E8FF)
+        ..color       = Colors.white
         ..strokeWidth = 2.5
-        ..style       = PaintingStyle.stroke,
+        ..style       = ui.PaintingStyle.stroke,
     );
     // Arrow pointing up — MapLibre rotates it to the collector's bearing
     final path = Path()

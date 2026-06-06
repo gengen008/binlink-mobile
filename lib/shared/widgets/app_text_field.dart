@@ -18,7 +18,7 @@ class AppTextField extends StatefulWidget {
     this.label,
     this.hint,
     this.prefixIcon,
-    this.suffixIcon,
+    this.suffix,
     this.obscureText = false,
     this.keyboardType,
     this.inputFormatters,
@@ -39,7 +39,7 @@ class AppTextField extends StatefulWidget {
   final String? label;
   final String? hint;
   final Widget? prefixIcon;
-  final Widget? suffixIcon;
+  final Widget? suffix;
   /// When true and [showToggle] is true, renders an eye toggle button.
   final bool obscureText;
   /// Shows a password visibility toggle when [obscureText] is true.
@@ -125,7 +125,7 @@ class _AppTextFieldState extends State<AppTextField> {
                       size: 20,
                     ),
                   )
-                : widget.suffixIcon,
+                : widget.suffix,
             border: OutlineInputBorder(
               borderRadius: AppRadius.fieldBR,
               borderSide: const BorderSide(color: AppColors.border),

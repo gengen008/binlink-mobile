@@ -1,8 +1,8 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/app_notification_card.dart';
@@ -59,7 +59,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
               )
             : _notifs.isEmpty
-                ? _EmptyState()
+                ? const _EmptyState()
                 : _NotifList(
                     notifs: _notifs,
                     onMarkRead: _markRead,
@@ -71,27 +71,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState();
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 72, height: 72,
-            decoration: const BoxDecoration(
-              color: AppColors.fieldFill,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(PhosphorIconsRegular.bell,
-                color: AppColors.primary, size: 32),
-          ),
-          const SizedBox(height: 16),
+          SvgPicture.asset(AppAssets.emptyNotifications, height: 100),
+          const SizedBox(height: 24),
           Text('No notifications yet',
-              style: AppTextStyles.h4.copyWith(color: AppColors.secondary)),
-          const SizedBox(height: 6),
+              style: AppTextStyles.h3),
+          const SizedBox(height: 8),
           Text("You're all caught up!",
-              style: AppTextStyles.caption.copyWith(color: AppColors.secondary)),
+              style: AppTextStyles.meta),
         ],
       ),
     );
@@ -130,9 +123,7 @@ class _NotifList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _buildRows();
-    return FadeInUp(
-      duration: const Duration(milliseconds: 2000),
-      child: ListView.builder(
+    return ListView.builder(
       padding: const EdgeInsets.only(bottom: 24),
       itemCount: rows.length,
       itemBuilder: (_, i) {
@@ -147,7 +138,6 @@ class _NotifList extends StatelessWidget {
           onTap: isRead ? null : () => onMarkRead(n['id'] as String, row.idx!),
         );
       },
-      ),
     );
   }
 }

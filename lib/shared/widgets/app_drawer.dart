@@ -1,25 +1,3 @@
-//   Container(w/1.5, margin.right:30) > ClipRRect(only topRight/bottomRight:10)
-//   > Drawer > Padding(top:70) > Column(mainAxisAlignment:end, [
-//     Row(center, profile_column),
-//     YMargin(10), DrawerDots, YMargin(10),
-//     Padding(left:25, Column([DrawerListTile...])),
-//     Spacer(),
-//     DrawerDots, YMargin(10),
-//     Text("Share on:", montserrat, 10, w400, Primarydark),
-//     YMargin(10),
-//     Row(center, [Container(25×25,whatsapp), XMargin(5), Container(25×25,twitter), XMargin(5), Container(25×25,facebook)]),
-//     YMargin(10),
-//     Padding(h:50, Container(h:40,w:137,Primaryred,br:8,"Log out").ripple(signOut)),
-//     YMargin(10),
-//     Spacer()
-//   ])
-//
-// BinLink replacements only:
-//   - driver image → initials container (110×110 circle)
-//   - Primarydark → AppColors.secondary
-//   - Primaryfield → AppColors.border
-//   - Primaryred → AppColors.danger
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';

@@ -15,7 +15,6 @@ import '../../../core/network/api_client.dart';
 import '../../../core/routing/routing_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/map_style.dart';
-import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/chat_sheet.dart';
@@ -40,36 +39,31 @@ double _bearingDeg(LatLng from, LatLng to) {
   return (atan2(y, x) * 180 / pi + 360) % 360;
 }
 
-/// Renders a directional arrow icon (vehicle heading indicator) as a PNG.
 Future<Uint8List> _buildTruckIcon() async {
   const size = 64.0;
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, size, size));
 
-  // Glow
   canvas.drawCircle(
     const Offset(size / 2, size / 2),
     size / 2 - 1,
     Paint()
-      ..color = const Color(0x405483B3)
+      ..color = const Color(0x2016A34A)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
   );
-  // Fill
   canvas.drawCircle(
     const Offset(size / 2, size / 2),
     size / 2 - 5,
-    Paint()..color = const Color(0xFF5483B3),
+    Paint()..color = const Color(0xFF16A34A),
   );
-  // Stroke
   canvas.drawCircle(
     const Offset(size / 2, size / 2),
     size / 2 - 5,
     Paint()
-      ..color = const Color(0xFFC1E8FF)
+      ..color = Colors.white
       ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke,
+      ..style = ui.PaintingStyle.stroke,
   );
-  // Arrow pointing up (maplibre rotates it to face travel direction)
   final path = Path()
     ..moveTo(size / 2, 10)
     ..lineTo(size / 2 - 9, size - 14)
@@ -95,26 +89,21 @@ class TrackingScreen extends StatefulWidget {
 class _TrackingScreenState extends State<TrackingScreen>
     with TickerProviderStateMixin {
 
-  // MapLibre
   MapLibreMapController? _mapCtrl;
   bool _styleLoaded = false;
   Circle? _pickupCircle;
   Symbol? _truckSymbol;
   Line?   _routeLine;
 
-  // Booking data
   Map<String, dynamic>? _booking;
   bool _loading = true;
 
-  // Collector position tracking
   double? _prevCollectorLat;
   double? _prevCollectorLng;
 
-  // Route state
   double? _routeFetchLat;
   double? _routeFetchLng;
 
-  // Smooth animation (Bolt-style)
   LatLng? _collectorAnimPos;
   LatLng? _collectorPrevPos;
   LatLng? _collectorTargetPos;
@@ -134,39 +123,30 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   void dispose() {
     _markerAnim.dispose();
-    _mapCtrl?.onCircleTapped.remove(_dummy);
     if (mounted) {
       try { context.read<HouseholdProvider>().stopListening(); } catch (_) {}
     }
     super.dispose();
   }
 
-  void _dummy(Circle _) {}
-
-  // ── Map lifecycle ──────────────────────────────────────────────────────────
-
   Future<void> _onStyleLoaded() async {
     _styleLoaded = true;
-    // Register truck icon
     final iconBytes = await _buildTruckIcon();
     await _mapCtrl?.addImage('binlink-truck', iconBytes);
 
-    // Pickup circle
     _pickupCircle = await _mapCtrl?.addCircle(CircleOptions(
       geometry:          _pickupLatLng,
-      circleRadius:      11,
-      circleColor:       '#052659',
-      circleStrokeColor: '#C1E8FF',
+      circleRadius:      12,
+      circleColor:       '#111827',
+      circleStrokeColor: '#FFFFFF',
       circleStrokeWidth: 3.0,
-      circleOpacity:     0.95,
+      circleOpacity:     1.0,
     ));
 
-    // Initial camera
     await _mapCtrl?.animateCamera(
       CameraUpdate.newLatLngZoom(_pickupLatLng, 15.0),
     );
 
-    // If collector already has a position, place the truck immediately
     if (_collectorAnimPos != null && _truckSymbol == null) {
       await _placeTruckSymbol(_collectorAnimPos!);
     }
@@ -181,8 +161,6 @@ class _TrackingScreenState extends State<TrackingScreen>
       iconRotate: _collectorBearing,
     ));
   }
-
-  // ── Animation tick — NO setState, pure imperative ──────────────────────────
 
   void _tickMarker() {
     if (_collectorPrevPos == null || _collectorTargetPos == null) return;
@@ -211,14 +189,11 @@ class _TrackingScreenState extends State<TrackingScreen>
     _markerAnim.forward(from: 0);
     _mapCtrl?.animateCamera(CameraUpdate.newLatLng(newPos));
 
-    // Place truck symbol on first position
     if (_truckSymbol == null && _styleLoaded) {
       _collectorAnimPos = newPos;
       await _placeTruckSymbol(newPos);
     }
   }
-
-  // ── Data ───────────────────────────────────────────────────────────────────
 
   LatLng get _pickupLatLng => LatLng(
     (_booking?['pickupLat'] as num?)?.toDouble() ?? 5.6037,
@@ -233,13 +208,14 @@ class _TrackingScreenState extends State<TrackingScreen>
           _booking = Map<String, dynamic>.from(res.data['data'] as Map);
           _loading = false;
         });
-        // Move camera to pickup once we know it, if style loaded
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _styleLoaded) {
             _mapCtrl?.animateCamera(
                 CameraUpdate.newLatLngZoom(_pickupLatLng, 15.0));
-            _mapCtrl?.updateCircle(
-                _pickupCircle!, CircleOptions(geometry: _pickupLatLng));
+            if (_pickupCircle != null) {
+              _mapCtrl?.updateCircle(
+                  _pickupCircle!, CircleOptions(geometry: _pickupLatLng));
+            }
           }
         });
       }
@@ -258,22 +234,19 @@ class _TrackingScreenState extends State<TrackingScreen>
     if (!mounted || _mapCtrl == null) return;
     final points = result.points.isNotEmpty ? result.points : null;
 
-    // Update or create route line
     if (points != null && points.length > 1) {
       if (_routeLine != null) {
         await _mapCtrl!.updateLine(_routeLine!, LineOptions(geometry: points));
       } else {
         _routeLine = await _mapCtrl!.addLine(LineOptions(
           geometry:    points,
-          lineColor:   '#5483B3',
+          lineColor:   '#16A34A',
           lineWidth:   4.0,
           lineOpacity: 0.85,
         ));
       }
     }
   }
-
-  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +255,6 @@ class _TrackingScreenState extends State<TrackingScreen>
     final collectorLat = prov.collectorLat;
     final collectorLng = prov.collectorLng;
 
-    // Trigger animation when collector moves
     if (collectorLat != null && collectorLng != null &&
         (collectorLat != _prevCollectorLat || collectorLng != _prevCollectorLng)) {
       _prevCollectorLat = collectorLat;
@@ -292,7 +264,6 @@ class _TrackingScreenState extends State<TrackingScreen>
       });
     }
 
-    // Refresh route when collector moves > 200 m from last fetch
     if (collectorLat != null && collectorLng != null && _booking != null) {
       final fetchLat = _routeFetchLat;
       final fetchLng = _routeFetchLng;
@@ -306,7 +277,6 @@ class _TrackingScreenState extends State<TrackingScreen>
       }
     }
 
-    // ETA
     String? etaLabel;
     if (collectorLat != null && collectorLng != null &&
         status != 'COMPLETED' && status != 'ARRIVED') {
@@ -320,7 +290,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppScaffoldBar(
-        title: S.of(context).liveTracking,
+        title: 'Live Tracking',
         trailing: _booking != null
             ? StatusBadge(status: status, animate: true)
             : null,
@@ -331,20 +301,17 @@ class _TrackingScreenState extends State<TrackingScreen>
                   bookingId: widget.bookingId, myRole: 'HOUSEHOLD'),
               backgroundColor: AppColors.primary,
               child: const Icon(PhosphorIconsFill.chatCircle,
-                  color: AppColors.white, size: 24),
+                  color: Colors.white, size: 24),
             )
           : null,
       body: Column(
           children: [
-
-            // Map
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(
                       color: AppColors.primary))
                   : Stack(
                       children: [
-                        // MapLibre map
                         Positioned.fill(
                           child: MapLibreMap(
                             styleString: kMapStyleUrl,
@@ -361,7 +328,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                           ),
                         ),
 
-                        // Searching radar — shown while waiting for a collector
                         if (status == 'PENDING' || status == 'SEARCHING')
                           Positioned(
                             top: 16, left: 0, right: 0,
@@ -370,23 +336,21 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const SearchingRadarWidget(radius: 55),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 12),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 5),
+                                        horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: AppColors.secondary.withAlpha(220),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                          color: AppColors.primary
-                                              .withAlpha(60)),
+                                      color: AppColors.secondary,
+                                      borderRadius: AppRadius.fullBR,
+                                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
                                     ),
                                     child: Text(
                                       status == 'SEARCHING'
                                           ? 'Searching for a collector...'
                                           : 'Waiting for acceptance...',
                                       style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.white),
+                                          color: Colors.white, fontWeight: FontWeight.w700),
                                     ),
                                   ),
                                 ],
@@ -394,28 +358,26 @@ class _TrackingScreenState extends State<TrackingScreen>
                             ),
                           ),
 
-                        // ETA overlay chip
                         if (etaLabel != null)
                           Positioned(
-                            top: 12, left: 12,
+                            top: 16, left: 16,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
+                                  horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
-                                color: AppColors.secondary.withAlpha(230),
+                                color: AppColors.secondary,
                                 borderRadius: AppRadius.fullBR,
-                                border: Border.all(
-                                    color: AppColors.primary.withAlpha(80)),
+                                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(PhosphorIconsFill.clock,
-                                      color: AppColors.warning, size: 14),
-                                  const SizedBox(width: 6),
+                                      color: AppColors.primary, size: 16),
+                                  const SizedBox(width: 8),
                                   Text(etaLabel,
-                                      style: AppTextStyles.monoSm.copyWith(
-                                          color: AppColors.white)),
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                          color: Colors.white, fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             ),
@@ -424,118 +386,85 @@ class _TrackingScreenState extends State<TrackingScreen>
                     ),
             ),
 
-            // Bottom info card
             if (_booking != null)
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
                 decoration: const BoxDecoration(
-                  color: AppColors.card,
+                  color: Colors.white,
                   borderRadius: AppRadius.sheetBR,
                   border: Border(top: BorderSide(color: AppColors.border)),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
                 ),
                 child: Column(
                   children: [
-                  Center(
+                    Center(
                       child: Container(
-                        width: 80, height: 3,
-                        margin: const EdgeInsets.only(bottom: 20),
+                        width: 40, height: 4,
+                        margin: const EdgeInsets.only(bottom: 24),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(120),
-                          borderRadius: const BorderRadius.all(Radius.circular(80)),
+                          color: AppColors.border,
+                          borderRadius: AppRadius.fullBR,
                         ),
                       ),
                     ),
                     _StatusMessage(status: status),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     if (_booking!['collector'] != null) ...[
-                      const Divider(color: AppColors.border),
-                      const SizedBox(height: 16),
                       Row(
                         children: [
-                          Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(30),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                Fmt.initials(_booking!['collector']
-                                    ['fullName'] as String?),
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: AppColors.primaryLight,
+                            child: Text(
+                              Fmt.initials(_booking!['collector']['fullName'] as String?),
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _booking!['collector']['fullName']
-                                          as String? ?? 'Collector',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.secondary,
-                                  ),
+                                  _booking!['collector']['fullName'] as String? ?? 'Collector',
+                                  style: AppTextStyles.section,
                                 ),
                                 Row(
                                   children: [
-                                    const Icon(PhosphorIconsFill.star,
-                                        color: AppColors.warning, size: 14),
+                                    const Icon(PhosphorIconsFill.star, color: AppColors.warning, size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${_booking!['collector']['rating'] ?? 5.0}',
-                                      style: AppTextStyles.monoSm,
+                                      style: AppTextStyles.meta.copyWith(fontWeight: FontWeight.w700),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
                           ),
-                          if (status == 'COMPLETED')
-                            const Icon(PhosphorIconsFill.checkCircle,
-                                color: AppColors.success, size: 28)
-                          else ...[
-                            if (_booking!['collector']['phone'] != null)
-                              _ActionCircle(
-                                icon: PhosphorIconsFill.phone,
-                                color: AppColors.success,
-                                onTap: () => launchUrl(Uri.parse(
-                                  'tel:${_booking!['collector']['phone']}')),
-                              ),
-                            const SizedBox(width: 8),
-                            _ActionCircle(
-                              icon: PhosphorIconsFill.navigationArrow,
-                              color: AppColors.primary,
-                              onTap: () {
-                                final lat = (_booking!['pickupLat'] as num?)?.toDouble();
-                                final lng = (_booking!['pickupLng'] as num?)?.toDouble();
-                                if (lat == null || lng == null) return;
-                                launchUrl(Uri.parse(
-                                  'https://www.google.com/maps/dir/?api=1'
-                                  '&destination=$lat,$lng&travelmode=driving',
-                                ), mode: LaunchMode.externalApplication);
-                              },
+                          if (status != 'COMPLETED') ...[
+                            _ActionBtn(
+                              icon: PhosphorIconsFill.phone,
+                              onTap: () => launchUrl(Uri.parse('tel:${_booking!['collector']['phone'] ?? ''}')),
                             ),
                           ],
                         ],
                       ),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Row(
                       children: [
-                        const Icon(PhosphorIconsRegular.mapPin,
-                            color: AppColors.muted, size: 16),
-                        const SizedBox(width: 8),
+                        const Icon(PhosphorIconsRegular.mapPin, color: AppColors.textMuted, size: 18),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _booking!['pickupAddress'] as String? ?? '',
-                            style: AppTextStyles.body
-                                .copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -549,25 +478,23 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 }
 
-class _ActionCircle extends StatelessWidget {
-  const _ActionCircle({
-    required this.icon, required this.color, required this.onTap});
+class _ActionBtn extends StatelessWidget {
+  const _ActionBtn({required this.icon, required this.onTap});
   final IconData icon;
-  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: AppRadius.fullBR,
       child: Container(
-        width: 40, height: 40,
-        decoration: BoxDecoration(
-          color: color.withAlpha(25),
+        width: 44, height: 44,
+        decoration: const BoxDecoration(
+          color: AppColors.primaryLight,
           shape: BoxShape.circle,
-          border: Border.all(color: color.withAlpha(80)),
         ),
-        child: Icon(icon, color: color, size: 19),
+        child: Icon(icon, color: AppColors.primary, size: 20),
       ),
     );
   }
@@ -580,32 +507,24 @@ class _StatusMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, msg, color) = switch (status) {
-      'SEARCHING'  => (PhosphorIconsRegular.magnifyingGlass, 'Searching for a nearby collector...', AppColors.warning),
-      'PENDING'    => (PhosphorIconsRegular.clock,           'Waiting for a collector to accept...', AppColors.warning),
-      'ASSIGNED'   => (PhosphorIconsFill.userCheck,          'A collector has been assigned!',       AppColors.primary),
-      'ACCEPTED'   => (PhosphorIconsFill.checkCircle,        'Collector accepted your request!',     AppColors.primary),
-      'ON_THE_WAY' => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
-      'EN_ROUTE'   => (PhosphorIconsFill.truck,              'Collector is on the way to you!',      AppColors.warning),
-      'ARRIVED'    => (PhosphorIconsFill.mapPin,             'Collector has arrived!',               AppColors.success),
-      'COLLECTING' => (PhosphorIconsFill.trashSimple,        'Collecting your waste now...',         AppColors.success),
-      'COLLECTED'  => (PhosphorIconsFill.checkCircle,        'Waste collected — en route to depot!', AppColors.success),
-      'COMPLETED'  => (PhosphorIconsFill.sparkle,            'Pickup complete — great job!',         AppColors.success),
-      'CANCELLED'  => (PhosphorIconsRegular.xCircle,         'This booking was cancelled.',          AppColors.danger),
-      _            => (PhosphorIconsRegular.question,        status,                                 AppColors.muted),
+      'SEARCHING'  => (PhosphorIconsRegular.magnifyingGlass, 'Searching for collector...', AppColors.warning),
+      'PENDING'    => (PhosphorIconsRegular.clock,           'Waiting for acceptance...',   AppColors.warning),
+      'ASSIGNED'   => (PhosphorIconsFill.userCheck,          'Collector assigned',         AppColors.primary),
+      'ACCEPTED'   => (PhosphorIconsFill.checkCircle,        'Collector accepted',         AppColors.primary),
+      'ON_THE_WAY' => (PhosphorIconsFill.truck,              'Collector is on the way',    AppColors.warning),
+      'EN_ROUTE'   => (PhosphorIconsFill.truck,              'Collector is on the way',    AppColors.warning),
+      'ARRIVED'    => (PhosphorIconsFill.mapPin,             'Collector has arrived',      AppColors.success),
+      'COLLECTING' => (PhosphorIconsFill.trashSimple,        'Collecting waste...',        AppColors.success),
+      'COLLECTED'  => (PhosphorIconsFill.checkCircle,        'Waste collected',            AppColors.success),
+      'COMPLETED'  => (PhosphorIconsFill.checkCircle,        'Pickup completed',           AppColors.success),
+      'CANCELLED'  => (PhosphorIconsRegular.xCircle,         'Booking cancelled',          AppColors.danger),
+      _            => (PhosphorIconsRegular.question,        status,                       AppColors.muted),
     };
     return Row(
       children: [
-        Container(
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-            color: color.withAlpha(25),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 22),
-        ),
+        Icon(icon, color: color, size: 24),
         const SizedBox(width: 12),
-        Expanded(child: Text(msg, style: AppTextStyles.bodyMedium.copyWith(
-          fontWeight: FontWeight.w600, color: AppColors.secondary))),
+        Expanded(child: Text(msg, style: AppTextStyles.section.copyWith(color: color))),
       ],
     );
   }

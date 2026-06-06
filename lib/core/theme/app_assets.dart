@@ -6,10 +6,10 @@ class AppAssets {
   AppAssets._();
 
   // ── Brand ────────────────────────────────────────────────────────────────
-  static const logo      = 'assets/images/logo.png';   // PNG for Image.asset
-  static const logoSvg   = 'assets/svg/binlink_logo.svg';
-  static const splash    = 'assets/images/logo.png';
-  static const appIcon   = 'assets/images/app_icon.png';
+  static const logoSvg        = 'assets/svg/binlink_logo.svg';
+  static const logoPremiumSvg = 'assets/svg/binlink_logo_premium.svg';
+  static const splash         = 'assets/svg/binlink_logo.svg';
+  static const appIcon   = 'assets/svg/binlink_logo.svg';
 
   // ── Avatars ───────────────────────────────────────────────────────────────
   static const userAvatar  = 'assets/images/defaultavatar.png';
@@ -17,6 +17,12 @@ class AppAssets {
   // ── Map markers ───────────────────────────────────────────────────────────
   static const pickupMarker    = 'assets/svg/pickup_marker.svg';
   static const collectorMarker = 'assets/svg/collector_marker.svg';
+  static const truck           = 'assets/svg/collector_truck.svg';
+
+  // ── Domain Icons ──────────────────────────────────────────────────────────
+  static const rubbishBin     = 'assets/svg/rubbish_bin.svg';
+  static const recyclingBag   = 'assets/svg/recycling_bag.svg';
+  static const verifiedBadge  = 'assets/svg/verified_badge.svg';
 
   // ── Empty states ──────────────────────────────────────────────────────────
   static const emptyPickups       = 'assets/svg/empty_pickups.svg';

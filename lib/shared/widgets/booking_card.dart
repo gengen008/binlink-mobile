@@ -5,119 +5,119 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/utils/formatters.dart';
 
-/// Single booking row — household History tab and collector Pickups list.
 class BookingCard extends StatelessWidget {
   const BookingCard({
     super.key,
     required this.booking,
     this.onTap,
-    this.showCollector = false,
   });
 
   final Map<String, dynamic> booking;
   final VoidCallback? onTap;
-  final bool showCollector;
 
   @override
   Widget build(BuildContext context) {
-    final status      = booking['status'] as String? ?? 'PENDING';
-    final address     = booking['pickupAddress'] as String? ?? '—';
-    final amount      = Fmt.toDouble(booking['totalAmount']);
-    final createdAt   = booking['createdAt'] as String?;
-    final category    = booking['wasteCategory'] as String?;
+    final status = booking['status'] as String? ?? 'PENDING';
+    final address = booking['pickupAddress'] as String? ?? '—';
+    final amount = Fmt.toDouble(booking['totalAmount']);
+    final createdAt = booking['createdAt'] as String?;
+    final category = booking['wasteCategory'] as String?;
     final statusColor = AppColors.statusColor(status);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.mdBR,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadius.mdBR,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.smBR,
+                ),
+                child: Icon(
+                  _getCategoryIcon(category),
+                  color: AppColors.secondary,
+                  size: 20,
+                ),
               ),
-              child: const Icon(
-                PhosphorIconsRegular.trashSimple,
-                color: AppColors.primary,
-                size: 20,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      address,
+                      style: AppTextStyles.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${Fmt.categoryLabel(category ?? '')} · ${createdAt != null ? Fmt.shortDate(createdAt) : '—'}',
+                      style: AppTextStyles.meta,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    address,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    Fmt.currency(amount),
+                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      if (category != null) ...[
-                        Text(
-                          Fmt.categoryLabel(category),
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(' · ', style: AppTextStyles.caption),
-                      ],
-                      Text(
-                        createdAt != null ? Fmt.shortDate(createdAt) : '—',
-                        style: AppTextStyles.caption,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 6),
+                  _StatusPill(status: status, color: statusColor),
                 ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  Fmt.currency(amount),
-                  style: AppTextStyles.monoSm.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                  ),
-                  child: Text(
-                    Fmt.statusLabel(status),
-                    style: AppTextStyles.caption.copyWith(
-                      color: statusColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String? category) {
+    switch (category) {
+      case 'PLASTIC': return PhosphorIconsFill.recycle;
+      case 'ORGANIC': return PhosphorIconsFill.leaf;
+      case 'EWASTE': return PhosphorIconsFill.laptop;
+      default: return PhosphorIconsFill.trashSimple;
+    }
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status, required this.color});
+  final String status;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: AppRadius.xsBR,
+      ),
+      child: Text(
+        Fmt.statusLabel(status),
+        style: AppTextStyles.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 9,
         ),
       ),
     );
