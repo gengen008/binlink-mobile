@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
@@ -16,13 +17,13 @@ class WasteCategory {
   const WasteCategory({
     required this.key,
     required this.label,
-    required this.icon,
+    required this.image,
     required this.color,
     required this.desc,
   });
   final String key;
   final String label;
-  final IconData icon;
+  final String image; // PNG asset path
   final Color color;
   final String desc;
 }
@@ -31,49 +32,42 @@ final List<WasteCategory> kCategories = [
   WasteCategory(
     key: 'HOUSEHOLD',
     label: 'Household',
-    icon: PhosphorIconsFill.trashSimple,
+    image: AppAssets.trashBin,
     color: AppColors.primary,
     desc: 'General home rubbish',
   ),
   const WasteCategory(
     key: 'PLASTIC',
-    label: 'Plastic',
-    icon: PhosphorIconsFill.recycle,
+    label: 'Plastic / Glass',
+    image: AppAssets.recycleBin,
     color: Color(0xFF3B82F6),
     desc: 'Bottles, bags, containers',
   ),
   const WasteCategory(
     key: 'ORGANIC',
     label: 'Organic',
-    icon: PhosphorIconsFill.leaf,
+    image: AppAssets.leaf,
     color: Color(0xFF10B981),
     desc: 'Food scraps, garden waste',
   ),
   const WasteCategory(
     key: 'EWASTE',
     label: 'E-Waste',
-    icon: PhosphorIconsFill.laptop,
+    image: AppAssets.laptop,
     color: Color(0xFF8B5CF6),
     desc: 'Electronics, batteries',
   ),
   const WasteCategory(
     key: 'GLASS',
-    label: 'Glass',
-    icon: PhosphorIconsFill.brandy,
+    label: 'Glass / Metal',
+    image: AppAssets.bottle,
     color: Color(0xFF0EA5E9),
-    desc: 'Bottles, jars, shards',
-  ),
-  const WasteCategory(
-    key: 'METAL',
-    label: 'Metal',
-    icon: PhosphorIconsFill.nut,
-    color: Color(0xFF64748B),
-    desc: 'Cans, scrap metal',
+    desc: 'Bottles, cans, scrap',
   ),
   const WasteCategory(
     key: 'CONSTRUCTION',
     label: 'Construction',
-    icon: PhosphorIconsFill.wall,
+    image: AppAssets.construction,
     color: Color(0xFFB45309),
     desc: 'Debris, wood, tiles',
   ),
@@ -129,9 +123,10 @@ class StepCategory extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat.icon, color: cat.color, size: 32),
+                      Image.asset(cat.image, width: 40, height: 40),
                       const SizedBox(height: 12),
                       Text(cat.label, style: AppTextStyles.bodyMedium),
+                      Text(cat.desc, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),

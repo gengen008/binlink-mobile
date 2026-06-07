@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -61,7 +60,7 @@ class CollectorProfileTab extends StatelessWidget {
                           children: [
                             Text(user?.fullName ?? 'Collector', style: AppTextStyles.section),
                             const SizedBox(width: 4),
-                            SvgPicture.asset(AppAssets.verifiedBadge, width: 16, height: 16),
+                            Image.asset(AppAssets.verifiedBadge, width: 16, height: 16),
                           ],
                         ),
                         Text(user?.email ?? '', style: AppTextStyles.meta),
@@ -91,22 +90,22 @@ class CollectorProfileTab extends StatelessWidget {
 
             // ── Menu ────────────────────────────────────────────────────────
             _ProfileMenuTile(
-              icon: PhosphorIconsRegular.truck,
+              image: AppAssets.steeringWheel,
               label: 'Vehicle Details',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleDetailsScreen())),
             ),
             _ProfileMenuTile(
-              icon: PhosphorIconsRegular.bell,
+              image: AppAssets.alertBell,
               label: 'Notifications',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorNotificationsScreen())),
             ),
             _ProfileMenuTile(
-              icon: PhosphorIconsRegular.question,
+              image: AppAssets.help,
               label: 'Help & Support',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorHelpScreen())),
             ),
             _ProfileMenuTile(
-              icon: PhosphorIconsRegular.shieldCheck,
+              image: AppAssets.shield,
               label: 'Privacy & Security',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorPrivacyScreen())),
             ),
@@ -178,8 +177,8 @@ class _StatItem {
 }
 
 class _ProfileMenuTile extends StatelessWidget {
-  const _ProfileMenuTile({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
+  const _ProfileMenuTile({required this.image, required this.label, required this.onTap});
+  final String image;
   final String label;
   final VoidCallback onTap;
 
@@ -199,7 +198,7 @@ class _ProfileMenuTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: AppColors.secondary),
+              Image.asset(image, width: 24, height: 24),
               const SizedBox(width: 16),
               Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
               const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textMuted),

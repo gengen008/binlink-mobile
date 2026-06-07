@@ -5,11 +5,13 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../screens/saved_addresses_screen.dart';
 import '../screens/subscriptions_screen.dart';
 import '../screens/edit_profile_screen.dart';
+import '../screens/notifications_screen.dart';
 import '../screens/help_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../../../shared/widgets/app_bar.dart';
@@ -38,16 +40,23 @@ class ProfileTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: AppRadius.mdBR,
-                border: Border.all(color: AppColors.border),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: AppColors.primaryLight,
-                    child: Text(
-                      Fmt.initials(user?.fullName ?? 'U'),
-                      style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: CircleAvatar(
+                      radius: 32,
+                      backgroundColor: AppColors.primaryLight,
+                      child: Text(
+                        Fmt.initials(user?.fullName ?? 'U'),
+                        style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -55,7 +64,13 @@ class ProfileTab extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.fullName ?? 'BinLink User', style: AppTextStyles.section),
+                        Row(
+                          children: [
+                            Text(user?.fullName ?? 'BinLink User', style: AppTextStyles.section),
+                            const SizedBox(width: 4),
+                            Image.asset(AppAssets.verifiedBadge, width: 18, height: 18),
+                          ],
+                        ),
                         Text(user?.email ?? '', style: AppTextStyles.meta),
                       ],
                     ),
@@ -65,7 +80,7 @@ class ProfileTab extends StatelessWidget {
                       context,
                       MaterialPageRoute(builder: (_) => const EditProfileScreen()),
                     ),
-                    icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 20),
+                    icon: Image.asset(AppAssets.userCog, width: 22, height: 22),
                   ),
                 ],
               ),
@@ -73,7 +88,7 @@ class ProfileTab extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ── Stats Row (PASS E) ───────────────────────────────────────────
+            // ── Stats Row ────────────────────────────────────────────────────
             _StatsRow(
               items: [
                 _StatItem(label: 'Pickups', value: '${user?.totalPickups ?? 0}'),
@@ -86,7 +101,7 @@ class ProfileTab extends StatelessWidget {
 
             // ── Menu List ─────────────────────────────────────────────────────
             _MenuTile(
-              icon: PhosphorIconsRegular.mapPin,
+              image: AppAssets.trashLocation,
               label: 'Saved Addresses',
               onTap: () => Navigator.push(
                 context,
@@ -94,7 +109,7 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
             _MenuTile(
-              icon: PhosphorIconsRegular.calendarCheck,
+              image: AppAssets.calendar,
               label: 'Subscriptions',
               onTap: () => Navigator.push(
                 context,
@@ -102,7 +117,15 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
             _MenuTile(
-              icon: PhosphorIconsRegular.question,
+              image: AppAssets.alertBell,
+              label: 'Notifications',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              ),
+            ),
+            _MenuTile(
+              image: AppAssets.help,
               label: 'Help & Support',
               onTap: () => Navigator.push(
                 context,
@@ -110,7 +133,7 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
             _MenuTile(
-              icon: PhosphorIconsRegular.shieldCheck,
+              image: AppAssets.shield,
               label: 'Privacy Policy',
               onTap: () => Navigator.push(
                 context,
@@ -154,7 +177,7 @@ class _StatsRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadius.mdBR,
-        border: Border.all(color: AppColors.border),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: Row(
         children: items.asMap().entries.map((e) {
@@ -162,7 +185,7 @@ class _StatsRow extends StatelessWidget {
           return Expanded(
             child: Container(
               decoration: BoxDecoration(
-                border: isLast ? null : const Border(right: BorderSide(color: AppColors.border)),
+                border: isLast ? null : const Border(right: BorderSide(color: AppColors.divider)),
               ),
               child: Column(
                 children: [
@@ -187,12 +210,12 @@ class _StatItem {
 
 class _MenuTile extends StatelessWidget {
   const _MenuTile({
-    required this.icon,
+    required this.image,
     required this.label,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String image;
   final String label;
   final VoidCallback onTap;
 
@@ -204,18 +227,18 @@ class _MenuTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppRadius.mdBR,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: AppRadius.mdBR,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.border.withAlpha(50)),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: AppColors.secondary),
+              Image.asset(image, width: 22, height: 22, color: AppColors.secondary),
               const SizedBox(width: 16),
-              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-              const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textMuted),
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600))),
+              const Icon(PhosphorIconsRegular.caretRight, size: 16, color: AppColors.textMuted),
             ],
           ),
         ),

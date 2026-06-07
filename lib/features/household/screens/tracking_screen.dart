@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/household_provider.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -60,19 +61,16 @@ class _TrackingScreenState extends State<TrackingScreen> {
           Positioned.fill(
             child: BinLinkMap(
               initialPosition: pickupPos,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('pickup'),
-                  position: pickupPos,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                ),
-                if (prov.collectorLat != null)
-                  Marker(
-                    markerId: const MarkerId('collector'),
-                    position: LatLng(prov.collectorLat!, prov.collectorLng!),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-                  ),
-              },
+              pickupPosition: pickupPos,
+              collectors: prov.collectorLat != null
+                  ? [
+                      {
+                        'id': 'active_collector',
+                        'lastLat': prov.collectorLat!,
+                        'lastLng': prov.collectorLng!,
+                      }
+                    ]
+                  : const [],
             ),
           ),
 
@@ -190,17 +188,29 @@ class _StatusMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, msg, color) = switch (status) {
-      'PENDING'    => (PhosphorIconsFill.clock, 'Finding your collector...', AppColors.warning),
-      'ACCEPTED'   => (PhosphorIconsFill.checkCircle, 'Collector accepted', AppColors.success),
-      'EN_ROUTE'   => (PhosphorIconsFill.truck, 'Collector is on the way', AppColors.info),
-      'ARRIVED'    => (PhosphorIconsFill.mapPin, 'Collector has arrived', AppColors.success),
-      'COMPLETED'  => (PhosphorIconsFill.checkCircle, 'Pickup completed', AppColors.success),
-      _            => (PhosphorIconsFill.info, status, AppColors.textSecondary),
+    final (pngAsset, fallbackIcon, msg, color) = switch (status) {
+      'PENDING'   => (null, PhosphorIconsFill.clock, 'Finding your collector...', AppColors.warning),
+      'ACCEPTED'  => (AppAssets.verifiedBadge, null, 'Collector accepted', AppColors.success),
+      'EN_ROUTE'  => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
+      'ARRIVED'   => (AppAssets.gps, null, 'Collector has arrived', AppColors.success),
+      'COMPLETED' => (AppAssets.verifiedBadge, null, 'Pickup completed', AppColors.success),
+      _           => (null, PhosphorIconsFill.info, status, AppColors.textSecondary),
     };
+
+    Widget iconWidget;
+    if (pngAsset != null) {
+      iconWidget = Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
+        child: Image.asset(pngAsset, width: 22, height: 22, color: color),
+      );
+    } else {
+      iconWidget = Icon(fallbackIcon!, color: color, size: 24);
+    }
+
     return Row(
       children: [
-        Icon(icon, color: color, size: 24),
+        iconWidget,
         const SizedBox(width: 12),
         Expanded(child: Text(msg, style: AppTextStyles.section.copyWith(color: color))),
       ],

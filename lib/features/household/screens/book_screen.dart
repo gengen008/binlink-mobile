@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
@@ -37,7 +38,7 @@ class _BookScreenState extends State<BookScreen> {
   
   LatLng _pickupPos = const LatLng(5.6037, -0.1870);
   bool _locating = false;
-  GoogleMapController? _mapController;
+  MapLibreMapController? _mapController;
 
   final Map<String, double> _kBinPrices = {'SMALL': 30, 'MEDIUM': 40, 'LARGE': 50};
   final double _kBagPrice = 6;
@@ -143,13 +144,7 @@ class _BookScreenState extends State<BookScreen> {
               initialPosition: _pickupPos,
               myLocationEnabled: true,
               onMapCreated: (c) => _mapController = c,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('pickup_pin'),
-                  position: _pickupPos,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                ),
-              },
+              pickupPosition: _pickupPos,
             ),
           ),
 
@@ -195,7 +190,9 @@ class _BookScreenState extends State<BookScreen> {
                 children: [
                   const SizedBox(height: 12),
                   Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: AppRadius.fullBR)),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
+                  _BookingStepBar(currentStep: _step),
+                  const SizedBox(height: 12),
                   
                   Flexible(
                     child: PageView(
@@ -252,6 +249,78 @@ class _BookScreenState extends State<BookScreen> {
     );
   }
 }
+
+// ─── Booking step progress bar with PNG icons ────────────────────────────────
+
+class _BookingStepBar extends StatelessWidget {
+  const _BookingStepBar({required this.currentStep});
+  final int currentStep;
+
+  static const _stepIcons = [
+    AppAssets.trashBin,   // Step 1: Category
+    AppAssets.scale,      // Step 2: Volume
+    AppAssets.clock,      // Step 3: Schedule
+    AppAssets.pin,        // Step 4: Address
+    AppAssets.receipt,    // Step 5: Review
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: List.generate(5, (i) {
+          final isDone   = i < currentStep;
+          final isActive = i == currentStep;
+          return Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(
+                          color: isDone || isActive ? AppColors.primary : AppColors.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isActive ? AppColors.primary : (isDone ? AppColors.primary : AppColors.border),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Center(
+                          child: isDone
+                            ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                            : Image.asset(
+                                _stepIcons[i],
+                                width: 16, height: 16,
+                                color: isActive ? Colors.white : AppColors.textMuted,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (i < 4)
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      height: 2,
+                      color: i < currentStep ? AppColors.primary : AppColors.border,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _CircleNavBtn extends StatelessWidget {
   const _CircleNavBtn({required this.icon, required this.onTap});

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../auth/providers/auth_provider.dart';
+import '../../../core/theme/app_assets.dart';
 import '../providers/household_provider.dart';
 import '../screens/book_screen.dart';
 import '../screens/tracking_screen.dart';
@@ -24,22 +24,18 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  GoogleMapController? _mapController;
+  MapLibreMapController? _mapController;
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     _mapController = controller;
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
     final prov = context.watch<HouseholdProvider>();
-    final user = auth.user;
     final active = prov.activeBooking;
     final saved = prov.savedAddresses.take(2).toList();
     
-    final firstName = user?.fullName?.split(' ').first ?? 'there';
-
     return Stack(
       children: [
         // ── Full Screen Map ─────────────────────────────────────────────────
@@ -47,21 +43,15 @@ class _HomeTabState extends State<HomeTab> {
           child: BinLinkMap(
             initialPosition: widget.myPos,
             onMapCreated: _onMapCreated,
-            markers: prov.onlineCollectors.map((c) {
-              return Marker(
-                markerId: MarkerId(c['id']),
-                position: LatLng(
-                  (c['lastLat'] as num).toDouble(),
-                  (c['lastLng'] as num).toDouble(),
-                ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                onTap: () => showCollectorSheet(
-                  context,
-                  c,
-                  onRequestPickup: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen())),
-                ),
-              );
-            }).toSet(),
+            collectors: prov.onlineCollectors,
+            onCollectorTap: (c) => showCollectorSheet(
+              context,
+              c,
+              onRequestPickup: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BookScreen()),
+              ),
+            ),
           ),
         ),
 
@@ -86,20 +76,23 @@ class _HomeTabState extends State<HomeTab> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Container(
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: AppRadius.fullBR,
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(PhosphorIconsRegular.magnifyingGlass, size: 20, color: AppColors.primary),
-                      const SizedBox(width: 12),
-                      Text("Where to pickup?", style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
-                    ],
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
+                  child: Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadius.fullBR,
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                    ),
+                    child: Row(
+                      children: [
+                        Image.asset(AppAssets.search, width: 22, height: 22, color: AppColors.primary),
+                        const SizedBox(width: 12),
+                        Text("Where to pickup?", style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -109,107 +102,137 @@ class _HomeTabState extends State<HomeTab> {
 
         // ── Locate Me Button ────────────────────────────────────────────────
         Positioned(
-          bottom: 240, // Above bottom sheet
+          bottom: active != null ? 350 : 300, // Adjust based on sheet height
           right: 16,
           child: FloatingActionButton.small(
-            onPressed: () => _mapController?.animateCamera(CameraUpdate.newLatLngZoom(widget.myPos, 15)),
+            onPressed: () => _mapController?.animateCamera(
+              CameraUpdate.newLatLngZoom(widget.myPos, 15),
+            ),
             backgroundColor: Colors.white,
             foregroundColor: AppColors.textPrimary,
             elevation: 4,
+            shape: const CircleBorder(),
             child: const Icon(PhosphorIconsRegular.crosshair),
           ),
         ),
 
-        // ── Bottom Interface ────────────────────────────────────────────────
+        // ── Bottom Interface (Uber Style) ──────────────────────────────────
         Align(
           alignment: Alignment.bottomCenter,
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: AppRadius.mdBR,
-              boxShadow: const [
-                BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -4)),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (active != null) ...[
-                  _ActiveBookingCard(
-                    booking: active,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => TrackingScreen(bookingId: active['id'])),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                
-                Text(
-                  "Hey, $firstName 👋",
-                  style: AppTextStyles.section.copyWith(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 12),
-                Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Suggestions Horizontal List (Uber Inspiration) ──
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
                   children: [
-                    Expanded(
-                      child: _SplitCard(
-                        icon: PhosphorIconsFill.lightning,
-                        title: "Request Now",
-                        subtitle: "Arrives in ~15m",
-                        isPrimary: true,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate')),
-                        ),
-                      ),
+                    _SuggestionCard(
+                      image: AppAssets.trashBin,
+                      title: 'Household',
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _SplitCard(
-                        icon: PhosphorIconsRegular.calendar,
-                        title: "Schedule",
-                        subtitle: "Pick date & time",
-                        isPrimary: false,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const BookScreen(mode: 'scheduled')),
-                        ),
-                      ),
+                    _SuggestionCard(
+                      image: AppAssets.recycleBin,
+                      title: 'Recycling',
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
+                    ),
+                    _SuggestionCard(
+                      image: AppAssets.bottle,
+                      title: 'Glass/Plastic',
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
+                    ),
+                    _SuggestionCard(
+                      image: AppAssets.leaf,
+                      title: 'Organic',
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate'))),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 20),
-                
-                if (saved.isEmpty)
-                  _SavedLocationTile(
-                    icon: PhosphorIconsRegular.plus,
-                    title: "Add a saved address",
-                    subtitle: "Get picked up faster",
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedAddressesScreen())),
-                  )
-                else
-                  ...saved.map((addr) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _SavedLocationTile(
-                      icon: addr['label'] == 'Work' ? PhosphorIconsFill.briefcase : PhosphorIconsFill.house,
-                      title: addr['label'] ?? 'Saved Address',
-                      subtitle: addr['address'] ?? '',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate')),
+              ),
+              const SizedBox(height: 12),
+              
+              // ── Main White Sheet ──
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.sheetBR,
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (active != null) ...[
+                      _ActiveBookingCard(
+                        booking: active,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => TrackingScreen(bookingId: active['id'])),
+                        ),
                       ),
+                      const SizedBox(height: 20),
+                    ],
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SplitCard(
+                            image: AppAssets.calendar,
+                            title: "Schedule",
+                            subtitle: "Plan ahead",
+                            isPrimary: false,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BookScreen(mode: 'scheduled')),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SplitCard(
+                            image: AppAssets.clock,
+                            title: "Request Now",
+                            subtitle: "Instant pickup",
+                            isPrimary: true,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate')),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  )),
-                
-                const SizedBox(height: 8),
-              ],
-            ),
+                    const SizedBox(height: 24),
+                    const Divider(height: 1),
+                    const SizedBox(height: 24),
+                    
+                    if (saved.isEmpty)
+                      _SavedLocationTile(
+                        icon: PhosphorIconsRegular.plus,
+                        title: "Add a saved address",
+                        subtitle: "Get picked up faster",
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedAddressesScreen())),
+                      )
+                    else
+                      ...saved.map((addr) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _SavedLocationTile(
+                          icon: addr['label'] == 'Work' ? PhosphorIconsFill.briefcase : PhosphorIconsFill.house,
+                          title: addr['label'] ?? 'Saved Address',
+                          subtitle: addr['address'] ?? '',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const BookScreen(mode: 'immediate')),
+                          ),
+                        ),
+                      )),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -217,16 +240,46 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({required this.image, required this.title, required this.onTap});
+  final String image;
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadius.mdBR,
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Image.asset(image, width: 28, height: 28),
+            const SizedBox(width: 10),
+            Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SplitCard extends StatelessWidget {
   const _SplitCard({
-    required this.icon,
+    required this.image,
     required this.title,
     required this.subtitle,
     required this.isPrimary,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String image;
   final String title;
   final String subtitle;
   final bool isPrimary;
@@ -239,20 +292,16 @@ class _SplitCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primary : Colors.white,
-          borderRadius: AppRadius.smBR,
-          border: isPrimary ? null : Border.all(color: AppColors.border),
-          boxShadow: isPrimary ? [
-            BoxShadow(color: AppColors.primary.withAlpha(80), blurRadius: 12, offset: const Offset(0, 4))
-          ] : null,
+          color: isPrimary ? AppColors.primary : AppColors.surface,
+          borderRadius: AppRadius.mdBR,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon, 
-              color: isPrimary ? Colors.white : AppColors.primary, 
-              size: 28
+            Image.asset(
+              image, 
+              width: 32, height: 32,
+              color: isPrimary ? Colors.white : AppColors.primary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -296,7 +345,7 @@ class _SavedLocationTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               shape: BoxShape.circle,
@@ -313,6 +362,7 @@ class _SavedLocationTile extends StatelessWidget {
               ],
             ),
           ),
+          const Icon(PhosphorIconsRegular.caretRight, size: 16, color: AppColors.textMuted),
         ],
       ),
     );
@@ -338,17 +388,18 @@ class _ActiveBookingCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: AppRadius.mdBR,
           border: Border.all(color: AppColors.primary, width: 1.5),
+          boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(40), blurRadius: 10)],
         ),
         child: Row(
           children: [
             Stack(
               alignment: Alignment.center,
               children: [
-                if (isSearching) SearchingRadarWidget(radius: 24),
+                if (isSearching) SearchingRadarWidget(radius: 24, ringColor: AppColors.primary),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-                  child: Icon(PhosphorIconsFill.truck, color: AppColors.primary, size: 24),
+                  child: Image.asset(AppAssets.truck, width: 24, height: 24, color: AppColors.primary),
                 ),
               ],
             ),
@@ -357,7 +408,7 @@ class _ActiveBookingCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(isSearching ? 'Searching...' : 'Collector Arriving', style: AppTextStyles.section.copyWith(color: AppColors.primary)),
+                  Text(isSearching ? 'Searching...' : 'Collector Arriving', style: AppTextStyles.section.copyWith(color: AppColors.primary, fontSize: 16)),
                   Text(isSearching ? 'Finding nearby collectors' : 'On the way', style: AppTextStyles.meta),
                 ],
               ),

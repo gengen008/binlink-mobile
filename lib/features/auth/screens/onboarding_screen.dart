@@ -4,9 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../shared/widgets/app_button.dart';
 
 const String _kOnboardingSeenKey = 'onboarding_seen_v5';
 
@@ -22,37 +20,49 @@ Future<void> markOnboardingSeen() async {
 }
 
 class _Page {
-  final String asset;
+  final String svgAsset;
+  final String badgeAsset;
+  final Color accentColor;
   final String heading;
   final String body;
-  final Color bgColor;
-  const _Page({required this.asset, required this.heading, required this.body, required this.bgColor});
+
+  const _Page({
+    required this.svgAsset,
+    required this.badgeAsset,
+    required this.accentColor,
+    required this.heading,
+    required this.body,
+  });
 }
 
 const _pages = [
   _Page(
-    asset: AppAssets.onboarding1,
-    heading: 'Book a pickup from your address',
-    body: 'Enter your location, choose waste type and bin size. Request a same-day pickup or schedule ahead.',
-    bgColor: Color(0xFFEFF6FF), // Light blue tint
+    svgAsset: AppAssets.onboarding1,
+    badgeAsset: AppAssets.trashBin,
+    accentColor: AppColors.steelBlue,
+    heading: 'Book a pickup\nfrom your door',
+    body: 'Choose waste type and bin size.\nRequest same-day or schedule ahead.',
   ),
   _Page(
-    asset: AppAssets.onboarding2,
-    heading: 'Track collector arrival in real time',
-    body: 'See your assigned collector on the map. Get live ETA updates and call or chat directly.',
-    bgColor: Color(0xFFE0F2FE),
+    svgAsset: AppAssets.onboarding2,
+    badgeAsset: AppAssets.truck,
+    accentColor: Color(0xFF3B82F6),
+    heading: 'Track your collector\nin real time',
+    body: 'See your assigned collector on the map.\nGet live ETA and communicate directly.',
   ),
   _Page(
-    asset: AppAssets.onboarding3,
-    heading: 'Pay and manage your pickup history',
-    body: 'View receipts, track spending, and manage scheduled pickups — all in one place.',
-    bgColor: Color(0xFFF3F4F6),
+    svgAsset: AppAssets.onboarding3,
+    badgeAsset: AppAssets.receipt,
+    accentColor: AppColors.skyBlue,
+    heading: 'Pay cash on\narrival',
+    body: 'No upfront payment needed.\nPay your collector directly when they arrive.',
   ),
   _Page(
-    asset: AppAssets.onboarding4,
-    heading: 'Earn Eco Rewards for recycling',
-    body: 'Get points for every kg of recycled waste. Trade points for discounts and plant trees.',
-    bgColor: Color(0xFFFEF3C7),
+    svgAsset: AppAssets.onboarding4,
+    badgeAsset: AppAssets.leaf,
+    accentColor: AppColors.success,
+    heading: 'Earn Eco Points\nfor recycling',
+    body: 'Get rewarded for every kg of recycled waste.\nRedeem points for discounts.',
   ),
 ];
 
@@ -72,123 +82,269 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (mounted) Navigator.pushReplacementNamed(context, '/login');
   }
 
+  void _next() {
+    if (_current == _pages.length - 1) {
+      _done();
+    } else {
+      _ctrl.nextPage(
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final illustrationH = size.height * 0.54;
     final page = _pages[_current];
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // ── Background Tint (Top 60%) ─────────────────────────────────────
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            height: MediaQuery.of(context).size.height * 0.6,
-            width: double.infinity,
-            color: page.bgColor,
-          ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Row(
-                    children: [
-                      Text('BinLink', style: AppTextStyles.h4.copyWith(color: AppColors.primary, fontWeight: FontWeight.w900)),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: _done, 
-                        child: Text('Skip', style: AppTextStyles.meta.copyWith(color: AppColors.textPrimary))
+      backgroundColor: page.accentColor,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 420),
+        color: page.accentColor,
+        child: Column(
+          children: [
+            // ── Illustration area (colored background) ─────────────────────
+            SizedBox(
+              height: illustrationH,
+              child: Stack(
+                children: [
+                  // Subtle radial glow behind illustration
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 0.8,
+                          colors: [
+                            Colors.white.withAlpha(40),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-                
-                Expanded(
-                  child: PageView.builder(
-                    controller: _ctrl,
-                    itemCount: _pages.length,
-                    onPageChanged: (i) => setState(() => _current = i),
-                    itemBuilder: (_, i) => _OnboardingContent(page: _pages[i]),
-                  ),
-                ),
-
-                // ── Bottom Sheet Area (40% height) ──────────────────────────
-                Container(
-                  padding: const EdgeInsets.fromLTRB(32, 40, 32, 32),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
                     ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_pages.length, (i) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _current == i ? 24 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _current == i ? AppColors.primary : AppColors.border, 
-                            borderRadius: AppRadius.fullBR
+
+                  // Top row: logo + skip
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            AppAssets.logoSvg,
+                            height: 28,
+                            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                           ),
-                        )),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: _done,
+                            child: Text(
+                              'Skip',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Colors.white.withAlpha(200),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                      AppButton(
-                        label: _current == _pages.length - 1 ? 'Get Started' : 'Continue',
-                        onPressed: () {
-                          if (_current == _pages.length - 1) {
-                            _done();
-                          } else {
-                            _ctrl.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeInOutExpo);
-                          }
-                        },
-                      ),
-                    ],
+                    ),
+                  ),
+
+                  // PageView for illustrations
+                  Positioned.fill(
+                    top: 80,
+                    child: PageView.builder(
+                      controller: _ctrl,
+                      itemCount: _pages.length,
+                      onPageChanged: (i) => setState(() => _current = i),
+                      itemBuilder: (_, i) => _IllustrationPanel(page: _pages[i]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── White bottom card ──────────────────────────────────────────
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(28, 36, 28, 20),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
                   ),
                 ),
-              ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Heading
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.12),
+                            end: Offset.zero,
+                          ).animate(anim),
+                          child: child,
+                        ),
+                      ),
+                      child: Text(
+                        page.heading,
+                        key: ValueKey(page.heading),
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 28,
+                          height: 1.2,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    // Body
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        page.body,
+                        key: ValueKey(page.body),
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Dots + Arrow button
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Dot indicators
+                        Row(
+                          children: List.generate(_pages.length, (i) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.only(right: 6),
+                              width: _current == i ? 22 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _current == i ? page.accentColor : AppColors.border,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            );
+                          }),
+                        ),
+                        const Spacer(),
+                        // Arrow/done button
+                        GestureDetector(
+                          onTap: _next,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: page.accentColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: page.accentColor.withAlpha(90),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Icon(
+                                _current == _pages.length - 1
+                                    ? Icons.check_rounded
+                                    : Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _OnboardingContent extends StatelessWidget {
-  const _OnboardingContent({required this.page});
+class _IllustrationPanel extends StatelessWidget {
+  const _IllustrationPanel({required this.page});
   final _Page page;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        const Spacer(),
+        // Main SVG illustration
         Center(
-          child: SvgPicture.asset(page.asset, height: 260),
-        ),
-        const Spacer(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(page.heading, style: AppTextStyles.display.copyWith(fontSize: 26)),
-              const SizedBox(height: 16),
-              Text(page.body, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontSize: 16)),
-            ],
+          child: SvgPicture.asset(
+            page.svgAsset,
+            height: 200,
+            fit: BoxFit.contain,
           ),
         ),
-        const SizedBox(height: 40), // Gap before the white sheet starts
+        // PNG badge — floating card bottom-right
+        Positioned(
+          bottom: 24,
+          right: 28,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(50),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(page.badgeAsset, width: 32, height: 32),
+                const SizedBox(width: 8),
+                Text(
+                  _badgeLabel(page.badgeAsset),
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  String _badgeLabel(String asset) {
+    if (asset.contains('truck')) return 'Live Tracking';
+    if (asset.contains('trash-bin')) return 'Book Now';
+    if (asset.contains('receipt')) return 'Cash on Arrival';
+    if (asset.contains('leaf')) return 'Eco Points';
+    return 'BinLink';
   }
 }

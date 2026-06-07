@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
@@ -172,6 +173,16 @@ class _IncomingRequestModalState extends State<_IncomingRequestModal> with Singl
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Truck icon badge
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: Image.asset(AppAssets.truck, width: 40, height: 40, color: AppColors.success),
+              ),
+              const SizedBox(height: 12),
               Text("New Request", style: AppTextStyles.title),
               const SizedBox(height: 8),
               Text("${LocationService.formatDistance(distMeters)} away", style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),

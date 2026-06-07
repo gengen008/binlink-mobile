@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/collector_provider.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -55,13 +56,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           Positioned.fill(
             child: BinLinkMap(
               initialPosition: _pickupPos,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('pickup'),
-                  position: _pickupPos,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-                ),
-              },
+              pickupPosition: _pickupPos,
             ),
           ),
 
@@ -173,7 +168,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     if (_beforePhoto == null)
                       AppButton(
                         label: _uploading ? 'Uploading...' : 'Take Before Photo',
-                        icon: const Icon(PhosphorIconsFill.camera),
+                        icon: Image.asset(AppAssets.collectorCamera, width: 20, height: 20, color: Colors.white),
                         onPressed: _uploading ? null : () => _takePhoto('before'),
                       )
                     else if (_currentStatus == 'ARRIVED')
@@ -187,7 +182,7 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                     else if (_afterPhoto == null)
                       AppButton(
                         label: _uploading ? 'Uploading...' : 'Take After Photo',
-                        icon: const Icon(PhosphorIconsFill.camera),
+                        icon: Image.asset(AppAssets.collectorCamera, width: 20, height: 20, color: Colors.white),
                         onPressed: _uploading ? null : () => _takePhoto('after'),
                       )
                     else ...[

@@ -1,6 +1,5 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -275,7 +274,7 @@ class _GoogleRegisterButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(AppAssets.google, width: 20, height: 20),
+            Image.asset(AppAssets.googleIcon, width: 22, height: 22),
             const SizedBox(width: 10),
             Text(
               'Continue with Google',

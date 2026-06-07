@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -151,8 +152,11 @@ class _PaymentScreenState extends State<PaymentScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(PhosphorIconsFill.money,
-                            color: AppColors.primary, size: 28),
+                        Image.asset(
+                          AppAssets.cash,
+                          width: 32, height: 32,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
