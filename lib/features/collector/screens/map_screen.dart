@@ -4,7 +4,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map/flutter_map.dart';
 
 import '../../../core/l10n/strings.dart';
 import '../../../core/theme/app_colors.dart';
@@ -25,7 +24,7 @@ class CollectorMapScreen extends StatefulWidget {
 
 class _CollectorMapScreenState extends State<CollectorMapScreen> {
   int _currentIndex = 0;
-  LatLng _pos = const LatLng(5.6037, -0.1870);
+  LatLng? _pos;
   StreamSubscription<Position>? _posSub;
 
   @override

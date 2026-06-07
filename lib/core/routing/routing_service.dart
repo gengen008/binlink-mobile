@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'routing_provider.dart';
 import 'tomtom_routing_provider.dart';
 import 'osrm_routing_provider.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/flutter_map.dart' show MapController;
 import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -8,12 +8,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_assets.dart';
-import '../../../core/services/location_service.dart';
 import '../../../core/services/places_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/household_provider.dart';
-import '../screens/saved_addresses_screen.dart';
-import '../screens/payment_screen.dart';
 import '../../../shared/widgets/collector_bottom_sheet.dart';
 import '../../../shared/widgets/searching_radar_widget.dart';
 import '../../../shared/widgets/chat_sheet.dart';
@@ -25,7 +22,8 @@ enum HomeSheetState { idle, serviceSelection, addressSelection, searching, track
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key, required this.myPos, required this.onTabSwitch});
-  final LatLng myPos;
+  // Nullable: null until the device provides a real GPS fix.
+  final LatLng? myPos;
   final ValueChanged<int> onTabSwitch;
 
   @override
@@ -52,9 +50,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _startBookingFlow() {
+    if (widget.myPos == null) return; // GPS not ready yet
     setState(() {
       _sheetState = HomeSheetState.serviceSelection;
-      _pickupPosition = widget.myPos; // Default to current location
+      _pickupPosition = widget.myPos;
     });
   }
 
@@ -114,7 +113,7 @@ class _HomeTabState extends State<HomeTab> {
       _scheduledTimePreference = null;
       _extraBags = 0;
     });
-    _mapController?.move(widget.myPos, 15);
+    if (widget.myPos != null) _mapController?.move(widget.myPos!, 15);
   }
 
   /// Opens a schedule date/time picker sheet. On confirmation transitions
@@ -134,15 +133,21 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Show a full-screen loader until we have a real GPS position.
+    // This prevents the map from ever defaulting to a hardcoded location.
+    if (widget.myPos == null) {
+      return const _LocationLoadingView();
+    }
+
     final prov = context.watch<HouseholdProvider>();
     final active = prov.activeBooking;
-    
+
     return Stack(
       children: [
         // ── Full Screen Map ─────────────────────────────────────────────────
         Positioned.fill(
           child: BinLinkMap(
-            initialPosition: widget.myPos,
+            initialPosition: widget.myPos!,
             onMapCreated: _onMapCreated,
             collectors: prov.onlineCollectors,
             pickupPosition: _pickupPosition,
@@ -228,7 +233,7 @@ class _HomeTabState extends State<HomeTab> {
           bottom: _sheetState == HomeSheetState.idle ? (active != null ? 350 : 300) : 400,
           right: 16,
           child: FloatingActionButton.small(
-            onPressed: () => _mapController?.move(widget.myPos, 15),
+            onPressed: () => _mapController?.move(widget.myPos!, 15),
             backgroundColor: Colors.white,
             foregroundColor: AppColors.textPrimary,
             elevation: 4,
@@ -751,6 +756,30 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+class _LocationLoadingView extends StatelessWidget {
+  const _LocationLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 20),
+            Text(
+              'Getting your location...',
+              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _TrackingBottomSheet extends StatelessWidget {
   const _TrackingBottomSheet({required this.booking});

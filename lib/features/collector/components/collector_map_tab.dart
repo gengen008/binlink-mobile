@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart' hide Path;
-import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_radius.dart';
@@ -15,7 +13,8 @@ import '../../../shared/widgets/binlink_map.dart';
 
 class CollectorMapTab extends StatefulWidget {
   const CollectorMapTab({super.key, required this.pos});
-  final LatLng pos;
+  // Nullable: null until the device provides a real GPS fix.
+  final LatLng? pos;
 
   @override
   State<CollectorMapTab> createState() => _CollectorMapTabState();
@@ -24,6 +23,13 @@ class CollectorMapTab extends StatefulWidget {
 class _CollectorMapTabState extends State<CollectorMapTab> {
   @override
   Widget build(BuildContext context) {
+    if (widget.pos == null) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final prov = context.watch<CollectorProvider>();
     final requests = prov.pendingRequests;
 
@@ -32,7 +38,7 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
         // ── Full Screen Map (Heatmap style) ────────────────────────────────
         Positioned.fill(
           child: BinLinkMap(
-            initialPosition: widget.pos,
+            initialPosition: widget.pos!,
             myLocationEnabled: prov.isOnline,
           ),
         ),
@@ -100,7 +106,7 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
         if (prov.isOnline && requests.isNotEmpty)
           _IncomingRequestModal(
             request: requests.first,
-            collectorPos: widget.pos,
+            collectorPos: widget.pos!,
             onAccept: () => prov.acceptRequest(requests.first['id']),
             onDecline: () => prov.declineRequest(requests.first['id']),
           ),
