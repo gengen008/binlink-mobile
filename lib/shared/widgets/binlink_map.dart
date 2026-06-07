@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_assets.dart';
 
-/// BinLink Map — flutter_map + SmartMaps tiles.
-/// 
-/// Replaces MapLibre implementation to remove Mapbox entirely.
+/// BinLink Map — flutter_map + CartoDB Dark Matter raster tiles.
+///
+/// Tile stack:
+///   Primary   → CartoDB Dark Matter (free, no key, dark-styled)
+///   Routing   → TomTom → OSRM → straight-line (via RoutingService)
+///   Geocoding → SmartMaps autocomplete.smartmaps.cloud (separate service)
+///
+/// Note: SmartMaps only provides VECTOR tiles (MapLibre GL format), not raster
+/// PNG tiles. flutter_map requires raster tiles, so CartoDB is the tile source.
 class BinLinkMap extends StatefulWidget {
   const BinLinkMap({
     super.key,
@@ -84,9 +89,6 @@ class BinLinkMapState extends State<BinLinkMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Read API key from dotenv (loaded at startup in main) — falls back to OSM if missing
-    final smartmapsKey = dotenv.env['SMARTMAPS_API_KEY'] ?? '';
-    
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
@@ -102,13 +104,17 @@ class BinLinkMapState extends State<BinLinkMap> with TickerProviderStateMixin {
         ),
       ),
       children: [
-        // ── Smartmaps Tile Layer ──
+        // ── CartoDB Dark Matter Tiles ──
+        // Free raster tiles, no API key required, dark-styled for the app's design.
+        // SmartMaps only serves vector tiles (MapLibre GL format) — not compatible
+        // with flutter_map's raster TileLayer.
         TileLayer(
-          urlTemplate: 'https://tiles.smartmaps.net/v1/{z}/{x}/{y}.png?key=$smartmapsKey',
+          urlTemplate: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
           userAgentPackageName: 'eco.binlink.app',
-          fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // fallback if key empty
+          subdomains: const ['a', 'b', 'c', 'd'],
+          maxZoom: 19,
         ),
-        
+
         // ── Route Polyline ──
         if (widget.routePoints.isNotEmpty)
           PolylineLayer(
@@ -142,6 +148,26 @@ class BinLinkMapState extends State<BinLinkMap> with TickerProviderStateMixin {
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                     border: const Border.fromBorderSide(BorderSide(color: Colors.white, width: 2.5)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+        // ── My Location Blue Dot ──
+        if (widget.myLocationEnabled && widget.myLocation != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: widget.myLocation!,
+                width: 24,
+                height: 24,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A9EFF),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 6)],
                   ),
                 ),
               ),
