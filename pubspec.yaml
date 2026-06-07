@@ -74,6 +74,9 @@ dependencies:
   # Env vars
   flutter_dotenv: ^5.1.0
 
+  # Supabase — Realtime chat + photo storage
+  supabase_flutter: ^2.8.4
+
   # Internationalization / formatting
   intl: ^0.20.2
 

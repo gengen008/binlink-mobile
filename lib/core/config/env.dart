@@ -19,4 +19,10 @@ class Env {
   /// Set OSRM_BASE_URL in .env to override (recommended for production).
   static String get osrmBaseUrl =>
       dotenv.env['OSRM_BASE_URL'] ?? 'http://router.project-osrm.org';
+
+  static String get supabaseUrl =>
+      dotenv.env['SUPABASE_URL'] ?? 'https://bvrzsssclvkqzqqffxda.supabase.co';
+
+  static String get supabaseAnonKey =>
+      dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 }

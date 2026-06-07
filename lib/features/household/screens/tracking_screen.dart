@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_assets.dart';
@@ -25,11 +26,19 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen> {
   Map<String, dynamic>? _booking;
+  RealtimeChannel? _statusChannel;
 
   @override
   void initState() {
     super.initState();
     _loadBooking();
+    _subscribeStatus();
+  }
+
+  @override
+  void dispose() {
+    _statusChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> _loadBooking() async {
@@ -40,8 +49,33 @@ class _TrackingScreenState extends State<TrackingScreen> {
           _booking = res.data['data'];
         });
       }
-    } catch (_) {
-    }
+    } catch (_) {}
+  }
+
+  void _subscribeStatus() {
+    _statusChannel = Supabase.instance.client
+        .channel('status_${widget.bookingId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'booking_status_events',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'booking_id',
+            value: widget.bookingId,
+          ),
+          callback: (payload) {
+            if (!mounted) return;
+            final event = payload.newRecord;
+            setState(() {
+              _booking = {
+                ...?_booking,
+                'status': event['status'] as String? ?? _booking?['status'],
+              };
+            });
+          },
+        )
+        .subscribe();
   }
 
   @override
@@ -189,12 +223,14 @@ class _StatusMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (pngAsset, fallbackIcon, msg, color) = switch (status) {
-      'PENDING'   => (null, PhosphorIconsFill.clock, 'Finding your collector...', AppColors.warning),
-      'ACCEPTED'  => (AppAssets.verifiedBadge, null, 'Collector accepted', AppColors.success),
-      'EN_ROUTE'  => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
-      'ARRIVED'   => (AppAssets.gps, null, 'Collector has arrived', AppColors.success),
-      'COMPLETED' => (AppAssets.verifiedBadge, null, 'Pickup completed', AppColors.success),
-      _           => (null, PhosphorIconsFill.info, status, AppColors.textSecondary),
+      'PENDING'    => (null, PhosphorIconsFill.clock, 'Finding your collector...', AppColors.warning),
+      'ACCEPTED'   => (AppAssets.verifiedBadge, null, 'Collector accepted', AppColors.success),
+      'EN_ROUTE'   => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
+      'ON_THE_WAY' => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
+      'ARRIVED'    => (AppAssets.gps, null, 'Collector has arrived', AppColors.success),
+      'COLLECTING' => (AppAssets.gps, null, 'Collecting your waste', AppColors.success),
+      'COMPLETED'  => (AppAssets.verifiedBadge, null, 'Pickup completed', AppColors.success),
+      _            => (null, PhosphorIconsFill.info, status, AppColors.textSecondary),
     };
 
     Widget iconWidget;

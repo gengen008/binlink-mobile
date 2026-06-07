@@ -5,7 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/app_flavor.dart';
+import 'core/config/env.dart';
 import 'core/services/fcm_service.dart';
 import 'app.dart';
 
@@ -20,6 +22,13 @@ Future<void> _appMain() async {
 
   try {
     await dotenv.load(fileName: '.env');
+  } catch (_) {}
+
+  try {
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      publishableKey: Env.supabaseAnonKey,
+    );
   } catch (_) {}
 
   try {

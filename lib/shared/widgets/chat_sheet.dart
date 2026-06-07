@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/network/api_client.dart';
-import '../../core/network/socket_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -34,27 +34,51 @@ class _ChatSheetState extends State<ChatSheet> {
   bool _loading = true;
   bool _sending = false;
 
-  // Store handler reference so we can remove only this handler later
-  late final void Function(dynamic) _socketHandler;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
-    _socketHandler = (data) {
-      if (!mounted) return;
-      final msg = Map<String, dynamic>.from(data as Map);
-      // Avoid duplicates: check if id already in list
-      if (_messages.any((m) => m['id'] == msg['id'])) return;
-      setState(() => _messages.add(msg));
-      _scrollToBottom();
-    };
-    SocketService.on('chat:message', _socketHandler);
+    _subscribeRealtime();
     _load();
   }
 
+  void _subscribeRealtime() {
+    _channel = Supabase.instance.client
+        .channel('chat_${widget.bookingId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'booking_id',
+            value: widget.bookingId,
+          ),
+          callback: (payload) {
+            if (!mounted) return;
+            final msg = _normalise(payload.newRecord);
+            if (_messages.any((m) => m['id'] == msg['id'])) return;
+            setState(() => _messages.add(msg));
+            _scrollToBottom();
+          },
+        )
+        .subscribe();
+  }
+
+  Map<String, dynamic> _normalise(Map<String, dynamic> row) => {
+    'id':         row['id'],
+    'bookingId':  row['booking_id'],
+    'senderId':   row['sender_id'],
+    'senderRole': row['sender_role'],
+    'senderName': row['sender_name'],
+    'message':    row['message'],
+    'sentAt':     row['sent_at'],
+  };
+
   @override
   void dispose() {
-    SocketService.offHandler('chat:message', _socketHandler);
+    _channel?.unsubscribe();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -82,6 +106,7 @@ class _ChatSheetState extends State<ChatSheet> {
     try {
       await ApiClient.post(
           '/api/bookings/${widget.bookingId}/chat', {'message': text});
+      // Realtime subscription will deliver the message automatically
     } catch (_) {}
     if (mounted) setState(() => _sending = false);
   }
