@@ -35,42 +35,42 @@ final List<WasteCategory> kCategories = [
     color: AppColors.primary,
     desc: 'General home rubbish',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'PLASTIC',
     label: 'Plastic',
     icon: PhosphorIconsFill.recycle,
     color: Color(0xFF3B82F6),
     desc: 'Bottles, bags, containers',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'ORGANIC',
     label: 'Organic',
     icon: PhosphorIconsFill.leaf,
     color: Color(0xFF10B981),
     desc: 'Food scraps, garden waste',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'EWASTE',
     label: 'E-Waste',
     icon: PhosphorIconsFill.laptop,
     color: Color(0xFF8B5CF6),
     desc: 'Electronics, batteries',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'GLASS',
     label: 'Glass',
     icon: PhosphorIconsFill.brandy,
     color: Color(0xFF0EA5E9),
     desc: 'Bottles, jars, shards',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'METAL',
     label: 'Metal',
     icon: PhosphorIconsFill.nut,
     color: Color(0xFF64748B),
     desc: 'Cans, scrap metal',
   ),
-  WasteCategory(
+  const WasteCategory(
     key: 'CONSTRUCTION',
     label: 'Construction',
     icon: PhosphorIconsFill.wall,

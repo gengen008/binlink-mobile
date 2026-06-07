@@ -290,14 +290,32 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
           const SizedBox(height: 8),
           Text('Why are you unable to complete this pickup?', style: AppTextStyles.meta),
           const SizedBox(height: 24),
-          ..._reasons.map((r) => RadioListTile<String>(
-            title: Text(r['label']!, style: AppTextStyles.bodyMedium),
-            value: r['value']!,
-            groupValue: _reason,
-            onChanged: (v) => setState(() => _reason = v),
-            contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.danger,
-          )),
+          ..._reasons.map((r) {
+            final selected = _reason == r['value'];
+            return InkWell(
+              onTap: () => setState(() => _reason = r['value']),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20, height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected ? AppColors.danger : AppColors.border,
+                          width: selected ? 6 : 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(r['label']!, style: AppTextStyles.bodyMedium),
+                  ],
+                ),
+              ),
+            );
+          }),
           const SizedBox(height: 16),
           AppTextField(
             controller: _noteCtrl,
