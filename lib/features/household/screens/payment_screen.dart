@@ -9,7 +9,6 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/app_button.dart';
-import 'tracking_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key, required this.booking});
@@ -55,17 +54,11 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _trackPickup() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            TrackingScreen(bookingId: widget.booking['id'] as String),
-      ),
-    );
+    Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   void _backToHome() {
-    Navigator.pushNamedAndRemoveUntil(context, '/household', (_) => false);
+    Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   @override

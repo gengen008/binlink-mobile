@@ -75,11 +75,13 @@ class AppAssets {
   static const dump             = 'assets/icons/tracking/icons8-dump-truck-50.png';
   static const trailerUnloading = 'assets/icons/tracking/icons8-trailer-unloading-50.png';
 
+  // ── Images assets ──────────────────────────────────────────────────────────
+  static const onboarding1 = 'assets/images/onboarding/onboarding_1.jpg';
+  static const onboarding2 = 'assets/images/onboarding/onboarding_2.jpg';
+  static const onboarding3 = 'assets/images/onboarding/onboarding_3.jpg';
+  static const onboarding4 = 'assets/images/onboarding/onboarding_4.jpg';
+
   // ── SVG assets ───────────────────────────────────────────────────────────
-  static const onboarding1 = 'assets/svg/onboarding_1.svg';
-  static const onboarding2 = 'assets/svg/onboarding_2.svg';
-  static const onboarding3 = 'assets/svg/onboarding_3.svg';
-  static const onboarding4 = 'assets/svg/onboarding_4.svg';
   static const pickupMarker       = 'assets/svg/pickup_marker.svg';
   static const collectorMarker    = 'assets/svg/collector_marker.svg';
   static const emptyPickups       = 'assets/svg/empty_pickups.svg';

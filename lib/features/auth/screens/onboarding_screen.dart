@@ -20,14 +20,14 @@ Future<void> markOnboardingSeen() async {
 }
 
 class _Page {
-  final String svgAsset;
+  final String imageAsset;
   final String badgeAsset;
   final Color accentColor;
   final String heading;
   final String body;
 
   const _Page({
-    required this.svgAsset,
+    required this.imageAsset,
     required this.badgeAsset,
     required this.accentColor,
     required this.heading,
@@ -37,28 +37,28 @@ class _Page {
 
 const _pages = [
   _Page(
-    svgAsset: AppAssets.onboarding1,
+    imageAsset: AppAssets.onboarding1,
     badgeAsset: AppAssets.trashBin,
     accentColor: AppColors.steelBlue,
     heading: 'Book a pickup\nfrom your door',
     body: 'Choose waste type and bin size.\nRequest same-day or schedule ahead.',
   ),
   _Page(
-    svgAsset: AppAssets.onboarding2,
+    imageAsset: AppAssets.onboarding2,
     badgeAsset: AppAssets.truck,
     accentColor: Color(0xFF3B82F6),
     heading: 'Track your collector\nin real time',
     body: 'See your assigned collector on the map.\nGet live ETA and communicate directly.',
   ),
   _Page(
-    svgAsset: AppAssets.onboarding3,
+    imageAsset: AppAssets.onboarding3,
     badgeAsset: AppAssets.receipt,
     accentColor: AppColors.skyBlue,
     heading: 'Pay cash on\narrival',
     body: 'No upfront payment needed.\nPay your collector directly when they arrive.',
   ),
   _Page(
-    svgAsset: AppAssets.onboarding4,
+    imageAsset: AppAssets.onboarding4,
     badgeAsset: AppAssets.leaf,
     accentColor: AppColors.success,
     heading: 'Earn Eco Points\nfor recycling',
@@ -296,9 +296,9 @@ class _IllustrationPanel extends StatelessWidget {
       children: [
         // Main SVG illustration
         Center(
-          child: SvgPicture.asset(
-            page.svgAsset,
-            height: 200,
+          child: Image.asset(
+            page.imageAsset,
+            height: 260,
             fit: BoxFit.contain,
           ),
         ),

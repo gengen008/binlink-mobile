@@ -17,6 +17,14 @@ class CollectorProvider extends ChangeNotifier {
   StreamSubscription? _locationSub;
   bool _listeningForBookings = false;
 
+  double? _currentLat;
+  double? _currentLng;
+  double? _currentHeading;
+
+  double? get currentLat => _currentLat;
+  double? get currentLng => _currentLng;
+  double? get currentHeading => _currentHeading;
+
   List<Map<String, dynamic>> get pendingRequests  => _pendingRequests;
   List<Map<String, dynamic>> get activePickups    => _activePickups;
   List<Map<String, dynamic>> get completedPickups => _completedPickups;
@@ -129,6 +137,11 @@ class CollectorProvider extends ChangeNotifier {
   void _startLocationBroadcast() {
     _locationSub?.cancel();
     _locationSub = LocationService.getPositionStream().listen((pos) async {
+      _currentLat = pos.latitude;
+      _currentLng = pos.longitude;
+      _currentHeading = pos.heading;
+      notifyListeners();
+
       try {
         await ApiClient.put('/api/profile/location', {
           'lat': pos.latitude, 'lng': pos.longitude,

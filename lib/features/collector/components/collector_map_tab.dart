@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:latlong2/latlong.dart' hide Path;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_assets.dart';
@@ -126,22 +127,24 @@ class _IncomingRequestModal extends StatefulWidget {
 
 class _IncomingRequestModalState extends State<_IncomingRequestModal> with SingleTickerProviderStateMixin {
   late AnimationController _anim;
-  int _seconds = 30;
+  int _seconds = 15;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 30))..forward();
+    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 15))..forward();
     
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_seconds == 0) {
+      if (_seconds <= 0) {
         timer.cancel();
         widget.onDecline();
       } else {
         if (mounted) setState(() => _seconds--);
       }
     });
+    
+    // Play radar sound here if we had an audio player
   }
 
   @override
@@ -158,89 +161,124 @@ class _IncomingRequestModalState extends State<_IncomingRequestModal> with Singl
       (widget.request['pickupLat'] as num).toDouble(), 
       (widget.request['pickupLng'] as num).toDouble(),
     );
-    final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.9;
+    final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.8; // 80% collector cut
 
-    return Container(
-      color: Colors.black.withAlpha(200),
-      child: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadius.lgBR,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Truck icon badge
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withAlpha(20),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset(AppAssets.truck, width: 40, height: 40, color: AppColors.success),
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E), // Dark modal for high contrast
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(color: AppColors.success.withAlpha(40), blurRadius: 40, spreadRadius: 10),
+            const BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 10)),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("NEW REQUEST", style: AppTextStyles.meta.copyWith(color: AppColors.success, letterSpacing: 2.0)),
+            const SizedBox(height: 16),
+            Text(
+              "Est. ${Fmt.currency(payout)}",
+              style: AppTextStyles.display.copyWith(color: Colors.white, fontSize: 36),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(PhosphorIconsFill.car, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text("${LocationService.formatDistance(distMeters)} away", style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
+                const SizedBox(width: 16),
+                const Icon(PhosphorIconsFill.clock, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text("~${(distMeters / 400).ceil()} min", style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 12),
-              Text("New Request", style: AppTextStyles.title),
-              const SizedBox(height: 8),
-              Text("${LocationService.formatDistance(distMeters)} away", style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-              const SizedBox(height: 32),
-              
-              Stack(
-                alignment: Alignment.center,
+              child: Row(
                 children: [
-                  AnimatedBuilder(
-                    animation: _anim,
-                    builder: (context, child) {
-                      return SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: CircularProgressIndicator(
-                          value: 1 - _anim.value,
-                          strokeWidth: 8,
-                          color: AppColors.success,
-                          backgroundColor: AppColors.surface,
-                        ),
-                      );
-                    },
-                  ),
-                  GestureDetector(
-                    onTap: widget.onAccept,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(PhosphorIconsFill.check, color: Colors.white, size: 40),
-                      ),
+                  const Icon(PhosphorIconsRegular.mapPin, color: Colors.white, size: 18),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.request['pickupAddress'] ?? "Pickup Location",
+                      style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 32),
-              Text(
-                widget.request['pickupAddress'] ?? "Pickup Location",
-                textAlign: TextAlign.center,
-                style: AppTextStyles.section,
+            ),
+            const SizedBox(height: 32),
+            
+            // ── Tap to Accept Ring ──
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _anim,
+                  builder: (context, child) {
+                    return SizedBox(
+                      width: 130,
+                      height: 130,
+                      child: CircularProgressIndicator(
+                        value: 1 - _anim.value,
+                        strokeWidth: 8,
+                        color: AppColors.success,
+                        backgroundColor: Colors.white12,
+                      ),
+                    );
+                  },
+                ),
+                GestureDetector(
+                  onTap: widget.onAccept,
+                  child: Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: AppColors.success.withAlpha(100), blurRadius: 20, spreadRadius: 5),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("TAP", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text("TO ACCEPT", style: TextStyle(color: Colors.white.withAlpha(200), fontSize: 10, letterSpacing: 1.0)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 32),
+            GestureDetector(
+              onTap: widget.onDecline,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white30),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Icon(Icons.close, color: Colors.white70),
               ),
-              const SizedBox(height: 8),
-              Text(
-                "Estimated Payout: ${Fmt.currency(payout)}",
-                style: AppTextStyles.mono.copyWith(color: AppColors.success, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: widget.onDecline,
-                child: Text("Decline", style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

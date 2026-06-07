@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/collector_provider.dart';
+import '../components/navigation_overlay.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -49,6 +51,8 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     final hhName = widget.booking['household']?['fullName'] as String? ?? 'Household';
     final address = widget.booking['pickupAddress'] as String? ?? '';
 
+    final isNavigating = _currentStatus == 'EN_ROUTE';
+
     return Scaffold(
       body: Stack(
         children: [
@@ -57,55 +61,69 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
             child: BinLinkMap(
               initialPosition: _pickupPos,
               pickupPosition: _pickupPos,
+              isNavigating: isNavigating,
+              myLocation: prov.currentLat != null ? LatLng(prov.currentLat!, prov.currentLng!) : null,
+              myHeading: prov.currentHeading ?? 0.0,
             ),
           ),
 
-          // ── Header ──
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context), 
-                    icon: const Icon(PhosphorIconsRegular.arrowLeft)
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.mdBR,
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Pickup Detail', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
-                        Text(address, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ],
+          // ── Header / Navigation Overlay ──
+          if (isNavigating)
+            NavigationOverlay(
+              instructionText: 'Turn right onto Independence Avenue',
+              distanceMeters: 450,
+              maneuver: 'right',
+              etaMinutes: 8,
+              distanceKm: 2.1,
+              speedLimitKph: 60,
+              currentSpeedKph: 45.0,
+            )
+          else
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context), 
+                      icon: const Icon(PhosphorIconsRegular.arrowLeft)
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () => _showExceptionSheet(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
-                    child: const Icon(PhosphorIconsFill.warningCircle, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: AppRadius.mdBR,
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Pickup Detail', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+                          Text(address, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => _showExceptionSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
+                      child: const Icon(PhosphorIconsFill.warningCircle, color: Colors.white, size: 24),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
           // ── Bottom Sheet (Operational Console) ──
           Align(

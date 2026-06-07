@@ -322,7 +322,7 @@ class _MessageBubble extends StatelessWidget {
                   Text(
                     text,
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.white,
+                      color: isMe ? AppColors.white : AppColors.textPrimary,
                       fontSize: 14,
                       height: 1.4,
                     ),
@@ -382,7 +382,7 @@ class _ChatInput extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 style: AppTextStyles.body.copyWith(
-                    color: AppColors.white, fontSize: 14),
+                    color: AppColors.textPrimary, fontSize: 14),
                 maxLines: 4,
                 minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
