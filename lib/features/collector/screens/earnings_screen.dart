@@ -156,7 +156,7 @@ class _MiniStat extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.tx});
+  _TransactionTile({required this.tx});
   final Map<String, dynamic> tx;
 
   @override
@@ -245,6 +245,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(color: Colors.white, borderRadius: AppRadius.mdBR, border: Border.all(color: AppColors.border)),
       child: Column(
+
         children: [
           SvgPicture.asset(asset, height: 160),
           const SizedBox(height: 24),

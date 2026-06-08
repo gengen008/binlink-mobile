@@ -4,10 +4,10 @@ import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_text_styles.dart';
 
-/// BinLink "Base" Platform Theme
+/// BinLink "V4" Premium Theme
 ///
-/// World-class operational aesthetic. Stark high-contrast surfaces,
-/// purely functional componentry, and 16px mobility radius standards.
+/// Designed to meet Uber/Bolt standards. High contrast, bold typography,
+/// and subtle depth (shadows) to avoid the "AI-generated" flat look.
 class AppTheme {
   AppTheme._();
 
@@ -27,12 +27,12 @@ class AppTheme {
     ),
 
     textTheme: TextTheme(
-      displayLarge:   AppTextStyles.display,
-      titleLarge:     AppTextStyles.title,
-      titleMedium:    AppTextStyles.section,
+      displayLarge:   AppTextStyles.h1,
+      displayMedium:  AppTextStyles.h2,
+      displaySmall:   AppTextStyles.h3,
       bodyLarge:      AppTextStyles.body,
-      bodyMedium:     AppTextStyles.bodyMedium,
-      labelSmall:     AppTextStyles.caption,
+      bodyMedium:     AppTextStyles.bodySmall,
+      labelSmall:     AppTextStyles.label,
     ),
 
     // ── Components ───────────────────────────────────────────────────────────
@@ -41,18 +41,18 @@ class AppTheme {
       backgroundColor: AppColors.background,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: true,
+      centerTitle: false, // Uber/Bolt style: left-aligned often
       titleTextStyle: AppTextStyles.appBarTitle,
-      iconTheme: IconThemeData(color: AppColors.primary, size: 22),
+      iconTheme: IconThemeData(color: AppColors.textPrimary, size: 24),
       systemOverlayStyle: SystemUiOverlayStyle.dark,
     ),
 
     cardTheme: CardThemeData(
-      color: AppColors.background,
-      elevation: 0,
+      color: Colors.white,
+      elevation: 8,
+      shadowColor: Colors.black.withAlpha(20),
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.mdBR,
-        side: const BorderSide(color: AppColors.border, width: 1),
       ),
     ),
 
@@ -60,8 +60,9 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 0,
-        minimumSize: const Size(double.infinity, 56),
+        elevation: 4,
+        shadowColor: AppColors.primary.withAlpha(80),
+        minimumSize: const Size(double.infinity, 58), // Taller buttons
         shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBR),
         textStyle: AppTextStyles.button,
       ),
@@ -70,7 +71,7 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       border: OutlineInputBorder(
         borderRadius: AppRadius.mdBR,
         borderSide: BorderSide.none,
@@ -81,17 +82,37 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AppRadius.mdBR,
-        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 2.0),
       ),
-      hintStyle: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+      errorBorder: OutlineInputBorder(
+        borderRadius: AppRadius.mdBR,
+        borderSide: BorderSide(color: AppColors.danger, width: 1.0),
+      ),
+      hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
     ),
 
-    bottomSheetTheme: const BottomSheetThemeData(
+    bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: AppColors.background,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.sheetBR),
-      elevation: 0,
+      modalBackgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      elevation: 16,
+      shadowColor: Colors.black.withAlpha(100),
     ),
   );
 
-  static ThemeData get dark => light.copyWith(brightness: Brightness.dark);
+  static ThemeData get dark => light.copyWith(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: AppColors.black,
+    appBarTheme: light.appBarTheme.copyWith(
+      backgroundColor: AppColors.black,
+      titleTextStyle: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+    ),
+    cardTheme: light.cardTheme.copyWith(
+      color: AppColors.premiumBlack,
+    ),
+  );
 }

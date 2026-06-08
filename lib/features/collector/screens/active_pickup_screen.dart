@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:animate_do/animate_do.dart';
 import '../providers/collector_provider.dart';
 import '../components/navigation_overlay.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -33,10 +32,12 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   String? _afterPhoto;
   bool _uploading = false;
   
-  LatLng get _pickupPos => LatLng(
-        (widget.booking['pickupLat'] as num?)?.toDouble() ?? 5.6037,
-        (widget.booking['pickupLng'] as num?)?.toDouble() ?? -0.1870,
-      );
+  ll.LatLng? get _pickupPos {
+    final lat = (widget.booking['pickupLat'] as num?)?.toDouble();
+    final lng = (widget.booking['pickupLng'] as num?)?.toDouble();
+    if (lat == null || lng == null) return null;
+    return ll.LatLng(lat, lng);
+  }
 
   @override
   void initState() {
@@ -52,188 +53,216 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
 
     final isNavigating = _currentStatus == 'EN_ROUTE';
 
+    final pickup = _pickupPos;
+    if (pickup == null) {
+      return Scaffold(
+        backgroundColor: AppColors.black,
+        appBar: AppBar(title: const Text('Invalid Pickup Location')),
+        body: const Center(child: Text('Error: Pickup coordinates missing', style: TextStyle(color: Colors.white))),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          // ── Map ───────────────────────────────────────────────────────────
+          // ── Map ──
           Positioned.fill(
             child: BinLinkMap(
-              initialPosition: _pickupPos,
-              pickupPosition: _pickupPos,
+              initialPosition: pickup,
+              pickupPosition: pickup,
               isNavigating: isNavigating,
-              myLocation: prov.currentLat != null ? LatLng(prov.currentLat!, prov.currentLng!) : null,
+              myLocation: prov.currentLat != null ? ll.LatLng(prov.currentLat!, prov.currentLng!) : null,
               myHeading: prov.currentHeading ?? 0.0,
             ),
           ),
 
-          // ── Header / Navigation Overlay ──
+          // ── Premium Header ──
           if (isNavigating)
             NavigationOverlay(
-              instructionText: 'Turn right onto Independence Avenue',
-              distanceMeters: 450,
-              maneuver: 'right',
-              etaMinutes: 8,
-              distanceKm: 2.1,
+              instructionText: 'Follow the green line to destination',
+              distanceMeters: (widget.booking['distanceMeters'] as num?)?.toInt() ?? 0,
+              maneuver: 'straight',
+              etaMinutes: ((widget.booking['eta'] as num?)?.toInt() ?? 0) ~/ 60,
+              distanceKm: (widget.booking['distanceMeters'] as num? ?? 0) / 1000.0,
               speedLimitKph: 60,
-              currentSpeedKph: 45.0,
+              currentSpeedKph: prov.currentSpeedKph,
             )
           else
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context), 
-                      icon: const Icon(PhosphorIconsRegular.arrowLeft)
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: AppRadius.mdBR,
-                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Pickup Detail', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
-                          Text(address, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => _showExceptionSheet(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
-                      child: const Icon(PhosphorIconsFill.warningCircle, color: Colors.white, size: 24),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // ── Bottom Sheet (Operational Console) ──
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.sheetBR,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppColors.surface,
-                        child: Text(Fmt.initials(hhName)),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+              left: 20,
+              right: 20,
+              child: FadeInDown(
+                child: Row(
+                  children: [
+                    _RoundBackBtn(onTap: () => Navigator.pop(context)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.premiumBlack,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white10),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(hhName, style: AppTextStyles.section),
-                            Text(Fmt.categoryLabel(widget.booking['wasteCategory'] as String? ?? ''), style: AppTextStyles.meta),
+                            Text('ACTIVE PICKUP', style: AppTextStyles.label.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                            Text(address, style: AppTextStyles.bodySmall.copyWith(color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => showChatSheet(context, bookingId: widget.booking['id'], myRole: 'COLLECTOR'),
-                        icon: Icon(PhosphorIconsFill.chatCircle, color: AppColors.primary),
-                      ),
-                      IconButton(
-                        onPressed: () => launchUrl(Uri.parse('tel:${widget.booking['household']?['phone'] ?? ''}')),
-                        icon: Icon(PhosphorIconsFill.phone, color: AppColors.primary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  if (_currentStatus == 'ACCEPTED')
-                    AppButton(
-                      label: 'Start Trip',
-                      onPressed: () async {
-                        await prov.updateStatus(widget.booking['id'], 'en-route');
-                        setState(() => _currentStatus = 'EN_ROUTE');
-                      },
                     ),
-                  if (_currentStatus == 'EN_ROUTE')
-                    AppButton(
-                      label: 'I Have Arrived',
-                      onPressed: () async {
-                        await prov.updateStatus(widget.booking['id'], 'arrived');
-                        setState(() => _currentStatus = 'ARRIVED');
-                      },
-                    ),
-                  if (_currentStatus == 'ARRIVED' || _currentStatus == 'COLLECTING') ...[
-                    if (_beforePhoto == null)
-                      AppButton(
-                        label: _uploading ? 'Uploading...' : 'Take Before Photo',
-                        icon: Image.asset(AppAssets.collectorCamera, width: 20, height: 20, color: Colors.white),
-                        onPressed: _uploading ? null : () => _takePhoto('before'),
-                      )
-                    else if (_currentStatus == 'ARRIVED')
-                      AppButton(
-                        label: 'Start Collecting',
-                        onPressed: () async {
-                          await prov.updateStatus(widget.booking['id'], 'collecting');
-                          setState(() => _currentStatus = 'COLLECTING');
-                        },
-                      )
-                    else if (_afterPhoto == null)
-                      AppButton(
-                        label: _uploading ? 'Uploading...' : 'Take After Photo',
-                        icon: Image.asset(AppAssets.collectorCamera, width: 20, height: 20, color: Colors.white),
-                        onPressed: _uploading ? null : () => _takePhoto('after'),
-                      )
-                    else ...[
-                      AppTextField(
-                        controller: _weightCtrl,
-                        label: 'Actual Weight (kg)',
-                        hint: 'Enter collected weight',
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 16),
-                      AppButton(
-                        label: 'Complete Pickup',
-                        onPressed: () async {
-                          final w = double.tryParse(_weightCtrl.text) ?? 0;
-                          if (w <= 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter valid weight'))
-                            );
-                            return;
-                          }
-                          await prov.updateStatus(widget.booking['id'], 'complete', actualWeightKg: w);
-                          if (!context.mounted) return;
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
                   ],
-                ],
+                ),
+              ),
+            ),
+
+          // ── Exception Trigger ──
+          if (!isNavigating)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 20,
+              child: _RoundActionBtn(
+                icon: PhosphorIconsFill.warningCircle,
+                color: AppColors.danger,
+                onTap: () => _showExceptionSheet(context),
+              ),
+            ),
+
+          // ── Operational Console ──
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: FadeInUp(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+                decoration: const BoxDecoration(
+                  color: AppColors.premiumBlack,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 40, offset: Offset(0, -10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Household Info
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          child: CircleAvatar(
+                            radius: 26,
+                            backgroundColor: AppColors.premiumBlack,
+                            child: Text(Fmt.initials(hhName), style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(hhName, style: AppTextStyles.h2.copyWith(color: Colors.white)),
+                              Text(Fmt.categoryLabel(widget.booking['wasteCategory'] as String? ?? ''), style: AppTextStyles.label.copyWith(color: Colors.white54)),
+                            ],
+                          ),
+                        ),
+                        _RoundActionBtn(
+                          icon: PhosphorIconsFill.chatCircle,
+                          onTap: () => showChatSheet(context, bookingId: widget.booking['id'], myRole: 'COLLECTOR'),
+                        ),
+                        const SizedBox(width: 12),
+                        _RoundActionBtn(
+                          icon: PhosphorIconsFill.phone,
+                          onTap: () => launchUrl(Uri.parse('tel:${widget.booking['household']?['phone'] ?? ''}')),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    // Dynamic Status Buttons
+                    _buildStatusActions(prov),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildStatusActions(CollectorProvider prov) {
+    switch (_currentStatus) {
+      case 'ACCEPTED':
+        return AppButton(
+          label: 'START TRIP',
+          onPressed: () async {
+            await prov.updateStatus(widget.booking['id'], 'en-route');
+            setState(() => _currentStatus = 'EN_ROUTE');
+          },
+        );
+      case 'EN_ROUTE':
+      case 'ON_THE_WAY':
+        return AppButton(
+          label: 'I HAVE ARRIVED',
+          onPressed: () async {
+            await prov.updateStatus(widget.booking['id'], 'arrived');
+            setState(() => _currentStatus = 'ARRIVED');
+          },
+        );
+      case 'ARRIVED':
+      case 'COLLECTING':
+        return Column(
+          children: [
+            if (_beforePhoto == null)
+              AppButton(
+                label: _uploading ? 'UPLOADING...' : 'TAKE BEFORE PHOTO',
+                icon: const Icon(PhosphorIconsFill.camera, color: Colors.white),
+                onPressed: _uploading ? null : () => _takePhoto('before'),
+              )
+            else if (_currentStatus == 'ARRIVED')
+              AppButton(
+                label: 'START COLLECTING',
+                onPressed: () async {
+                  await prov.updateStatus(widget.booking['id'], 'collecting');
+                  setState(() => _currentStatus = 'COLLECTING');
+                },
+              )
+            else if (_afterPhoto == null)
+              AppButton(
+                label: _uploading ? 'UPLOADING...' : 'TAKE AFTER PHOTO',
+                icon: const Icon(PhosphorIconsFill.camera, color: Colors.white),
+                onPressed: _uploading ? null : () => _takePhoto('after'),
+              )
+            else ...[
+              AppTextField(
+                controller: _weightCtrl,
+                label: 'Actual Weight (kg)',
+                hint: '0.0',
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 24),
+              AppButton(
+                label: 'COMPLETE PICKUP',
+                onPressed: () async {
+                  final w = double.tryParse(_weightCtrl.text) ?? 0;
+                  if (w <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid weight')));
+                    return;
+                  }
+                  await prov.updateStatus(widget.booking['id'], 'complete', actualWeightKg: w);
+                  if (mounted) Navigator.pop(context);
+                },
+              ),
+            ],
+          ],
+        );
+      default:
+        return const SizedBox();
+    }
   }
 
   Future<void> _takePhoto(String type) async {
@@ -256,14 +285,49 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => _ExceptionSheet(
         onReport: (reason, note) async {
           await context.read<CollectorProvider>().reportException(widget.booking['id'], reason, note);
           if (context.mounted) {
             Navigator.pop(context);
-            Navigator.pop(context); // Exit active pickup screen
+            Navigator.pop(context); 
           }
         },
+      ),
+    );
+  }
+}
+
+class _RoundBackBtn extends StatelessWidget {
+  const _RoundBackBtn({required this.onTap});
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(color: AppColors.premiumBlack, shape: BoxShape.circle),
+        child: const Icon(PhosphorIconsRegular.arrowLeft, color: Colors.white, size: 24),
+      ),
+    );
+  }
+}
+
+class _RoundActionBtn extends StatelessWidget {
+  const _RoundActionBtn({required this.icon, required this.onTap, this.color});
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? color;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: color ?? AppColors.premiumBlack, shape: BoxShape.circle, border: color == null ? Border.all(color: Colors.white10) : null),
+        child: Icon(icon, size: 24, color: Colors.white),
       ),
     );
   }
@@ -292,52 +356,48 @@ class _ExceptionSheetState extends State<_ExceptionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 32),
+    return Container(
+      decoration: const BoxDecoration(color: AppColors.premiumBlack, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Report Exception', style: AppTextStyles.title),
+          Text('Report Problem', style: AppTextStyles.h2.copyWith(color: Colors.white)),
           const SizedBox(height: 8),
-          Text('Why are you unable to complete this pickup?', style: AppTextStyles.meta),
-          const SizedBox(height: 24),
+          Text('Select a reason for cancellation', style: AppTextStyles.label.copyWith(color: Colors.white54)),
+          const SizedBox(height: 32),
           ..._reasons.map((r) {
             final selected = _reason == r['value'];
-            return InkWell(
+            return GestureDetector(
               onTap: () => setState(() => _reason = r['value']),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.danger.withAlpha(20) : Colors.white.withAlpha(5),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: selected ? AppColors.danger : Colors.white10),
+                ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 20, height: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: selected ? AppColors.danger : AppColors.border,
-                          width: selected ? 6 : 1.5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(r['label']!, style: AppTextStyles.bodyMedium),
+                    Text(r['label']!, style: AppTextStyles.h4.copyWith(color: selected ? AppColors.danger : Colors.white)),
+                    const Spacer(),
+                    if (selected) const Icon(Icons.check_circle, color: AppColors.danger, size: 20),
                   ],
                 ),
               ),
             );
           }),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           AppTextField(
             controller: _noteCtrl,
-            label: 'Additional Note (Optional)',
-            hint: 'Describe the issue...',
-            maxLines: 2,
+            label: 'Additional details',
+            hint: 'Describe the situation...',
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           AppButton(
-            label: 'Submit Report',
+            label: 'CANCEL PICKUP',
             variant: AppButtonVariant.danger,
             onPressed: _reason == null ? null : () => widget.onReport(_reason!, _noteCtrl.text),
           ),

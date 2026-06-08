@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../core/l10n/strings.dart';
 import '../../../core/theme/app_colors.dart';
@@ -25,7 +25,7 @@ class HouseholdHomeScreen extends StatefulWidget {
 class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   int _currentIndex = 0;
   // Null until the device provides a real GPS fix — never hardcoded.
-  LatLng? _myPos;
+  ll.LatLng? _myPos;
   StreamSubscription<Position>? _posSub;
 
   @override
@@ -44,18 +44,18 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     // Phase 1: last-known — fast, may be slightly stale
     final lastKnown = await LocationService.getLastKnownPosition();
     if (lastKnown != null && mounted) {
-      setState(() => _myPos = LatLng(lastKnown.latitude, lastKnown.longitude));
+      setState(() => _myPos = ll.LatLng(lastKnown.latitude, lastKnown.longitude));
     }
 
     // Phase 2: fresh GPS fix — accurate
     final pos = await LocationService.getCurrentPosition();
     if (pos != null && mounted) {
-      setState(() => _myPos = LatLng(pos.latitude, pos.longitude));
+      setState(() => _myPos = ll.LatLng(pos.latitude, pos.longitude));
     }
 
     // Phase 3: live stream — updates whenever user moves ≥10 m
     _posSub = LocationService.getPositionStream().listen((p) {
-      if (mounted) setState(() => _myPos = LatLng(p.latitude, p.longitude));
+      if (mounted) setState(() => _myPos = ll.LatLng(p.latitude, p.longitude));
     });
 
     if (!mounted) return;

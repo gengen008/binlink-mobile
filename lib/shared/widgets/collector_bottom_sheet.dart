@@ -41,6 +41,7 @@ class _CollectorSheet extends StatelessWidget {
     final vehicle  = collector['vehicleType'] as String?;
     final plate    = collector['vehiclePlate'] as String?;
     final initials = Fmt.initials(name);
+    final isNew    = rating == null || jobs == 0;
 
     return Container(
       decoration: const BoxDecoration(
@@ -102,16 +103,31 @@ class _CollectorSheet extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          ...List.generate(5, (i) => Icon(
-                            i < (rating ?? 5.0).floor() ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
-                            color: AppColors.warning,
-                            size: 14,
-                          )),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${(rating ?? 5.0).toStringAsFixed(1)} ($jobs jobs)',
-                            style: AppTextStyles.meta,
-                          ),
+                          if (isNew)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withAlpha(20),
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(color: Colors.blue.withAlpha(50)),
+                              ),
+                              child: Text(
+                                'NEW',
+                                style: AppTextStyles.caption.copyWith(color: Colors.blue, fontWeight: FontWeight.w900, fontSize: 10),
+                              ),
+                            )
+                          else ...[
+                            ...List.generate(5, (i) => Icon(
+                              i < rating.floor() ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                              color: AppColors.warning,
+                              size: 14,
+                            )),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${rating.toStringAsFixed(1)} ($jobs jobs)',
+                              style: AppTextStyles.meta,
+                            ),
+                          ],
                         ],
                       ),
                     ],

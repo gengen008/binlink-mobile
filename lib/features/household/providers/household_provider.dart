@@ -113,8 +113,15 @@ class HouseholdProvider extends ChangeNotifier {
     try {
       await ApiClient.put('/api/bookings/$bookingId/cancel', {'reason': reason});
       await loadBookings();
+      _error = null;
       return true;
-    } catch (_) {
+    } on DioException catch (e) {
+      _error = e.response?.data?['error'] ?? 'Failed to cancel booking';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'An unexpected error occurred';
+      notifyListeners();
       return false;
     }
   }

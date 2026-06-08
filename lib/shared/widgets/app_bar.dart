@@ -209,7 +209,7 @@ class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
                       children: [
                         Text(greeting, style: AppTextStyles.appBarTitle),
                         const SizedBox(height: 2),
-                        Text(subtitle, style: AppTextStyles.appBarSub),
+                        Text(subtitle, style: AppTextStyles.label),
                       ],
                     ),
                   ),

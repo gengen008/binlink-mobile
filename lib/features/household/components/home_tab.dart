@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart' show MapController;
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' show MaplibreMapController, CameraUpdate, LatLng;
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/services/places_service.dart';
 import '../../../core/utils/formatters.dart';
@@ -17,13 +17,13 @@ import '../../../shared/widgets/chat_sheet.dart';
 import '../../../shared/widgets/binlink_map.dart';
 import 'service_selection_sheet.dart';
 import 'address_selection_sheet.dart';
+import '../screens/payment_screen.dart';
 
 enum HomeSheetState { idle, serviceSelection, addressSelection, searching, tracking }
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key, required this.myPos, required this.onTabSwitch});
-  // Nullable: null until the device provides a real GPS fix.
-  final LatLng? myPos;
+  final ll.LatLng? myPos;
   final ValueChanged<int> onTabSwitch;
 
   @override
@@ -31,26 +31,45 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  MapController? _mapController;
+  MaplibreMapController? _mapController;
   HomeSheetState _sheetState = HomeSheetState.idle;
-  
-  // Booking Data
+
   String? _selectedCategory;
   String? _selectedBinSize;
   String _currentAddress = '';
-  LatLng? _pickupPosition;
+  ll.LatLng? _pickupPosition;
   int _extraBags = 0;
 
-  // Schedule Data (null = immediate pickup)
   DateTime? _scheduledDate;
   String? _scheduledTimePreference;
 
-  void _onMapCreated(MapController controller) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final active = context.read<HouseholdProvider>().activeBooking;
+      if (active != null) {
+        context.read<HouseholdProvider>().listenToBooking(active['id']);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Only stop listening if we're actually tracking something
+    if (_sheetState == HomeSheetState.tracking) {
+      context.read<HouseholdProvider>().stopListening();
+    }
+    super.dispose();
+  }
+
+  void _onMapCreated(MaplibreMapController controller) {
     _mapController = controller;
   }
 
+
   void _startBookingFlow() {
-    if (widget.myPos == null) return; // GPS not ready yet
+    if (widget.myPos == null) return;
     setState(() {
       _sheetState = HomeSheetState.serviceSelection;
       _pickupPosition = widget.myPos;
@@ -64,7 +83,6 @@ class _HomeTabState extends State<HomeTab> {
       _extraBags = extraBags;
     });
 
-    // Try to get address for the pin
     final address = await PlacesService.reverseGeocode(
         _pickupPosition!.latitude, _pickupPosition!.longitude);
     
@@ -73,17 +91,46 @@ class _HomeTabState extends State<HomeTab> {
         _currentAddress = address ?? 'Fetching address...';
         _sheetState = HomeSheetState.addressSelection;
       });
-      // Zoom into pin
-      _mapController?.move(_pickupPosition!, 16.5);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(_pickupPosition!.latitude, _pickupPosition!.longitude), 16.5),
+      );
     }
   }
 
   Future<void> _onAddressConfirmed(String address) async {
-    setState(() {
-      _sheetState = HomeSheetState.searching;
-    });
-
     final prov = context.read<HouseholdProvider>();
+    
+    // Choose payment method
+    final method = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const _PaymentMethodPicker(),
+    );
+
+    if (method == null) return; 
+
+    if (method == 'MOMO') {
+      final booking = await prov.createBooking(
+        binSize: _selectedBinSize ?? 'SMALL',
+        extraBags: _extraBags,
+        pickupAddress: address,
+        pickupLat: _pickupPosition!.latitude,
+        pickupLng: _pickupPosition!.longitude,
+        paymentMethod: 'MOMO',
+        wasteCategory: _selectedCategory,
+        scheduledDate: _scheduledDate,
+        timePreference: _scheduledTimePreference,
+        addressNotes: '',
+      );
+
+      if (booking != null && mounted) {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen(booking: booking)));
+      }
+      return;
+    }
+
+    setState(() => _sheetState = HomeSheetState.searching);
+
     final booking = await prov.createBooking(
       binSize: _selectedBinSize ?? 'SMALL',
       extraBags: _extraBags,
@@ -98,7 +145,7 @@ class _HomeTabState extends State<HomeTab> {
     );
 
     if (booking != null && mounted) {
-      // Transition directly to Tracking state, matching Bolt/Uber seamless flow
+      prov.listenToBooking(booking['id']);
       setState(() => _sheetState = HomeSheetState.tracking);
     } else {
       if (mounted) setState(() => _sheetState = HomeSheetState.idle);
@@ -113,11 +160,13 @@ class _HomeTabState extends State<HomeTab> {
       _scheduledTimePreference = null;
       _extraBags = 0;
     });
-    if (widget.myPos != null) _mapController?.move(widget.myPos!, 15);
+    if (widget.myPos != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(widget.myPos!.latitude, widget.myPos!.longitude), 15),
+      );
+    }
   }
 
-  /// Opens a schedule date/time picker sheet. On confirmation transitions
-  /// into the normal booking flow with the chosen date pre-loaded.
   Future<void> _startScheduleFlow() async {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -133,18 +182,14 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    // Show a full-screen loader until we have a real GPS position.
-    // This prevents the map from ever defaulting to a hardcoded location.
-    if (widget.myPos == null) {
-      return const _LocationLoadingView();
-    }
+    if (widget.myPos == null) return const _LocationLoadingView();
 
     final prov = context.watch<HouseholdProvider>();
     final active = prov.activeBooking;
 
     return Stack(
       children: [
-        // ── Full Screen Map ─────────────────────────────────────────────────
+        // ── Map ──
         Positioned.fill(
           child: BinLinkMap(
             initialPosition: widget.myPos!,
@@ -153,244 +198,286 @@ class _HomeTabState extends State<HomeTab> {
             pickupPosition: _pickupPosition,
             onCollectorTap: (c) {
               if (_sheetState == HomeSheetState.idle) {
-                showCollectorSheet(
-                  context,
-                  c,
-                  onRequestPickup: _startBookingFlow,
+                showCollectorSheet(context, c, onRequestPickup: _startBookingFlow);
+              }
+            },
+          ),
+        ),
+
+        // ── Search Pill (Floating Top) ──
+        if (_sheetState == HomeSheetState.idle)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 20,
+            right: 20,
+            child: FadeInDown(
+              child: _TopSearchPill(
+                onMenuTap: () => Scaffold.of(context).openDrawer(),
+                onSearchTap: _startBookingFlow,
+              ),
+            ),
+          ),
+
+        // ── Back Button (When Booking) ──
+        if (_sheetState != HomeSheetState.idle)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 20,
+            child: _FloatingCircularBtn(
+              icon: PhosphorIconsRegular.arrowLeft,
+              onTap: _cancelBooking,
+            ),
+          ),
+
+        // ── Locate Me ──
+        Positioned(
+          bottom: _sheetState == HomeSheetState.idle ? (active != null ? 400 : 350) : 420,
+          right: 20,
+          child: _FloatingCircularBtn(
+            image: AppAssets.gps,
+            onTap: () {
+              if (widget.myPos != null) {
+                _mapController?.animateCamera(
+                  CameraUpdate.newLatLngZoom(LatLng(widget.myPos!.latitude, widget.myPos!.longitude), 15),
                 );
               }
             },
           ),
         ),
 
-        // ── Top Bar: Menu (Only visible in idle) ────────────────────────────
-        if (_sheetState == HomeSheetState.idle)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Scaffold.of(context).openDrawer(),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                    ),
-                    child: const Icon(PhosphorIconsRegular.list, size: 24),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _startBookingFlow, // search bar = immediate booking
-                    child: Container(
-                      height: 52,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: AppRadius.fullBR,
-                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset(AppAssets.search, width: 22, height: 22, color: AppColors.primary),
-                          const SizedBox(width: 12),
-                          Text("Where to pickup?", style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // ── Top Bar: Back Button (Visible when booking) ─────────────────────
-        if (_sheetState != HomeSheetState.idle)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            child: GestureDetector(
-              onTap: _cancelBooking,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                ),
-                child: const Icon(PhosphorIconsRegular.arrowLeft, size: 24),
-              ),
-            ),
-          ),
-
-        // ── Locate Me Button ────────────────────────────────────────────────
-        Positioned(
-          bottom: _sheetState == HomeSheetState.idle ? (active != null ? 350 : 300) : 400,
-          right: 16,
-          child: FloatingActionButton.small(
-            onPressed: () => _mapController?.move(widget.myPos!, 15),
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.textPrimary,
-            elevation: 4,
-            shape: const CircleBorder(),
-            child: Image.asset(AppAssets.gps, width: 20, height: 20, color: AppColors.textPrimary),
-          ),
+        // ── Dynamic Sheets ──
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: _buildBottomContent(active),
         ),
-
-        // ── Dynamic Bottom Sheets ──────────────────────────────────────────
-        if (_sheetState == HomeSheetState.idle)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _IdleBottomSheet(
-              activeBooking: active,
-              onRequestNow: _startBookingFlow,
-              onSchedule: _startScheduleFlow,
-              onShowTracking: active != null
-                  ? () => setState(() => _sheetState = HomeSheetState.tracking)
-                  : null,
-            ),
-          )
-        else if (_sheetState == HomeSheetState.serviceSelection)
-          ServiceSelectionSheet(
-            onServiceSelected: _onServiceSelected,
-            onCancel: _cancelBooking,
-          )
-        else if (_sheetState == HomeSheetState.addressSelection)
-          AddressSelectionSheet(
-            currentAddress: _currentAddress,
-            onAddressConfirmed: _onAddressConfirmed,
-            onCancel: _cancelBooking,
-          )
-        else if (_sheetState == HomeSheetState.searching)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 48),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SearchingRadarWidget(radius: 40, ringColor: AppColors.primary),
-                  const SizedBox(height: 24),
-                  Text('Searching for nearby collectors...', style: AppTextStyles.h2),
-                  const SizedBox(height: 8),
-                  Text('Please wait while we match you.', style: AppTextStyles.body),
-                ],
-              ),
-            ),
-          )
-        else if (_sheetState == HomeSheetState.tracking && active != null)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _TrackingBottomSheet(booking: active),
-          ),
       ],
+    );
+  }
+
+  Widget _buildBottomContent(Map<String, dynamic>? active) {
+    final prov = context.read<HouseholdProvider>();
+    switch (_sheetState) {
+      case HomeSheetState.idle:
+        return _IdleBottomSheet(
+          activeBooking: active,
+          onRequestNow: _startBookingFlow,
+          onSchedule: _startScheduleFlow,
+          onShowTracking: () => setState(() => _sheetState = HomeSheetState.tracking),
+          savedAddresses: prov.savedAddresses,
+          onAddressTap: (a) => setState(() {
+            _pickupPosition = ll.LatLng((a['lat'] as num).toDouble(), (a['lng'] as num).toDouble());
+            _currentAddress = a['address'] as String? ?? '';
+            _sheetState = HomeSheetState.serviceSelection;
+          }),
+        );
+      case HomeSheetState.serviceSelection:
+        return ServiceSelectionSheet(
+          onServiceSelected: _onServiceSelected,
+          onCancel: _cancelBooking,
+        );
+      case HomeSheetState.addressSelection:
+        return AddressSelectionSheet(
+          currentAddress: _currentAddress,
+          onAddressConfirmed: _onAddressConfirmed,
+          onCancel: _cancelBooking,
+        );
+      case HomeSheetState.searching:
+        return _SearchingSheet();
+      case HomeSheetState.tracking:
+        return active != null ? _TrackingBottomSheet(booking: active) : const SizedBox();
+    }
+  }
+}
+
+// ── Components ──────────────────────────────────────────────────────────
+
+class _TopSearchPill extends StatelessWidget {
+  const _TopSearchPill({required this.onMenuTap, required this.onSearchTap});
+  final VoidCallback onMenuTap;
+  final VoidCallback onSearchTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onMenuTap,
+            child: const Icon(PhosphorIconsRegular.list, size: 24, color: AppColors.textPrimary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: onSearchTap,
+              child: Text(
+                "Ready for a pickup?",
+                style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary, fontSize: 18),
+              ),
+            ),
+          ),
+          Image.asset(AppAssets.search, width: 24, height: 24, color: AppColors.primary),
+        ],
+      ),
+    );
+  }
+}
+
+class _FloatingCircularBtn extends StatelessWidget {
+  const _FloatingCircularBtn({this.icon, this.image, required this.onTap});
+  final IconData? icon;
+  final String? image;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+        ),
+        child: image != null 
+          ? Image.asset(image!, width: 22, height: 22)
+          : Icon(icon, size: 22, color: AppColors.textPrimary),
+      ),
     );
   }
 }
 
 class _IdleBottomSheet extends StatelessWidget {
-  const _IdleBottomSheet({
+  _IdleBottomSheet({
     this.activeBooking,
     required this.onRequestNow,
     required this.onSchedule,
-    this.onShowTracking,
+    required this.onShowTracking,
+    required this.savedAddresses,
+    required this.onAddressTap,
   });
   final Map<String, dynamic>? activeBooking;
   final VoidCallback onRequestNow;
   final VoidCallback onSchedule;
-  final VoidCallback? onShowTracking;
+  final VoidCallback onShowTracking;
+  final List<Map<String, dynamic>> savedAddresses;
+  final ValueChanged<Map<String, dynamic>> onAddressTap;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Suggestions Horizontal List (Uber Inspiration) ──
+        // ── 3D Categories ──
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              _SuggestionCard(
-                image: AppAssets.trashBin,
-                title: 'Household',
-                onTap: onRequestNow,
-              ),
-              _SuggestionCard(
-                image: AppAssets.recycleBin,
-                title: 'Recycling',
-                onTap: onRequestNow,
-              ),
-              _SuggestionCard(
-                image: AppAssets.bottle,
-                title: 'Glass/Plastic',
-                onTap: onRequestNow,
-              ),
-              _SuggestionCard(
-                image: AppAssets.leaf,
-                title: 'Organic',
-                onTap: onRequestNow,
-              ),
+              _CategoryCardV4(image: AppAssets.bin3d, label: 'Household', onTap: onRequestNow),
+              _CategoryCardV4(image: AppAssets.truck3d, label: 'Construction', onTap: onRequestNow),
+              _CategoryCardV4(image: AppAssets.recycleBin, label: 'Recycling', onTap: onRequestNow),
+              _CategoryCardV4(image: AppAssets.leaf, label: 'Organic', onTap: onRequestNow),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         
-        // ── Main White Sheet ──
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadius.sheetBR,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (activeBooking != null) ...[
-                _ActiveBookingCard(
-                  booking: activeBooking!,
-                  onTap: onShowTracking ?? () {},
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _SplitCard(
-                      image: AppAssets.calendar,
-                      title: "Schedule",
-                      subtitle: "Plan ahead",
-                      isPrimary: false,
-                      onTap: onSchedule,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SplitCard(
-                      image: AppAssets.clock,
-                      title: "Request Now",
-                      subtitle: "Instant pickup",
-                      isPrimary: true,
-                      onTap: onRequestNow,
-                    ),
-                  ),
+        // ── Main Action Sheet ──
+        FadeInUp(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (activeBooking != null) ...[
+                  _ActiveBannerV4(booking: activeBooking!, onTap: onShowTracking),
+                  const SizedBox(height: 24),
                 ],
-              ),
-            ],
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionBtnV4(
+                        icon: PhosphorIconsFill.calendar,
+                        title: "Schedule",
+                        subtitle: "Plan ahead",
+                        color: AppColors.surface,
+                        onTap: onSchedule,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ActionBtnV4(
+                        icon: PhosphorIconsFill.lightning,
+                        title: "Request",
+                        subtitle: "Instant",
+                        color: AppColors.primaryLight,
+                        textColor: AppColors.primary,
+                        onTap: onRequestNow,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // ── Saved Addresses Section ──
+                const Divider(),
+                const SizedBox(height: 16),
+                if (savedAddresses.isEmpty)
+                  Row(
+                    children: [
+                      const Icon(PhosphorIconsFill.mapPin, color: AppColors.textMuted, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Saved Addresses", style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
+                            Text("No addresses saved yet", style: AppTextStyles.label.copyWith(fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                      const Icon(PhosphorIconsRegular.caretRight, color: AppColors.textMuted),
+                    ],
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Quick Pickup", style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      const SizedBox(height: 12),
+                      ...savedAddresses.take(3).map((a) => ListTile(
+                        onTap: () => onAddressTap(a),
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(PhosphorIconsFill.mapPin, size: 18),
+                        ),
+                        title: Text(a['label'], style: AppTextStyles.h4),
+                        subtitle: Text(a['address'], style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: const Icon(PhosphorIconsRegular.caretRight, size: 16),
+                      )),
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -398,10 +485,10 @@ class _IdleBottomSheet extends StatelessWidget {
   }
 }
 
-class _SuggestionCard extends StatelessWidget {
-  const _SuggestionCard({required this.image, required this.title, required this.onTap});
+class _CategoryCardV4 extends StatelessWidget {
+  _CategoryCardV4({required this.image, required this.label, required this.onTap});
   final String image;
-  final String title;
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -409,18 +496,21 @@ class _SuggestionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppRadius.mdBR,
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
-        ),
-        child: Row(
+        margin: const EdgeInsets.only(right: 16),
+        child: Column(
           children: [
-            Image.asset(image, width: 28, height: 28),
-            const SizedBox(width: 10),
-            Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+            Container(
+              width: 72, height: 72,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 15, offset: const Offset(0, 6))],
+              ),
+              child: Image.asset(image, fit: BoxFit.contain),
+            ),
+            const SizedBox(height: 10),
+            Text(label, style: AppTextStyles.label.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -428,19 +518,20 @@ class _SuggestionCard extends StatelessWidget {
   }
 }
 
-class _SplitCard extends StatelessWidget {
-  const _SplitCard({
-    required this.image,
+class _ActionBtnV4 extends StatelessWidget {
+  _ActionBtnV4({
+    required this.icon,
     required this.title,
     required this.subtitle,
-    required this.isPrimary,
+    required this.color,
+    this.textColor,
     required this.onTap,
   });
-
-  final String image;
+  final IconData icon;
   final String title;
   final String subtitle;
-  final bool isPrimary;
+  final Color color;
+  final Color? textColor;
   final VoidCallback onTap;
 
   @override
@@ -448,34 +539,15 @@ class _SplitCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primary : AppColors.surface,
-          borderRadius: AppRadius.mdBR,
-        ),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(24)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              image, 
-              width: 32, height: 32,
-              color: isPrimary ? Colors.white : AppColors.primary,
-            ),
+            Icon(icon, color: textColor ?? AppColors.textPrimary, size: 24),
             const SizedBox(height: 16),
-            Text(
-              title,
-              style: AppTextStyles.section.copyWith(
-                color: isPrimary ? Colors.white : AppColors.textPrimary,
-                fontSize: 16,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                color: isPrimary ? Colors.white.withAlpha(200) : AppColors.textSecondary,
-                fontSize: 11,
-              ),
-            ),
+            Text(title, style: AppTextStyles.h3.copyWith(color: textColor ?? AppColors.textPrimary)),
+            Text(subtitle, style: AppTextStyles.label.copyWith(color: (textColor ?? AppColors.textSecondary).withAlpha(180))),
           ],
         ),
       ),
@@ -483,51 +555,40 @@ class _SplitCard extends StatelessWidget {
   }
 }
 
-class _ActiveBookingCard extends StatelessWidget {
-  const _ActiveBookingCard({required this.booking, required this.onTap});
+class _ActiveBannerV4 extends StatelessWidget {
+  _ActiveBannerV4({required this.booking, required this.onTap});
   final Map<String, dynamic> booking;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final status = booking['status'] as String? ?? 'PENDING';
-    final isSearching = status == 'PENDING' || status == 'SEARCHING';
-    
     return InkWell(
       onTap: onTap,
-      borderRadius: AppRadius.mdBR,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppRadius.mdBR,
-          border: Border.all(color: AppColors.primary, width: 1.5),
-          boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(40), blurRadius: 10)],
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(80), blurRadius: 15, offset: const Offset(0, 5))],
         ),
         child: Row(
           children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                if (isSearching) SearchingRadarWidget(radius: 24, ringColor: AppColors.primary),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-                  child: Image.asset(AppAssets.truck, width: 24, height: 24, color: AppColors.primary),
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: Image.asset(AppAssets.truck3d, width: 24, height: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(isSearching ? 'Searching...' : 'Collector Arriving', style: AppTextStyles.section.copyWith(color: AppColors.primary, fontSize: 16)),
-                  Text(isSearching ? 'Finding nearby collectors' : 'On the way', style: AppTextStyles.meta),
+                  Text("Active Booking", style: AppTextStyles.h4.copyWith(color: Colors.white)),
+                  Text(Fmt.statusLabel(booking['status'] ?? ''), style: AppTextStyles.label.copyWith(color: Colors.white70)),
                 ],
               ),
             ),
-            Icon(PhosphorIconsRegular.caretRight, color: AppColors.primary),
+            const Icon(PhosphorIconsRegular.caretRight, color: Colors.white),
           ],
         ),
       ),
@@ -535,13 +596,124 @@ class _ActiveBookingCard extends StatelessWidget {
   }
 }
 
-// ── Schedule Picker Sheet ──────────────────────────────────────────────────────
-// Shown when user taps "Schedule" CTA. Lets them pick a date (next 14 days)
-// and a time preference. Returns {'date': DateTime, 'timePreference': String}.
+class _SearchingSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 60),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SearchingRadarWidget(radius: 40, ringColor: AppColors.primary),
+          const SizedBox(height: 32),
+          Text('Matching with Collector', style: AppTextStyles.h2),
+          const SizedBox(height: 8),
+          Text('This usually takes less than a minute.', style: AppTextStyles.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackingBottomSheet extends StatelessWidget {
+  const _TrackingBottomSheet({required this.booking});
+  final Map<String, dynamic> booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = booking['status'] as String? ?? 'PENDING';
+    
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+                child: Icon(PhosphorIconsFill.truck, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(child: Text(Fmt.statusLabel(status), style: AppTextStyles.h2.copyWith(color: AppColors.primary))),
+            ],
+          ),
+          const SizedBox(height: 32),
+          if (booking['collector'] != null) ...[
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppColors.surface,
+                  child: Text(Fmt.initials(booking['collector']['fullName']), style: AppTextStyles.h3),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(booking['collector']['fullName'] ?? 'Collector', style: AppTextStyles.h3),
+                      Text(
+                        booking['collector']['vehiclePlate'] != null
+                            ? "Vehicle #${booking['collector']['vehiclePlate']}"
+                            : "Collector Vehicle",
+                        style: AppTextStyles.label,
+                      ),
+                    ],
+                  ),
+                ),
+                _RoundIconBtn(icon: PhosphorIconsFill.phone, onTap: () => launchUrl(Uri.parse('tel:${booking['collector']['phone'] ?? ''}'))),
+                const SizedBox(width: 12),
+                _RoundIconBtn(icon: PhosphorIconsFill.chatCircle, onTap: () => showChatSheet(context, bookingId: booking['id'], myRole: 'HOUSEHOLD')),
+              ],
+            ),
+          ],
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              const Icon(PhosphorIconsRegular.mapPin, color: AppColors.textMuted, size: 20),
+              const SizedBox(width: 12),
+              Expanded(child: Text(booking['pickupAddress'] ?? '', style: AppTextStyles.bodyMedium)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoundIconBtn extends StatelessWidget {
+  const _RoundIconBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+        child: Icon(icon, size: 22, color: AppColors.textPrimary),
+      ),
+    );
+  }
+}
 
 class _SchedulePickerSheet extends StatefulWidget {
   const _SchedulePickerSheet();
-
   @override
   State<_SchedulePickerSheet> createState() => _SchedulePickerSheetState();
 }
@@ -570,94 +742,44 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 32),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).viewInsets.bottom + 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 12),
           Center(
-            child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                Text('Schedule Pickup', style: AppTextStyles.h2),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // ── 14-day date carousel ──────────────────────────────────────────
+          const SizedBox(height: 24),
+          Text('Schedule Pickup', style: AppTextStyles.h2),
+          const SizedBox(height: 24),
           SizedBox(
-            height: 80,
+            height: 90,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: dates.length,
               itemBuilder: (_, i) {
                 final d = dates[i];
-                final isSelected = d.day == _selectedDate.day &&
-                    d.month == _selectedDate.month;
+                final isSelected = d.day == _selectedDate.day && d.month == _selectedDate.month;
                 final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                final dayName = dayNames[d.weekday - 1];
-                final monthNames = [
-                  'Jan','Feb','Mar','Apr','May','Jun',
-                  'Jul','Aug','Sep','Oct','Nov','Dec'
-                ];
-
                 return GestureDetector(
                   onTap: () => setState(() => _selectedDate = d),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 56,
-                    margin: const EdgeInsets.only(right: 10),
+                    width: 64,
+                    margin: const EdgeInsets.only(right: 12),
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primary : AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                      ),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          dayName,
-                          style: AppTextStyles.caption.copyWith(
-                            color: isSelected ? Colors.white.withAlpha(200) : AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text(dayNames[d.weekday - 1], style: AppTextStyles.label.copyWith(color: isSelected ? Colors.white70 : AppColors.textSecondary)),
                         const SizedBox(height: 4),
-                        Text(
-                          '${d.day}',
-                          style: AppTextStyles.h3.copyWith(
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                            fontSize: 20,
-                          ),
-                        ),
-                        Text(
-                          monthNames[d.month - 1],
-                          style: AppTextStyles.caption.copyWith(
-                            color: isSelected ? Colors.white.withAlpha(180) : AppColors.textMuted,
-                            fontSize: 10,
-                          ),
-                        ),
+                        Text('${d.day}', style: AppTextStyles.h3.copyWith(color: isSelected ? Colors.white : AppColors.textPrimary, fontSize: 22)),
                       ],
                     ),
                   ),
@@ -665,88 +787,43 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
               },
             ),
           ),
-
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text('Time Preference', style: AppTextStyles.section),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Time preference chips ─────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: _timeSlots.map((slot) {
-                final (id, label, hours) = slot;
-                final isSelected = _timePreference == id;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _timePreference = id),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primaryLight : AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            label,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            hours,
-                            style: AppTextStyles.caption.copyWith(
-                              color: isSelected ? AppColors.primary : AppColors.textMuted,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
+          const SizedBox(height: 32),
+          Text('Time Preference', style: AppTextStyles.h3),
+          const SizedBox(height: 16),
+          Row(
+            children: _timeSlots.map((slot) {
+              final (id, label, hours) = slot;
+              final isSelected = _timePreference == id;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _timePreference = id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primaryLight : AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(label, style: AppTextStyles.h4.copyWith(color: isSelected ? AppColors.primary : AppColors.textPrimary)),
+                        Text(hours, style: AppTextStyles.label.copyWith(fontSize: 10)),
+                      ],
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
-
-          const SizedBox(height: 28),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, {
-                  'date': _selectedDate,
-                  'timePreference': _timePreference,
-                }),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  'Confirm Schedule',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context, {'date': _selectedDate, 'timePreference': _timePreference}),
+              child: const Text('Confirm Schedule'),
             ),
           ),
         ],
@@ -755,11 +832,8 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _LocationLoadingView extends StatelessWidget {
   const _LocationLoadingView();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -768,12 +842,9 @@ class _LocationLoadingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            const SizedBox(height: 20),
-            Text(
-              'Getting your location...',
-              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-            ),
+            CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+            const SizedBox(height: 24),
+            Text('Locating you...', style: AppTextStyles.h3),
           ],
         ),
       ),
@@ -781,99 +852,37 @@ class _LocationLoadingView extends StatelessWidget {
   }
 }
 
-class _TrackingBottomSheet extends StatelessWidget {
-  const _TrackingBottomSheet({required this.booking});
-  final Map<String, dynamic> booking;
+class _PaymentMethodPicker extends StatelessWidget {
+  const _PaymentMethodPicker();
 
   @override
   Widget build(BuildContext context) {
-    final status = booking['status'] as String? ?? 'PENDING';
-    
-    final (pngAsset, fallbackIcon, msg, color) = switch (status) {
-      'PENDING'    => (null, PhosphorIconsFill.clock, 'Finding your collector...', AppColors.warning),
-      'ACCEPTED'   => (AppAssets.verifiedBadge, null, 'Collector accepted', AppColors.success),
-      'EN_ROUTE'   => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
-      'ON_THE_WAY' => (AppAssets.truck, null, 'Collector is on the way', AppColors.info),
-      'ARRIVED'    => (AppAssets.gps, null, 'Collector has arrived', AppColors.success),
-      'COLLECTING' => (AppAssets.gps, null, 'Collecting your waste', AppColors.success),
-      'COMPLETED'  => (AppAssets.verifiedBadge, null, 'Pickup completed', AppColors.success),
-      _            => (null, PhosphorIconsFill.info, status, AppColors.textSecondary),
-    };
-
-    Widget iconWidget;
-    if (pngAsset != null) {
-      iconWidget = Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
-        child: Image.asset(pngAsset, width: 22, height: 22, color: color),
-      );
-    } else {
-      iconWidget = Icon(fallbackIcon!, color: color, size: 24);
-    }
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: AppRadius.sheetBR,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              iconWidget,
-              const SizedBox(width: 12),
-              Expanded(child: Text(msg, style: AppTextStyles.section.copyWith(color: color))),
-            ],
+          Center(
+            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
           ),
           const SizedBox(height: 24),
-          if (booking['collector'] != null) ...[
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppColors.surface,
-                  child: Text(Fmt.initials(booking['collector']['fullName'])),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(booking['collector']['fullName'] ?? 'Collector', style: AppTextStyles.section),
-                      Text(
-                        booking['collector']['vehiclePlate'] != null
-                            ? "Vehicle #${booking['collector']['vehiclePlate']}"
-                            : "Collector Vehicle",
-                        style: AppTextStyles.meta,
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => launchUrl(Uri.parse('tel:${booking['collector']['phone'] ?? ''}')),
-                  icon: const Icon(PhosphorIconsFill.phone),
-                ),
-                IconButton(
-                  onPressed: () => showChatSheet(context, bookingId: booking['id'], myRole: 'HOUSEHOLD'),
-                  icon: const Icon(PhosphorIconsFill.chatCircle),
-                ),
-              ],
-            ),
-          ],
+          Text('Payment Method', style: AppTextStyles.h2),
           const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              const Icon(PhosphorIconsRegular.mapPin, color: AppColors.textSecondary, size: 18),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(booking['pickupAddress'] ?? '', style: AppTextStyles.bodyMedium),
-              ),
-            ],
+          _PaymentOption(
+            label: 'Cash on Pickup',
+            icon: PhosphorIconsFill.money,
+            onTap: () => Navigator.pop(context, 'CASH'),
+          ),
+          const SizedBox(height: 12),
+          _PaymentOption(
+            label: 'Mobile Money',
+            icon: PhosphorIconsFill.phone,
+            onTap: () => Navigator.pop(context, 'MOMO'),
           ),
         ],
       ),
@@ -881,3 +890,28 @@ class _TrackingBottomSheet extends StatelessWidget {
   }
 }
 
+class _PaymentOption extends StatelessWidget {
+  const _PaymentOption({required this.label, required this.icon, required this.onTap});
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12)),
+        child: Icon(icon, color: AppColors.textPrimary),
+      ),
+      title: Text(label, style: AppTextStyles.h4),
+      trailing: const Icon(PhosphorIconsRegular.caretRight, size: 18),
+    );
+  }
+}

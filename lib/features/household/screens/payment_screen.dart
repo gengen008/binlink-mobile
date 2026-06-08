@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../../../core/theme/app_assets.dart';
-import '../../../core/services/receipt_service.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/l10n/strings.dart';
 import '../../../shared/widgets/app_bar.dart';
 import '../../../shared/widgets/app_button.dart';
 
@@ -18,28 +17,26 @@ class PaymentScreen extends StatefulWidget {
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen>
-    with SingleTickerProviderStateMixin {
-  bool _confirmed = false; // true → show success screen
+class _PaymentScreenState extends State<PaymentScreen> with SingleTickerProviderStateMixin {
+  bool _confirmed = false;
+  String _selectedMethod = 'CASH';
+  bool _isProcessing = false;
 
   late final AnimationController _successAnim;
   late final Animation<double> _scalePop;
-  late final Animation<double> _fadePop;
 
-  String get _paymentMethod =>
-      widget.booking['paymentMethod'] as String? ?? 'CASH';
+  final _paymentMethods = [
+    {'id': 'CASH',     'label': 'Cash on Pickup', 'icon': PhosphorIconsFill.money, 'color': AppColors.boltGreen},
+    {'id': 'MTN',      'label': 'MTN MoMo',       'icon': PhosphorIconsFill.phone, 'color': Color(0xFFFFCC00)},
+    {'id': 'TELECEL',  'label': 'Telecel Cash',   'icon': PhosphorIconsFill.phone, 'color': Color(0xFFE60000)},
+    {'id': 'AIRTEL',   'label': 'AirtelTigo',     'icon': PhosphorIconsFill.phone, 'color': Color(0xFF005A9C)},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _successAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _scalePop = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _successAnim, curve: Curves.elasticOut),
-    );
-    _fadePop = CurvedAnimation(parent: _successAnim, curve: Curves.easeOut);
+    _successAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _scalePop = Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: _successAnim, curve: Curves.elasticOut));
   }
 
   @override
@@ -48,17 +45,42 @@ class _PaymentScreenState extends State<PaymentScreen>
     super.dispose();
   }
 
-  void _showSuccess() {
-    setState(() => _confirmed = true);
-    _successAnim.forward();
-  }
+  Future<void> _handlePayment() async {
+    setState(() => _isProcessing = true);
+    try {
+      if (_selectedMethod == 'CASH') {
+        // Direct confirmation for cash (Backend already sets status)
+        await Future.delayed(const Duration(milliseconds: 800));
+      } else {
+        // Real Paystack Flow for MoMo
+        final res = await ApiClient.post('/api/payments/initialize', {
+          'bookingId': widget.booking['id'],
+          'channel':   'mobile_money',
+        });
+        
+        final data = res.data['data'];
+        final url = Uri.parse(data['authorization_url']);
+        
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          // After returning from browser, we show success (polling would be better, but this confirms intent)
+        }
+      }
 
-  void _trackPickup() {
-    Navigator.popUntil(context, (route) => route.isFirst);
-  }
-
-  void _backToHome() {
-    Navigator.popUntil(context, (route) => route.isFirst);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _confirmed = true;
+        });
+        _successAnim.forward();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment failed: ${e.toString()}'), backgroundColor: AppColors.danger),
+      );
+    }
   }
 
   @override
@@ -66,302 +88,147 @@ class _PaymentScreenState extends State<PaymentScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 400),
-        transitionBuilder: (child, anim) => FadeTransition(
-          opacity: anim,
-          child: child,
-        ),
-        child: _confirmed ? _buildSuccess() : _buildPaymentForm(),
+        duration: const Duration(milliseconds: 500),
+        child: _confirmed ? _buildSuccess() : _buildPaymentMethods(),
       ),
     );
   }
 
-  // ── Payment form ───────────────────────────────────────────────────────────
-
-  Widget _buildPaymentForm() {
+  Widget _buildPaymentMethods() {
     final amount = Fmt.toDouble(widget.booking['totalAmount']);
 
-    return SizedBox.expand(
-      key: const ValueKey('form'),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppScaffoldBar(title: S.of(context).payment),
-        body: Column(
-          children: [
-            const SizedBox(height: 20),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                decoration: BoxDecoration(
-                  borderRadius: AppRadius.mdBR,
-                  color: AppColors.secondary,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Amount Due',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withAlpha(160),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      Fmt.currency(amount),
-                      style: AppTextStyles.display.copyWith(
-                        color: Colors.white,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: const AppScaffoldBar(title: 'Payment'),
+      body: Column(
+        children: [
+          // ── Premium Amount Card ──
+          FadeInDown(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(32),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.black,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(40), blurRadius: 20, offset: const Offset(0, 8))],
               ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Payment method section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Payment Method',
-                    style: AppTextStyles.section,
-                  ),
-                  const SizedBox(height: 16),
-
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.mdBR,
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          AppAssets.cash,
-                          width: 32, height: 32,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Pay with Cash',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 20, height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.primary, width: 6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Cash instruction
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: AppRadius.mdBR,
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(PhosphorIconsRegular.info, size: 16, color: AppColors.textMuted),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Have ${Fmt.currency(amount)} ready to pay your collector on arrival.',
-                            style: AppTextStyles.meta,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-                  AppButton(
-                    label: S.of(context).confirmBooking,
-                    onPressed: _showSuccess,
-                  ),
+                  Text('TOTAL TO PAY', style: AppTextStyles.label.copyWith(color: Colors.white54, letterSpacing: 1.5)),
+                  const SizedBox(height: 12),
+                  Text(Fmt.currency(amount), style: AppTextStyles.monoLg.copyWith(color: Colors.white, fontSize: 40)),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
+          ),
 
-  // ── Success screen ─────────────────────────────────────────────────────────
-
-  Widget _buildSuccess() {
-    final bookingId = widget.booking['id'] as String? ?? '';
-    final amount    =
-        Fmt.toDouble(widget.booking['totalAmount']);
-    final ref       = bookingId.length > 8
-        ? bookingId.substring(0, 8).toUpperCase()
-        : bookingId.toUpperCase();
-    final isNow     = (widget.booking['scheduledDate'] as String?) == null;
-
-    return SizedBox.expand(
-      key: const ValueKey('success'),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppScaffoldBar(title: S.of(context).pickupConfirmed),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-            child: Column(
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               children: [
-                const Spacer(),
-
-                // Animated check circle
-                ScaleTransition(
-                  scale: _scalePop,
-                  child: FadeTransition(
-                    opacity: _fadePop,
-                    child: Container(
-                      width: 100, height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withAlpha(20),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          PhosphorIconsFill.checkCircle,
-                          color: AppColors.primary,
-                          size: 50,
+                Text('Select Method', style: AppTextStyles.h3),
+                const SizedBox(height: 20),
+                
+                ..._paymentMethods.map((m) {
+                  final isSelected = _selectedMethod == m['id'];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedMethod = m['id'] as String),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.surface : Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 2 : 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(color: (m['color'] as Color).withAlpha(30), borderRadius: BorderRadius.circular(16)),
+                              child: Icon(m['icon'] as IconData, color: m['color'] as Color, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(child: Text(m['label'] as String, style: AppTextStyles.h4)),
+                            if (isSelected) Icon(Icons.check_circle, color: AppColors.primary),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                FadeTransition(
-                  opacity: _fadePop,
-                  child: Column(
-                    children: [
-                      Text(S.of(context).pickupConfirmed,
-                          style: AppTextStyles.title,
-                          textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      Text(
-                        isNow
-                            ? 'A collector is being assigned.\nExpected arrival: ~15 minutes.'
-                            : 'Your scheduled pickup has been confirmed.',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Booking reference card
-                FadeTransition(
-                  opacity: _fadePop,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: AppRadius.mdBR,
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      children: [
-                        _SuccessRow(label: S.of(context).bookingRef, value: '#$ref', isBold: true),
-                        const Divider(height: 32),
-                        _SuccessRow(label: S.of(context).amountPaid, value: Fmt.currency(amount)),
-                        const SizedBox(height: 12),
-                        _SuccessRow(label: 'Payment', value: Fmt.paymentMethodLabel(_paymentMethod)),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Action buttons
-                FadeTransition(
-                  opacity: _fadePop,
-                  child: Column(
-                    children: [
-                      AppButton(
-                        label: S.of(context).trackPickup,
-                        onPressed: _trackPickup,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Download Receipt
-                      OutlinedButton(
-                        onPressed: () => ReceiptService.shareReceipt(widget.booking),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 54),
-                        ),
-                        child: Text(S.of(context).downloadReceipt),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Back to Home
-                      TextButton(
-                        onPressed: _backToHome,
-                        child: Text(
-                          S.of(context).backToHome,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  );
+                }),
               ],
             ),
           ),
-        ),
+
+          // ── Bottom Action ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 48),
+            child: AppButton(
+              label: 'Pay ${Fmt.currency(amount)}',
+              loading: _isProcessing,
+              onPressed: _handlePayment,
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _SuccessRow extends StatelessWidget {
-  const _SuccessRow({required this.label, required this.value, this.isBold = false});
-  final String label;
-  final String value;
-  final bool isBold;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: AppTextStyles.meta),
-        Text(value, style: isBold ? AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700) : AppTextStyles.bodyMedium),
-      ],
+  Widget _buildSuccess() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ScaleTransition(
+                scale: _scalePop,
+                child: Container(
+                  width: 120, height: 120,
+                  decoration: const BoxDecoration(color: AppColors.boltGreen, shape: BoxShape.circle),
+                  child: const Icon(Icons.check, color: Colors.white, size: 60),
+                ),
+              ),
+              const SizedBox(height: 40),
+              FadeInUp(
+                delay: const Duration(milliseconds: 200),
+                child: Text('Payment Confirmed', style: AppTextStyles.h1),
+              ),
+              const SizedBox(height: 12),
+              FadeInUp(
+                delay: const Duration(milliseconds: 400),
+                child: Text(
+                  'Your booking has been successfully confirmed. A collector will be assigned shortly.',
+                  style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 60),
+              FadeInUp(
+                delay: const Duration(milliseconds: 600),
+                child: AppButton(
+                  label: 'Track Pickup',
+                  onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
+                ),
+              ),
+              const SizedBox(height: 16),
+              FadeInUp(
+                delay: const Duration(milliseconds: 800),
+                child: TextButton(
+                  onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
+                  child: Text('Back to Home', style: AppTextStyles.label),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

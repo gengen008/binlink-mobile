@@ -65,7 +65,7 @@ class AppDrawer extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          Text(name, style: AppTextStyles.drawerTitle,
+                          Text(name, style: AppTextStyles.h3,
                               textAlign: TextAlign.center),
                           const SizedBox(height: 15),
                           Padding(
@@ -83,7 +83,7 @@ class AppDrawer extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text('Edit Profile',
-                                        style: AppTextStyles.buttonSm),
+                                        style: AppTextStyles.h4.copyWith(fontSize: 14, color: Colors.white)),
                                   ],
                                 ),
                               ),
@@ -176,8 +176,6 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-//
-
 class _DrawerListTile extends StatelessWidget {
   const _DrawerListTile({required this.label, required this.onTap});
 
@@ -188,7 +186,7 @@ class _DrawerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
-      title: Text(label, style: AppTextStyles.drawerItem),
+      title: Text(label, style: AppTextStyles.h4),
     );
   }
 }

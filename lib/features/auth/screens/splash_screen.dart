@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,13 +37,18 @@ class _SplashScreenState extends State<SplashScreen> {
         FlavorConfig.isCollector ? '/collector' : '/household',
       );
     } else {
-      final showOnboarding = await shouldShowOnboarding();
+      final showOnboarding = await _shouldShowOnboarding();
       if (!mounted) return;
       Navigator.pushReplacementNamed(
         context,
         showOnboarding ? '/onboarding' : '/login',
       );
     }
+  }
+
+  Future<bool> _shouldShowOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('show_onboarding') ?? true;
   }
 
   @override
@@ -64,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
               delay: const Duration(milliseconds: 300),
               child: Text(
                 FlavorConfig.appName,
-                style: AppTextStyles.display.copyWith(
+                style: AppTextStyles.h1.copyWith(
                   fontSize: 28,
                   color: AppColors.primary,
                 ),

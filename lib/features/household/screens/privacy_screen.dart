@@ -51,7 +51,7 @@ class PrivacyScreen extends StatelessWidget {
         _PolicySection(
           heading: '8. Contact',
           body:
-              'BinLink Eco Ltd.\nAccra, Ghana\nEmail: privacy@binlink.eco\nPhone: +233 55 123 4567\n\nLast updated: June 2026',
+              'BinLink Eco Ltd.\nAccra, Ghana\nEmail: privacy@binlink.eco\nPhone: +233 24 000 0000\n\nLast updated: June 2026',
         ),
       ],
     );

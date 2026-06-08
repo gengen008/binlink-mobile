@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../shared/widgets/app_button.dart';
 
 class AddressSelectionSheet extends StatefulWidget {
@@ -37,90 +37,82 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.65,
-      minChildSize: 0.4,
-      maxChildSize: 0.85,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
           ),
-          child: Column(
+          const SizedBox(height: 24),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Confirm Pickup Spot', style: AppTextStyles.h2),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: widget.onCancel,
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset(AppAssets.pin, width: 24, height: 24, color: AppColors.textPrimary),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: _addressCtrl,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Enter pickup address',
-                              ),
-                              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-              
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: AppColors.border)),
-                ),
-                child: AppButton(
-                  label: 'Confirm Pickup',
-                  onPressed: () => widget.onAddressConfirmed(_addressCtrl.text),
+              Text('Confirm Pickup', style: AppTextStyles.h2),
+              GestureDetector(
+                onTap: widget.onCancel,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+                  child: const Icon(Icons.close, size: 20),
                 ),
               ),
             ],
           ),
-        );
-      },
+          
+          const SizedBox(height: 32),
+          
+          Text("LOCATION", style: AppTextStyles.label.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                  child: const Icon(Icons.location_on, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _addressCtrl,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: 'Pickup address',
+                    ),
+                    style: AppTextStyles.h4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          FadeInUp(
+            child: AppButton(
+              label: 'Confirm Location',
+              onPressed: () => widget.onAddressConfirmed(_addressCtrl.text),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

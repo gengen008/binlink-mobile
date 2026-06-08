@@ -31,7 +31,7 @@ class TomTomRoutingProvider implements RoutingProvider {
           'travelMode':          'van',
           'routeRepresentation': 'polyline',
           'instructionsType':    'none',
-          'traffic':             'false',
+          'traffic':             'true',
         },
       );
 

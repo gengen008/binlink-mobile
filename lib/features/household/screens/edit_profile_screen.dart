@@ -114,7 +114,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         AppTextField(
                           controller: _nameCtrl,
                           label: 'Full Name',
-                          hint: 'Your full name',
+                          hint: 'e.g. Kofi Mensah',
                           prefixIcon: const Icon(PhosphorIconsRegular.user,
                               color: AppColors.muted, size: 20),
                           validator: (v) => (v?.trim().isEmpty ?? true)
@@ -130,7 +130,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         AppTextField(
                           controller: _addressCtrl,
                           label: 'Primary Address',
-                          hint: 'Your home address',
+                          hint: 'e.g. 12 Independence Ave, Accra',
                           maxLines: 2,
                           prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
                               color: AppColors.muted, size: 20),

@@ -143,8 +143,12 @@ class SocketService {
   }
 
   /// Broadcast collector GPS position. Debounced on server side (10m min move).
-  static void broadcastLocation(String bookingId, double lat, double lng) {
-    emit('collector:location', {'bookingId': bookingId, 'lat': lat, 'lng': lng});
+  static void broadcastLocation({String? bookingId, required double lat, required double lng}) {
+    emit('collector:location', {
+      if (bookingId != null) 'bookingId': bookingId,
+      'lat': lat,
+      'lng': lng,
+    });
   }
 
   // ── Heartbeat ─────────────────────────────────────────────────────────────

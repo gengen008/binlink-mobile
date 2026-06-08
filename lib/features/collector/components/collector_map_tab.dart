@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_assets.dart';
+
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/collector_provider.dart';
@@ -13,8 +15,7 @@ import '../../../shared/widgets/binlink_map.dart';
 
 class CollectorMapTab extends StatefulWidget {
   const CollectorMapTab({super.key, required this.pos});
-  // Nullable: null until the device provides a real GPS fix.
-  final LatLng? pos;
+  final ll.LatLng? pos;
 
   @override
   State<CollectorMapTab> createState() => _CollectorMapTabState();
@@ -24,123 +25,161 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
   @override
   Widget build(BuildContext context) {
     if (widget.pos == null) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: AppColors.black,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     final prov = context.watch<CollectorProvider>();
     final requests = prov.pendingRequests;
 
-    return Stack(
-      children: [
-        // ── Full Screen Map (Heatmap style) ────────────────────────────────
-        Positioned.fill(
-          child: BinLinkMap(
-            initialPosition: widget.pos!,
-            myLocationEnabled: prov.isOnline,
-          ),
-        ),
-
-        // ── Top Stats Bar (Uber Driver style) ──────────────────────────────
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 16,
-          left: 16,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: AppRadius.fullBR,
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(PhosphorIconsFill.chartLineUp, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Text(
-                  "Earned ${Fmt.currency(prov.todayEarnings)} today",
-                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-                ),
-              ],
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: [
+          // ── Map ──
+          Positioned.fill(
+            child: BinLinkMap(
+              initialPosition: widget.pos!,
+              myLocationEnabled: prov.isOnline,
             ),
           ),
-        ),
 
-        // ── GO / STOP Button (Online Toggle) ──────────────────────────────
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 32),
-            child: GestureDetector(
-              onTap: () => prov.toggleOnline(),
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: prov.isOnline ? AppColors.danger : AppColors.success,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (prov.isOnline ? AppColors.danger : AppColors.success).withAlpha(100),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                  border: Border.all(color: Colors.white, width: 4),
-                ),
-                child: Center(
-                  child: Text(
-                    prov.isOnline ? "OFF" : "GO",
-                    style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 20),
-                  ),
-                ),
+          // ── Top Earnings Bar ──
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 20,
+            right: 20,
+            child: FadeInDown(
+              child: _EarningsPill(earnings: prov.todayEarnings, pickups: prov.todayPickups),
+            ),
+          ),
+
+          // ── Online/Offline Toggle (The BIG Button) ──
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 40),
+              child: _OnlineToggleBtn(
+                isOnline: prov.isOnline,
+                onTap: () => prov.toggleOnline(),
               ),
             ),
           ),
-        ),
 
-        // ── Incoming Request Overlay ──────────────────────────────────────
-        if (prov.isOnline && requests.isNotEmpty)
-          _IncomingRequestModal(
-            request: requests.first,
-            collectorPos: widget.pos!,
-            onAccept: () => prov.acceptRequest(requests.first['id']),
-            onDecline: () => prov.declineRequest(requests.first['id']),
-          ),
-      ],
+          // ── Request Overlay ──
+          if (prov.isOnline && requests.isNotEmpty)
+            _IncomingRequestOverlay(
+              request: requests.first,
+              collectorPos: widget.pos!,
+              onAccept: () => prov.acceptRequest(requests.first['id']),
+              onDecline: () => prov.declineRequest(requests.first['id']),
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _IncomingRequestModal extends StatefulWidget {
-  const _IncomingRequestModal({
+class _EarningsPill extends StatelessWidget {
+  const _EarningsPill({required this.earnings, required this.pickups});
+  final double earnings;
+  final int pickups;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.black,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white12),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(50), blurRadius: 20)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+            child: const Icon(PhosphorIconsFill.coins, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            Fmt.currency(earnings),
+            style: AppTextStyles.h3.copyWith(color: Colors.white, fontSize: 18),
+          ),
+          const SizedBox(width: 12),
+          Container(width: 1, height: 16, color: Colors.white24),
+          const SizedBox(width: 12),
+          Text(
+            "$pickups jobs",
+            style: AppTextStyles.label.copyWith(color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnlineToggleBtn extends StatelessWidget {
+  const _OnlineToggleBtn({required this.isOnline, required this.onTap});
+  final bool isOnline;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isOnline ? AppColors.danger : AppColors.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 84, height: 84,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: color.withAlpha(120), blurRadius: 25, spreadRadius: 5),
+            const BoxShadow(color: Colors.white24, blurRadius: 0, spreadRadius: 4),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            isOnline ? "STOP" : "GO",
+            style: AppTextStyles.h1.copyWith(color: Colors.white, fontSize: 22, letterSpacing: 1.0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IncomingRequestOverlay extends StatefulWidget {
+  const _IncomingRequestOverlay({
     required this.request, 
     required this.collectorPos,
     required this.onAccept,
     required this.onDecline,
   });
   final Map<String, dynamic> request;
-  final LatLng collectorPos;
+  final ll.LatLng collectorPos;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
   @override
-  State<_IncomingRequestModal> createState() => _IncomingRequestModalState();
+  State<_IncomingRequestOverlay> createState() => _IncomingRequestOverlayState();
 }
 
-class _IncomingRequestModalState extends State<_IncomingRequestModal> with SingleTickerProviderStateMixin {
+class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with SingleTickerProviderStateMixin {
   late AnimationController _anim;
-  int _seconds = 15;
+  int _seconds = 30;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 15))..forward();
-    
+    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 30))..forward();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_seconds <= 0) {
         timer.cancel();
@@ -149,8 +188,6 @@ class _IncomingRequestModalState extends State<_IncomingRequestModal> with Singl
         if (mounted) setState(() => _seconds--);
       }
     });
-    
-    // Play radar sound here if we had an audio player
   }
 
   @override
@@ -167,124 +204,86 @@ class _IncomingRequestModalState extends State<_IncomingRequestModal> with Singl
       (widget.request['pickupLat'] as num).toDouble(), 
       (widget.request['pickupLng'] as num).toDouble(),
     );
-    final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.8; // 80% collector cut
+    final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.9;
 
-    return Align(
-      alignment: Alignment.bottomCenter,
+    return ZoomIn(
+      duration: const Duration(milliseconds: 400),
       child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E), // Dark modal for high contrast
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(color: AppColors.success.withAlpha(40), blurRadius: 40, spreadRadius: 10),
-            const BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 10)),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("NEW REQUEST", style: AppTextStyles.meta.copyWith(color: AppColors.success, letterSpacing: 2.0)),
-            const SizedBox(height: 16),
-            Text(
-              "Est. ${Fmt.currency(payout)}",
-              style: AppTextStyles.display.copyWith(color: Colors.white, fontSize: 36),
+        color: Colors.black87,
+        child: Center(
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.premiumBlack,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white10),
+              boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(30), blurRadius: 50)],
             ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(PhosphorIconsFill.car, color: Colors.white70, size: 20),
-                const SizedBox(width: 8),
-                Text("${LocationService.formatDistance(distMeters)} away", style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
-                const SizedBox(width: 16),
-                const Icon(PhosphorIconsFill.clock, color: Colors.white70, size: 20),
-                const SizedBox(width: 8),
-                Text("~${(distMeters / 400).ceil()} min", style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black45,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(PhosphorIconsRegular.mapPin, color: Colors.white, size: 18),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.request['pickupAddress'] ?? "Pickup Location",
-                      style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // ── Tap to Accept Ring ──
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _anim,
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 130,
-                      height: 130,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(20)),
+                  child: Text("NEW PICKUP", style: AppTextStyles.label.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 32),
+                Image.asset(AppAssets.truck3d, width: 80, height: 80),
+                const SizedBox(height: 24),
+                Text(Fmt.currency(payout), style: AppTextStyles.h1.copyWith(color: Colors.white, fontSize: 44)),
+                const SizedBox(height: 8),
+                Text("Your Earnings", style: AppTextStyles.label.copyWith(color: Colors.white54)),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(PhosphorIconsFill.mapPin, color: Colors.white70, size: 20),
+                    const SizedBox(width: 12),
+                    Text(LocationService.formatDistance(distMeters), style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                
+                // ── Accept Circle ──
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 140, height: 140,
                       child: CircularProgressIndicator(
                         value: 1 - _anim.value,
-                        strokeWidth: 8,
-                        color: AppColors.success,
-                        backgroundColor: Colors.white12,
+                        strokeWidth: 10,
+                        color: AppColors.primary,
+                        backgroundColor: Colors.white10,
                       ),
-                    );
-                  },
+                    ),
+                    GestureDetector(
+                      onTap: widget.onAccept,
+                      child: Container(
+                        width: 120, height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(100), blurRadius: 20)],
+                        ),
+                        child: Center(
+                          child: Text("ACCEPT", style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                
+                const SizedBox(height: 40),
                 GestureDetector(
-                  onTap: widget.onAccept,
-                  child: Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: AppColors.success.withAlpha(100), blurRadius: 20, spreadRadius: 5),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("TAP", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                        Text("TO ACCEPT", style: TextStyle(color: Colors.white.withAlpha(200), fontSize: 10, letterSpacing: 1.0)),
-                      ],
-                    ),
-                  ),
+                  onTap: widget.onDecline,
+                  child: Text("DECLINE", style: AppTextStyles.label.copyWith(color: Colors.white38, letterSpacing: 2)),
                 ),
               ],
             ),
-            
-            const SizedBox(height: 32),
-            GestureDetector(
-              onTap: widget.onDecline,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: const Icon(Icons.close, color: Colors.white70),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -20,10 +20,12 @@ class CollectorProvider extends ChangeNotifier {
   double? _currentLat;
   double? _currentLng;
   double? _currentHeading;
+  double? _currentSpeedKph;
 
   double? get currentLat => _currentLat;
   double? get currentLng => _currentLng;
   double? get currentHeading => _currentHeading;
+  double get currentSpeedKph => _currentSpeedKph ?? 0.0;
 
   List<Map<String, dynamic>> get pendingRequests  => _pendingRequests;
   List<Map<String, dynamic>> get activePickups    => _activePickups;
@@ -140,21 +142,22 @@ class CollectorProvider extends ChangeNotifier {
       _currentLat = pos.latitude;
       _currentLng = pos.longitude;
       _currentHeading = pos.heading;
+      _currentSpeedKph = pos.speed * 3.6;
       notifyListeners();
 
-      try {
-        await ApiClient.put('/api/profile/location', {
-          'lat': pos.latitude, 'lng': pos.longitude,
-        });
-      } catch (_) {}
+      // Broadcast general location for zones (always)
+      SocketService.broadcastLocation(
+        lat: pos.latitude,
+        lng: pos.longitude,
+      );
 
-      // Broadcast to any active booking rooms
+      // Targeted broadcast to active booking rooms
       for (final pickup in _activePickups) {
         if (['EN_ROUTE', 'ON_THE_WAY', 'ARRIVED', 'COLLECTING'].contains(pickup['status'])) {
           SocketService.broadcastLocation(
-            pickup['id'] as String,
-            pos.latitude,
-            pos.longitude,
+            bookingId: pickup['id'] as String,
+            lat: pos.latitude,
+            lng: pos.longitude,
           );
         }
       }
@@ -181,9 +184,16 @@ class CollectorProvider extends ChangeNotifier {
     }
   }
 
-  void declineRequest(String bookingId) {
-    _pendingRequests.removeWhere((r) => r['id'] == bookingId);
-    notifyListeners();
+  Future<void> declineRequest(String bookingId) async {
+    try {
+      await ApiClient.post('/api/bookings/$bookingId/decline', {});
+      _pendingRequests.removeWhere((r) => r['id'] == bookingId);
+      notifyListeners();
+    } catch (_) {
+      // Still remove locally to clean up UI
+      _pendingRequests.removeWhere((r) => r['id'] == bookingId);
+      notifyListeners();
+    }
   }
 
   Future<void> updateStatus(String bookingId, String action, {double? actualWeightKg}) async {

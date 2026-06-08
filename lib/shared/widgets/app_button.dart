@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_text_styles.dart';
 
-enum AppButtonVariant { primary, secondary, danger, ghost }
+enum AppButtonVariant { primary, secondary, danger, ghost, dark }
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -14,7 +15,7 @@ class AppButton extends StatelessWidget {
     this.loading = false,
     this.icon,
     this.fullWidth = true,
-    this.height = 56,
+    this.height = 58,
   });
 
   final String label;
@@ -27,35 +28,34 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg, border) = _colors();
+    final (bg, fg, shadow) = _colors();
 
-    return InkWell(
-      onTap: loading ? null : onPressed,
-      borderRadius: AppRadius.buttonBR,
-      child: Container(
+    return GestureDetector(
+      onTap: (loading || onPressed == null) ? null : () {
+        HapticFeedback.lightImpact();
+        onPressed!();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: fullWidth ? double.infinity : null,
         height: height,
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: AppRadius.buttonBR,
-          border: border != null ? Border.all(color: border) : null,
+          borderRadius: AppRadius.mdBR,
+          boxShadow: shadow != null ? [
+            BoxShadow(color: shadow.withAlpha(80), blurRadius: 12, offset: const Offset(0, 4)),
+          ] : null,
         ),
         child: Center(
           child: loading
               ? SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: fg,
-                  ),
+                  width: 24, height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 3, color: fg),
                 )
               : Row(
-                  mainAxisSize:
-                      fullWidth ? MainAxisSize.max : MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                    if (icon != null) ...[icon!, const SizedBox(width: 10)],
                     Text(
                       label,
                       style: AppTextStyles.button.copyWith(color: fg),
@@ -70,17 +70,15 @@ class AppButton extends StatelessWidget {
   (Color, Color, Color?) _colors() {
     switch (variant) {
       case AppButtonVariant.primary:
-        return (AppColors.primary, Colors.white, null);
+        return (AppColors.primary, Colors.white, AppColors.primary);
       case AppButtonVariant.secondary:
-        return (AppColors.fieldFill, AppColors.secondary, AppColors.border);
+        return (AppColors.surface, AppColors.textPrimary, null);
       case AppButtonVariant.danger:
-        return (
-          AppColors.danger.withAlpha(20),
-          AppColors.danger,
-          AppColors.danger.withAlpha(80),
-        );
+        return (AppColors.danger, Colors.white, AppColors.danger);
       case AppButtonVariant.ghost:
-        return (Colors.transparent, AppColors.secondary, null);
+        return (Colors.transparent, AppColors.primary, null);
+      case AppButtonVariant.dark:
+        return (AppColors.black, Colors.white, Colors.black);
     }
   }
 }

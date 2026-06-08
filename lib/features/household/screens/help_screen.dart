@@ -161,7 +161,7 @@ class _HelpScreenState extends State<HelpScreen> {
                           children: [
                             const SizedBox(height: 10),
                             Text(
-                              'BinLink Support',
+                              'Still need help?',
                               style: AppTextStyles.h4.copyWith(
                                 color: AppColors.secondary,
                               ),
@@ -169,19 +169,19 @@ class _HelpScreenState extends State<HelpScreen> {
                             const SizedBox(height: 15),
                             _ContactRow(
                               icon: PhosphorIconsRegular.phone,
-                              label: 'Call us',
-                              value: '+233 55 123 4567',
+                              label: 'Customer Support',
+                              value: '+233 24 000 0000',
                               onTap: () => launchUrl(
-                                Uri.parse('tel:+233551234567'),
+                                Uri.parse('tel:+233240000000'),
                               ),
                             ),
                             const SizedBox(height: 12),
                             _ContactRow(
                               icon: PhosphorIconsRegular.envelopeSimple,
-                              label: 'Email us',
-                              value: 'support@binlink.eco',
+                              label: 'Email Support',
+                              value: 'help@binlink.eco',
                               onTap: () => launchUrl(
-                                Uri.parse('mailto:support@binlink.eco'),
+                                Uri.parse('mailto:help@binlink.eco'),
                               ),
                             ),
                           ],

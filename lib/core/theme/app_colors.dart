@@ -8,50 +8,53 @@ class AppColors {
   AppColors._();
 
   // ── Brand Identity ─────────────────────────────────────────────────────────
-  static const Color navy         = Color(0xFF021024); // Darkest background
-  static const Color deepOcean    = Color(0xFF052659); // Secondary surface
-  static const Color iceBlue      = Color(0xFFC1E8FF); // Highlights / chips
+  static const Color black        = Color(0xFF000000); // Uber Black
+  static const Color premiumBlack = Color(0xFF080808); // Deep surface
+  static const Color boltGreen    = Color(0xFF00C244); // Bolt Green (Vivid)
+  static const Color electricBlue = Color(0xFF276EF1); // Uber Blue
+  static const Color pureWhite    = Color(0xFFFFFFFF);
   
   // ── Flavor Colors ──────────────────────────────────────────────────────────
-  static const Color steelBlue    = Color(0xFF5483B3); // Household Primary
-  static const Color skyBlue      = Color(0xFF7DA0CA); // Household Secondary
-  
-  static const Color collectorPrimary = Color(0xFFF59E0B); // Collector Primary (Amber)
-  static const Color collectorAccent  = Color(0xFFD97706); // Collector Darker Amber
+  // Use Uber Blue for Household and Bolt Green for Collector (operational)
+  static const Color householdPrimary = electricBlue;
+  static const Color collectorPrimary = boltGreen;
 
   // ── Dynamic Primary (Flavor Based) ────────────────────────────────────────
-  static Color get primary => FlavorConfig.isHousehold ? steelBlue : collectorPrimary;
-  static Color get secondary => FlavorConfig.isHousehold ? skyBlue : collectorAccent;
+  static Color get primary => FlavorConfig.isHousehold ? householdPrimary : collectorPrimary;
+  static Color get secondary => black;
 
   // ── Surface & Neutral ──────────────────────────────────────────────────────
-  static const Color background   = Color(0xFFFFFFFF); // Pure White
-  static const Color surface      = Color(0xFFF6F6F6); // Light Gray Surface
-  static const Color border       = Color(0xFFE5E7EB); // Subtle Borders
-  static const Color divider      = Color(0xFFEEEEEE);
+  static const Color background   = Color(0xFFFFFFFF); // Light background
+  static const Color surface      = Color(0xFFF3F4F6); // Light gray surface
+  static const Color darkSurface  = Color(0xFF111827); // Dark mode surface
+  static const Color border       = Color(0xFFE5E7EB); // Subtle borders
+  static const Color divider      = Color(0xFFF1F1F1);
 
   // ── Text ──────────────────────────────────────────────────────────────────
-  static const Color textPrimary   = Color(0xFF111111); // Near-Black
-  static const Color textSecondary = Color(0xFF6B7280); // Gray
+  static const Color textPrimary   = Color(0xFF000000); // Absolute black
+  static const Color textSecondary = Color(0xFF6B7280); // Slate gray
+  static const Color textMuted     = Color(0xFF9CA3AF); 
   static const Color textOnDark    = Color(0xFFFFFFFF);
 
   // ── Status & States ───────────────────────────────────────────────────────
-  static const Color success = Color(0xFF22C55E);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color danger  = Color(0xFFEF4444);
-  static const Color info    = Color(0xFF3B82F6);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFFBBF24); // Yellow (not orange)
+  static const Color danger  = Color(0xFFDC2626);
+  static const Color info    = electricBlue;
   static const Color white   = Color(0xFFFFFFFF);
 
+  // ── Legacy Aliases & Missing Tokens ──────────────────────────────────────
+  static const Color steelBlue    = electricBlue;
+  static const Color appBarAction = surface;
+
   // ── Semantic Aliases ──────────────────────────────────────────────────────
-  static Color get primaryLight     => primary.withAlpha(30);
-  static const Color textMuted        = Color(0xFF6B7280);
-  static const Color card             = background;
-  static const Color cardElevated     = Color(0xFFF9FAFB);
-  static const Color appBarBg         = background;
-  static const Color appBarAction     = surface;
+  static Color get primaryLight     => primary.withAlpha(25);
+  static const Color card             = white;
+  static const Color cardElevated     = white;
+  static const Color appBarBg         = white;
   static const Color fieldFill        = surface;
-  static const Color fieldFillFocused = background;
-  static const Color fieldHint        = textSecondary;
-  static const Color sheetHandle      = Color(0xFFD1D5DB);
+  static const Color fieldFillFocused = white;
+  static const Color sheetHandle      = Color(0xFFE5E7EB);
   static Color get borderActive       => primary;
   static const Color muted            = textSecondary;
 

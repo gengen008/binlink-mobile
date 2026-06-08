@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
@@ -124,8 +126,17 @@ class AuthProvider extends ChangeNotifier {
     } on DioException catch (e) {
       _error = _extractError(e);
       return false;
+    } on PlatformException catch (e) {
+      if (e.code == '10' || e.code == 'developer_error') {
+        _error = 'Google Sign-In configuration error. Please ensure SHA-1 keys are correctly registered in Firebase for both flavors.';
+      } else if (e.code == 'network_error') {
+        _error = 'Network error during Google Sign-In. Please check your connection.';
+      } else {
+        _error = 'Google Sign-In failed (${e.code}): ${e.message}';
+      }
+      return false;
     } catch (e) {
-      _error = 'Google sign-in failed. Please try again.';
+      _error = 'An unexpected error occurred during Google sign-in.';
       return false;
     } finally {
       _setLoading(false);
@@ -198,7 +209,12 @@ class AuthProvider extends ChangeNotifier {
     String? fullName,
     String role = 'HOUSEHOLD',
   }) async {
-    final body = <String, dynamic>{'firebaseToken': idToken, 'role': role};
+    final fcmToken = await FirebaseMessaging.instance.getToken().catchError((_) => null);
+    final body = <String, dynamic>{
+      'firebaseToken': idToken,
+      'role': role,
+      if (fcmToken != null) 'fcmToken': fcmToken,
+    };
     if (fullName != null) body['fullName'] = fullName;
     final res = await ApiClient.post('/api/auth/firebase', body);
     await _handleAuthResponse(res.data['data']);

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_assets.dart';
 import '../../core/utils/formatters.dart';
 
 class BookingCard extends StatelessWidget {
@@ -25,31 +24,28 @@ class BookingCard extends StatelessWidget {
     final statusColor = AppColors.statusColor(status);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      child: InkWell(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: AppRadius.mdBR,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: AppRadius.mdBR,
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 15, offset: const Offset(0, 6)),
+            ],
           ),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 52, height: 52,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: AppRadius.smBR,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  _getCategoryIcon(category),
-                  color: AppColors.secondary,
-                  size: 20,
-                ),
+                child: Image.asset(_getCategoryAsset(category), fit: BoxFit.contain),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -58,14 +54,14 @@ class BookingCard extends StatelessWidget {
                   children: [
                     Text(
                       address,
-                      style: AppTextStyles.bodyMedium,
+                      style: AppTextStyles.h4,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${Fmt.categoryLabel(category ?? '')} · ${createdAt != null ? Fmt.shortDate(createdAt) : '—'}',
-                      style: AppTextStyles.meta,
+                      style: AppTextStyles.label,
                     ),
                   ],
                 ),
@@ -76,9 +72,9 @@ class BookingCard extends StatelessWidget {
                 children: [
                   Text(
                     Fmt.currency(amount),
-                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+                    style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   _StatusPill(status: status, color: statusColor),
                 ],
               ),
@@ -89,12 +85,12 @@ class BookingCard extends StatelessWidget {
     );
   }
 
-  IconData _getCategoryIcon(String? category) {
+  String _getCategoryAsset(String? category) {
     switch (category) {
-      case 'PLASTIC': return PhosphorIconsFill.recycle;
-      case 'ORGANIC': return PhosphorIconsFill.leaf;
-      case 'EWASTE': return PhosphorIconsFill.laptop;
-      default: return PhosphorIconsFill.trashSimple;
+      case 'PLASTIC': return AppAssets.recycleBin;
+      case 'ORGANIC': return AppAssets.leaf;
+      case 'CONSTRUCTION': return AppAssets.truck3d;
+      default: return AppAssets.bin3d;
     }
   }
 }
@@ -107,17 +103,18 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: AppRadius.xsBR,
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        Fmt.statusLabel(status),
-        style: AppTextStyles.caption.copyWith(
+        Fmt.statusLabel(status).toUpperCase(),
+        style: AppTextStyles.label.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
           fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
         ),
       ),
     );
