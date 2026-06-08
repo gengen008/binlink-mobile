@@ -5,7 +5,6 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_assets.dart';
-import '../../core/config/env.dart';
 
 /// BinLink Map V4 — Maplibre GL + SmartMaps Vector Tiles.
 ///
