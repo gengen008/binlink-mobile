@@ -35,7 +35,7 @@ class BinLinkMap extends StatefulWidget {
   final List<Map<String, dynamic>> collectors;
   final List<ll.LatLng> routePoints;
   final ll.LatLng? pickupPosition;
-  final Function(MaplibreMapController)? onMapCreated;
+  final Function(MapLibreMapController)? onMapCreated;
   final bool myLocationEnabled;
   final EdgeInsets padding;
   final Function(Map<String, dynamic>)? onCollectorTap;
@@ -49,7 +49,7 @@ class BinLinkMap extends StatefulWidget {
 }
 
 class BinLinkMapState extends State<BinLinkMap> {
-  MaplibreMapController? _controller;
+  MapLibreMapController? _controller;
   bool _styleLoaded = false;
 
   @override
@@ -69,7 +69,7 @@ class BinLinkMapState extends State<BinLinkMap> {
     );
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     _controller = controller;
     widget.onMapCreated?.call(controller);
   }
@@ -243,7 +243,7 @@ class BinLinkMapState extends State<BinLinkMap> {
   Widget build(BuildContext context) {
     final styleUrl = 'https://tiles.smartmaps.cloud/styles/dark/style.json?apiKey=${Env.smartmapsApiKey}';
 
-    return MaplibreMap(
+    return MapLibreMap(
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: _onStyleLoaded,
       initialCameraPosition: CameraPosition(
@@ -252,10 +252,10 @@ class BinLinkMapState extends State<BinLinkMap> {
       ),
       styleString: styleUrl,
       myLocationEnabled: widget.myLocationEnabled,
-      myLocationRenderMode: MyLocationRenderMode.COMPASS,
-      myLocationTrackingMode: widget.isNavigating 
-          ? MyLocationTrackingMode.TrackingGPS 
-          : MyLocationTrackingMode.None,
+      myLocationRenderMode: MyLocationRenderMode.compass,
+      myLocationTrackingMode: widget.isNavigating
+          ? MyLocationTrackingMode.trackingGps
+          : MyLocationTrackingMode.none,
       trackCameraPosition: true,
       onMapClick: (point, latlng) async {
         final features = await _controller?.queryRenderedFeatures(

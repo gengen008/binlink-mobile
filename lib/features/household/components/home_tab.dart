@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart' show MaplibreMapController, CameraUpdate, LatLng;
+import 'package:maplibre_gl/maplibre_gl.dart' show MapLibreMapController, CameraUpdate, LatLng;
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +31,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  MaplibreMapController? _mapController;
+  MapLibreMapController? _mapController;
   HomeSheetState _sheetState = HomeSheetState.idle;
 
   String? _selectedCategory;
@@ -63,7 +63,7 @@ class _HomeTabState extends State<HomeTab> {
     super.dispose();
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
+  void _onMapCreated(MapLibreMapController controller) {
     _mapController = controller;
   }
 
