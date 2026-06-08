@@ -241,7 +241,7 @@ class BinLinkMapState extends State<BinLinkMap> {
 
   @override
   Widget build(BuildContext context) {
-    final styleUrl = 'https://tiles.smartmaps.cloud/styles/dark/style.json?apiKey=${Env.smartmapsApiKey}';
+    const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
     return MapLibreMap(
       onMapCreated: _onMapCreated,
