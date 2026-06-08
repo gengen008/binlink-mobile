@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import '../../core/config/env.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_assets.dart';
 
@@ -240,7 +241,8 @@ class BinLinkMapState extends State<BinLinkMap> {
 
   @override
   Widget build(BuildContext context) {
-    const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+    final encodedKey = Uri.encodeComponent(Env.smartmapsApiKey);
+    final styleUrl = 'https://tiles.smartmaps.cloud/styles/v1/smartmaps/dark/style.json?apiKey=$encodedKey';
 
     return MapLibreMap(
       onMapCreated: _onMapCreated,
