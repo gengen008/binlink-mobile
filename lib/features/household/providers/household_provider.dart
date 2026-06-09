@@ -104,6 +104,10 @@ class HouseholdProvider extends ChangeNotifier {
       _error = e.response?.data?['error'] ?? 'Failed to create booking';
       notifyListeners();
       return null;
+    } catch (e) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return null;
     } finally {
       _setLoading(false);
     }

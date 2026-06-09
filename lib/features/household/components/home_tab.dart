@@ -84,46 +84,77 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _onServiceSelected(String category, String binSize, int extraBags) async {
+    final pos = _pickupPosition; // cache before async gap
+    if (pos == null) return;
+
     setState(() {
       _selectedCategory = category;
       _selectedBinSize = binSize;
       _extraBags = extraBags;
     });
 
-    final address = await PlacesService.reverseGeocode(
-        _pickupPosition!.latitude, _pickupPosition!.longitude);
-    
-    if (mounted) {
-      setState(() {
-        _currentAddress = address ?? 'Fetching address...';
-        _sheetState = HomeSheetState.addressSelection;
-      });
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(LatLng(_pickupPosition!.latitude, _pickupPosition!.longitude), 16.5),
-      );
-    }
+    final address = await PlacesService.reverseGeocode(pos.latitude, pos.longitude);
+
+    // Guard: user may have tapped Cancel during the geocoding await
+    if (!mounted || _pickupPosition == null) return;
+
+    setState(() {
+      _currentAddress = address ?? 'Fetching address...';
+      _sheetState = HomeSheetState.addressSelection;
+    });
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(LatLng(_pickupPosition!.latitude, _pickupPosition!.longitude), 16.5),
+    );
   }
 
   Future<void> _onAddressConfirmed(String address) async {
-    final prov = context.read<HouseholdProvider>();
-    
-    // Choose payment method
-    final method = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const _PaymentMethodPicker(),
-    );
+    final pos = _pickupPosition; // cache before any async gap
+    if (pos == null) return;
 
-    if (method == null) return; 
+    try {
+      final prov = context.read<HouseholdProvider>();
 
-    if (method == 'MOMO') {
+      // Choose payment method
+      final method = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const _PaymentMethodPicker(),
+      );
+
+      if (method == null) return;
+
+      // Guard: user may have cancelled while the sheet was open
+      if (!mounted || _pickupPosition == null) return;
+
+      if (method == 'MOMO') {
+        final booking = await prov.createBooking(
+          binSize: _selectedBinSize ?? 'SMALL',
+          extraBags: _extraBags,
+          pickupAddress: address,
+          pickupLat: pos.latitude,
+          pickupLng: pos.longitude,
+          paymentMethod: 'MOMO',
+          wasteCategory: _selectedCategory,
+          scheduledDate: _scheduledDate,
+          timePreference: _scheduledTimePreference,
+          addressNotes: '',
+        );
+
+        if (booking != null && mounted) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen(booking: booking)));
+        }
+        return;
+      }
+
+      setState(() => _sheetState = HomeSheetState.searching);
+
       final booking = await prov.createBooking(
         binSize: _selectedBinSize ?? 'SMALL',
         extraBags: _extraBags,
         pickupAddress: address,
-        pickupLat: _pickupPosition!.latitude,
-        pickupLng: _pickupPosition!.longitude,
-        paymentMethod: 'MOMO',
+        pickupLat: pos.latitude,
+        pickupLng: pos.longitude,
+        paymentMethod: 'CASH',
         wasteCategory: _selectedCategory,
         scheduledDate: _scheduledDate,
         timePreference: _scheduledTimePreference,
@@ -131,31 +162,18 @@ class _HomeTabState extends State<HomeTab> {
       );
 
       if (booking != null && mounted) {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen(booking: booking)));
+        prov.listenToBooking(booking['id']);
+        setState(() => _sheetState = HomeSheetState.tracking);
+      } else {
+        if (mounted) setState(() => _sheetState = HomeSheetState.idle);
       }
-      return;
-    }
-
-    setState(() => _sheetState = HomeSheetState.searching);
-
-    final booking = await prov.createBooking(
-      binSize: _selectedBinSize ?? 'SMALL',
-      extraBags: _extraBags,
-      pickupAddress: address,
-      pickupLat: _pickupPosition!.latitude,
-      pickupLng: _pickupPosition!.longitude,
-      paymentMethod: 'CASH',
-      wasteCategory: _selectedCategory,
-      scheduledDate: _scheduledDate,
-      timePreference: _scheduledTimePreference,
-      addressNotes: '',
-    );
-
-    if (booking != null && mounted) {
-      prov.listenToBooking(booking['id']);
-      setState(() => _sheetState = HomeSheetState.tracking);
-    } else {
-      if (mounted) setState(() => _sheetState = HomeSheetState.idle);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _sheetState = HomeSheetState.idle);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Something went wrong. Please try again.')),
+        );
+      }
     }
   }
 
@@ -333,7 +351,7 @@ class _HomeTabState extends State<HomeTab> {
           ],
         );
 case HomeSheetState.searching:
-  return _SearchingSheet();
+  return _SearchingSheet(onCancel: _cancelBooking);
 case HomeSheetState.tracking:
   return active != null ? _TrackingBottomSheet(booking: active) : const SizedBox();
 }
@@ -792,6 +810,8 @@ class _ActiveBannerV4 extends StatelessWidget {
 }
 
 class _SearchingSheet extends StatefulWidget {
+  const _SearchingSheet({required this.onCancel});
+  final VoidCallback onCancel;
   @override
   State<_SearchingSheet> createState() => _SearchingSheetState();
 }
@@ -858,6 +878,7 @@ class _SearchingSheetState extends State<_SearchingSheet> {
               final prov = context.read<HouseholdProvider>();
               final activeId = prov.activeBooking?['id'];
               if (activeId != null) prov.cancelBooking(activeId);
+              widget.onCancel(); // reset parent state to idle
             },
           ),
         ],
