@@ -33,9 +33,13 @@ class SecureStorage {
       _storage.write(key: _kUser, value: jsonEncode(user));
 
   static Future<Map<String, dynamic>?> getUser() async {
-    final raw = await _storage.read(key: _kUser);
-    if (raw == null) return null;
-    return jsonDecode(raw) as Map<String, dynamic>;
+    try {
+      final raw = await _storage.read(key: _kUser);
+      if (raw == null) return null;
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<void> clearAll() => _storage.deleteAll();

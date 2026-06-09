@@ -380,6 +380,14 @@ class HouseholdProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void dispose() {
+    stopListening();
+    unsubscribeFromNearby();
+    _zoneEvents.close();
+    super.dispose();
+  }
+
   // ── Test-only setters ───────────────────────────────────────────────────────
   @visibleForTesting
   set bookingsForTest(List<Map<String, dynamic>> bookings) {

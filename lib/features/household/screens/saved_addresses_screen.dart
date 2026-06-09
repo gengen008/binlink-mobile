@@ -139,8 +139,10 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (_, i) => _AddressTile(
                         address: addresses[i],
-                        onDelete: () => prov.deleteSavedAddress(
-                            addresses[i]['id'] as String),
+                        onDelete: () {
+                          final id = addresses[i]['id'] as String?;
+                          if (id != null) prov.deleteSavedAddress(id);
+                        },
                       ),
                     );
                   },

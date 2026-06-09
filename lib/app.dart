@@ -4,6 +4,7 @@ import 'core/config/app_flavor.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/l10n/strings.dart';
+import 'core/navigation/nav_service.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -41,8 +42,6 @@ class BinLinkApp extends StatelessWidget {
           sp.load();
           return sp;
         }),
-        // Only instantiate the provider relevant to this flavor —
-        // prevents household and collector state from cross-contaminating
         if (!isCollector)
           ChangeNotifierProvider(create: (_) => HouseholdProvider()),
         if (isCollector)
@@ -50,11 +49,11 @@ class BinLinkApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProv, __) => MaterialApp(
+          navigatorKey: NavService.navigatorKey,
           title: FlavorConfig.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          // Force collector flavor to always use dark/amber theme
           themeMode: FlavorConfig.isCollector ? ThemeMode.dark : themeProv.themeMode,
           initialRoute: '/splash',
           routes: {
@@ -65,7 +64,6 @@ class BinLinkApp extends StatelessWidget {
             '/forgot-password': (_) => const ForgotPasswordScreen(),
             '/household':       (_) => const HouseholdHomeScreen(),
             '/collector':       (_) => const CollectorMapScreen(),
-            // Drawer-navigated screens (household only)
             '/notifications':   (_) => const NotificationsScreen(),
             '/help':            (_) => const HelpScreen(),
             '/privacy':         (_) => const PrivacyScreen(),

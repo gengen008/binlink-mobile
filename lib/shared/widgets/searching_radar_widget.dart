@@ -102,7 +102,7 @@ class _RadarPainter extends CustomPainter {
         center,
         t * radius,
         Paint()
-          ..color      = color.withValues(alpha: opacity)
+          ..color      = color.withOpacity(opacity)
           ..style      = PaintingStyle.stroke
           ..strokeWidth = strokeWidth,
       );

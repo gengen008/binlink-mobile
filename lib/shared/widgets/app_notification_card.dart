@@ -32,10 +32,10 @@ class AppNotificationCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isRead ? AppColors.card : AppColors.primaryLight.withValues(alpha: 0.5),
+          color: isRead ? AppColors.card : AppColors.primaryLight.withOpacity(0.5),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.2),
+            color: isRead ? AppColors.border : AppColors.primary.withOpacity(0.2),
           ),
         ),
         child: Row(

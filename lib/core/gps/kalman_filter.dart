@@ -121,7 +121,7 @@ class GpsSpeedValidator {
     final a = sin(dLat / 2) * sin(dLat / 2) +
         cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
             sin(dLng / 2) * sin(dLng / 2);
-    return R * 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * 2 * atan2(sqrt(a.clamp(0.0, 1.0)), sqrt((1 - a).clamp(0.0, 1.0)));
   }
 }
 

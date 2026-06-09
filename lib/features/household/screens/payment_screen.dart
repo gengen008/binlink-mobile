@@ -56,9 +56,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           'channel':   'mobile_money',
         });
         final data = res.data['data'];
-        final url = Uri.parse(data['authorization_url']);
+        final authUrl = data?['authorization_url'] as String?;
+        if (authUrl == null) {
+          throw Exception('Payment initialization failed: Missing authorization URL');
+        }
+        final url = Uri.parse(authUrl);
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          throw Exception('Could not launch payment portal. Please check your browser settings.');
         }
       }
 

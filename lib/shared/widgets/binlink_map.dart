@@ -300,6 +300,6 @@ class BinLinkMapState extends State<BinLinkMap> {
 extension _ColorX on Color {
   String toHexShortString() {
     final argb = toARGB32();
-    return '#${argb.toRadixString(16).substring(2)}';
+    return '#${(argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
   }
 }

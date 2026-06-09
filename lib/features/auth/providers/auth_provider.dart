@@ -224,14 +224,22 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  Future<void> _handleAuthResponse(Map<String, dynamic> data) async {
+  Future<void> _handleAuthResponse(Map<String, dynamic>? data) async {
+    if (data == null) {
+      _error = 'Invalid authentication response';
+      notifyListeners();
+      return;
+    }
     await SecureStorage.saveTokens(
       accessToken:  data['accessToken'],
       refreshToken: data['refreshToken'],
     );
-    final userMap = Map<String, dynamic>.from(data['user'] as Map);
-    _user = UserModel.fromJson(userMap);
-    await SecureStorage.saveUser(userMap);
+    final userData = data['user'];
+    if (userData != null) {
+      final userMap = Map<String, dynamic>.from(userData as Map);
+      _user = UserModel.fromJson(userMap);
+      await SecureStorage.saveUser(userMap);
+    }
     _status = AuthStatus.authenticated;
     _error = null;
     await SocketService.connect();

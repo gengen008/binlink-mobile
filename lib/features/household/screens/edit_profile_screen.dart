@@ -5,6 +5,7 @@ import '../../../shared/widgets/app_bar.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -89,8 +90,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: Consumer<AuthProvider>(
                             builder: (_, auth, __) {
                               final initials = _nameCtrl.text.isNotEmpty
-                                  ? _initials(_nameCtrl.text)
-                                  : _initials(auth.user?.fullName ?? '?');
+                                  ? Fmt.initials(_nameCtrl.text)
+                                  : Fmt.initials(auth.user?.fullName ?? '?');
                               return Container(
                                 width: 88, height: 88,
                                 decoration: BoxDecoration(
@@ -153,12 +154,5 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
     );
-  }
-
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    if (name.isNotEmpty) return name[0].toUpperCase();
-    return '?';
   }
 }

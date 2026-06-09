@@ -134,5 +134,6 @@ flutter:
     - assets/lottie/loading/
     - assets/lottie/payments/
     - assets/lottie/empty_states/
+    - assets/lottie/tracking/
     - assets/v4/icons/
     - assets/v4/3d/

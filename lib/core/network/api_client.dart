@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../config/env.dart';
 import '../storage/secure_storage.dart';
+import '../navigation/nav_service.dart';
 
 class ApiClient {
   ApiClient._();
@@ -66,9 +67,12 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await SecureStorage.getAccessToken();
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+    // Only add token if not already present or explicitly cleared
+    if (!options.headers.containsKey('Authorization')) {
+      final token = await SecureStorage.getAccessToken();
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
     }
     handler.next(options);
   }
@@ -84,6 +88,7 @@ class _AuthInterceptor extends Interceptor {
         final refreshToken = await SecureStorage.getRefreshToken();
         if (refreshToken == null) {
           await SecureStorage.clearAll();
+          NavService.pushNamedAndRemoveUntil('/login');
           handler.next(err);
           return;
         }
@@ -108,6 +113,7 @@ class _AuthInterceptor extends Interceptor {
         handler.resolve(retried);
       } catch (_) {
         await SecureStorage.clearAll();
+        NavService.pushNamedAndRemoveUntil('/login');
         handler.next(err);
       } finally {
         _isRefreshing = false;
