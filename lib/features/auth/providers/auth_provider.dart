@@ -74,6 +74,7 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     required String fullName,
+    String? phone,
     required String role,
   }) async {
     _setLoading(true);
@@ -83,7 +84,7 @@ class AuthProvider extends ChangeNotifier {
       );
       await cred.user!.updateDisplayName(fullName);
       final idToken = await cred.user!.getIdToken();
-      return await _firebaseExchange(idToken!, fullName: fullName, role: role);
+      return await _firebaseExchange(idToken!, fullName: fullName, phone: phone, role: role);
     } on FirebaseAuthException catch (e) {
       _error = _firebaseError(e);
       return false;
@@ -207,6 +208,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> _firebaseExchange(
     String idToken, {
     String? fullName,
+    String? phone,
     String role = 'HOUSEHOLD',
   }) async {
     final fcmToken = await FirebaseMessaging.instance.getToken().catchError((_) => null);
@@ -216,6 +218,7 @@ class AuthProvider extends ChangeNotifier {
       if (fcmToken != null) 'fcmToken': fcmToken,
     };
     if (fullName != null) body['fullName'] = fullName;
+    if (phone != null) body['phone'] = phone;
     final res = await ApiClient.post('/api/auth/firebase', body);
     await _handleAuthResponse(res.data['data']);
     return true;

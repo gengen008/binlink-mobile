@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -71,84 +72,32 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
           const CollectorProfileTab(),
         ],
       ),
-      bottomNavigationBar: _CollectorBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        items: [
-          _NavBtn(icon: PhosphorIconsRegular.mapTrifold, activeIcon: PhosphorIconsFill.mapTrifold, label: s.map),
-          _NavBtn(icon: PhosphorIconsRegular.clipboardText, activeIcon: PhosphorIconsFill.clipboardText, label: s.pickups),
-          _NavBtn(icon: PhosphorIconsRegular.coins, activeIcon: PhosphorIconsFill.coins, label: s.earnings),
-          _NavBtn(icon: PhosphorIconsRegular.user, activeIcon: PhosphorIconsFill.user, label: s.profile),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(LucideIcons.map), 
+            selectedIcon: Icon(PhosphorIcons.mapTrifold(PhosphorIconsStyle.fill)),
+            label: s.map,
+          ),
+          NavigationDestination(
+            icon: const Icon(LucideIcons.clipboardList), 
+            selectedIcon: Icon(PhosphorIcons.clipboardText(PhosphorIconsStyle.fill)),
+            label: s.pickups,
+          ),
+          NavigationDestination(
+            icon: const Icon(LucideIcons.coins), 
+            selectedIcon: Icon(PhosphorIcons.coins(PhosphorIconsStyle.fill)),
+            label: s.earnings,
+          ),
+          NavigationDestination(
+            icon: const Icon(LucideIcons.user), 
+            selectedIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.fill)),
+            label: s.profile,
+          ),
         ],
       ),
     );
   }
-}
-
-class _CollectorBottomNav extends StatelessWidget {
-  const _CollectorBottomNav({
-    required this.currentIndex,
-    required this.onTap,
-    required this.items,
-  });
-
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  final List<_NavBtn> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: List.generate(items.length, (i) {
-              final item = items[i];
-              final isSelected = currentIndex == i;
-              return Expanded(
-                child: InkWell(
-                  onTap: () => onTap(i),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        color: isSelected ? AppColors.primary : AppColors.textMuted,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isSelected ? AppColors.primary : AppColors.textMuted,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavBtn {
-  const _NavBtn({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-  });
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
 }

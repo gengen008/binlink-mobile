@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_text_styles.dart';
 
-///
-///  - No label support → added
-///  - No validator → added
-///  - No obscure text toggle → added
-///  - No focused fill state → added (AppColors.fieldFillFocused)
-///  - No autofillHints → added
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
@@ -40,9 +34,7 @@ class AppTextField extends StatefulWidget {
   final String? hint;
   final Widget? prefixIcon;
   final Widget? suffix;
-  /// When true and [showToggle] is true, renders an eye toggle button.
   final bool obscureText;
-  /// Shows a password visibility toggle when [obscureText] is true.
   final bool showToggle;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
@@ -53,11 +45,8 @@ class AppTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
   final Iterable<String>? autofillHints;
-  /// Override fill colour — used by light-bg auth screens.
   final Color? fillColor;
-  /// Override input text colour — used by light-bg auth screens.
   final Color? textColor;
-  /// Override label text colour — used by light-bg auth screens.
   final Color? labelColor;
 
   @override
@@ -91,8 +80,19 @@ class _AppTextFieldState extends State<AppTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: AppTextStyles.label.copyWith(color: widget.labelColor)),
-          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              widget.label!, 
+              style: AppTextStyles.bodySmall.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w800, 
+                letterSpacing: 1.0,
+                color: widget.labelColor ?? AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
         ],
         TextFormField(
           controller: widget.controller,
@@ -107,54 +107,58 @@ class _AppTextFieldState extends State<AppTextField> {
           textInputAction: widget.textInputAction,
           onFieldSubmitted: widget.onFieldSubmitted,
           autofillHints: widget.autofillHints,
-          style: AppTextStyles.body.copyWith(color: widget.textColor),
+          style: AppTextStyles.body.copyWith(color: widget.textColor, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: widget.hint,
+            hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
             filled: true,
             fillColor: widget.fillColor ?? (_focused
                 ? AppColors.fieldFillFocused
                 : AppColors.fieldFill),
-            prefixIcon: widget.prefixIcon,
-            // Suffix: either custom suffix OR eye toggle if password field
+            prefixIcon: widget.prefixIcon != null 
+                ? IconTheme(
+                    data: IconThemeData(color: _focused ? AppColors.primary : AppColors.textMuted),
+                    child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: widget.prefixIcon),
+                  )
+                : null,
+            prefixIconConstraints: const BoxConstraints(minWidth: 40),
             suffixIcon: widget.showToggle && widget.obscureText
                 ? GestureDetector(
                     onTap: () => setState(() => _obscure = !_obscure),
                     child: Icon(
-                      _obscure ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
-                      color: AppColors.muted,
+                      _obscure ? LucideIcons.eyeOff : LucideIcons.eye,
+                      color: AppColors.textMuted,
                       size: 20,
                     ),
                   )
                 : widget.suffix,
             border: OutlineInputBorder(
-              borderRadius: AppRadius.fieldBR,
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadius.fieldBR,
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: AppRadius.fieldBR,
-              borderSide: BorderSide(color: AppColors.borderActive, width: 1.5),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: AppColors.primary, width: 2.0),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: AppRadius.fieldBR,
-              borderSide: const BorderSide(color: AppColors.danger),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.0),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: AppRadius.fieldBR,
-              borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           ),
         ),
       ],
     );
   }
 }
-
-// ── OTP digit field ────────────────────────────────────────────────────────────
 
 class OtpField extends StatelessWidget {
   const OtpField({
@@ -185,16 +189,16 @@ class OtpField extends StatelessWidget {
           letterSpacing: 12,
         ),
         border: OutlineInputBorder(
-          borderRadius: AppRadius.fieldBR,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.fieldBR,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.fieldBR,
-          borderSide: BorderSide(color: AppColors.borderActive, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: AppColors.primary, width: 2.0),
         ),
       ),
       onChanged: (v) {

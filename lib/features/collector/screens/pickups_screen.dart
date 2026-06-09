@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/collector_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -41,7 +41,6 @@ class _PickupsScreenState extends State<PickupsScreen> with SingleTickerProvider
     final prov = context.watch<CollectorProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppScaffoldBar(
         title: 'My Pickups',
         showBack: false,
@@ -49,13 +48,12 @@ class _PickupsScreenState extends State<PickupsScreen> with SingleTickerProvider
           onPressed: () => prov.loadJobs(),
           icon: prov.loadingJobs 
             ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(PhosphorIconsRegular.arrowClockwise),
+            : const Icon(LucideIcons.refreshCw),
         ),
       ),
       body: Column(
         children: [
           Container(
-            color: Colors.white,
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: TabBar(
@@ -159,7 +157,7 @@ class _CollectorJobCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: AppRadius.mdBR,
             border: Border.all(color: isActive ? AppColors.primary.withAlpha(100) : AppColors.border, width: isActive ? 1.5 : 1),
           ),
@@ -178,15 +176,15 @@ class _CollectorJobCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _InfoBit(icon: PhosphorIconsRegular.calendarBlank, label: date != null ? Fmt.shortDate(date) : 'Today'),
+                  _InfoBit(icon: LucideIcons.calendar, label: date != null ? Fmt.shortDate(date) : 'Today'),
                   const SizedBox(width: 16),
-                  _InfoBit(icon: PhosphorIconsRegular.trashSimple, label: Fmt.categoryLabel(job['wasteCategory'] as String? ?? '')),
+                  _InfoBit(icon: LucideIcons.trash2, label: Fmt.categoryLabel(job['wasteCategory'] as String? ?? '')),
                   const Spacer(),
                   if (isActive)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: AppRadius.xsBR),
-                      child: Text('ACTIVE', style: AppTextStyles.caption.copyWith(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
+                      child: Text('ACTIVE', style: AppTextStyles.small.copyWith(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
                     ),
                 ],
               ),

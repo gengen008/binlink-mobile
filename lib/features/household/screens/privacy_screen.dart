@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../shared/widgets/app_bar.dart';
 
 class PrivacyScreen extends StatelessWidget {
@@ -11,7 +11,7 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const _PolicyScreen(
       title: 'Privacy Policy',
-      icon: PhosphorIconsFill.shieldCheck,
+      icon: LucideIcons.shieldCheck,
       sections: [
         _PolicySection(
           heading: '1. Information We Collect',
@@ -65,7 +65,7 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const _PolicyScreen(
       title: 'Terms of Service',
-      icon: PhosphorIconsFill.files,
+      icon: LucideIcons.files,
       sections: [
         _PolicySection(
           heading: '1. Acceptance of Terms',

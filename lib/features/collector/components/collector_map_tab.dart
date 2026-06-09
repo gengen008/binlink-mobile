@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' as ll;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,8 +10,10 @@ import '../../../core/theme/app_assets.dart';
 
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/collector_provider.dart';
 import '../../../shared/widgets/binlink_map.dart';
+import '../../../shared/widgets/skeleton.dart';
 
 class CollectorMapTab extends StatefulWidget {
   const CollectorMapTab({super.key, required this.pos});
@@ -25,17 +27,18 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
   @override
   Widget build(BuildContext context) {
     if (widget.pos == null) {
-      return Scaffold(
-        backgroundColor: AppColors.black,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      return const Scaffold(
+        backgroundColor: AppColors.premiumBlack,
+        body: Center(child: Skeleton(height: double.infinity, width: double.infinity, radius: 0)),
       );
     }
 
     final prov = context.watch<CollectorProvider>();
+    final user = context.watch<AuthProvider>().user;
     final requests = prov.pendingRequests;
 
     return Scaffold(
-      backgroundColor: AppColors.black,
+      backgroundColor: AppColors.premiumBlack,
       body: Stack(
         children: [
           // ── Map ──
@@ -56,15 +59,27 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
             ),
           ),
 
-          // ── Online/Offline Toggle (The BIG Button) ──
+          // ── Online/Offline Toggle & Capacity ──
           Align(
             alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 40),
-              child: _OnlineToggleBtn(
-                isOnline: prov.isOnline,
-                onTap: () => prov.toggleOnline(),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (prov.isOnline)
+                  FadeInUp(
+                    child: _CapacityBar(
+                      current: user?.currentLoadKg ?? 0,
+                      max: user?.maxCapacityKg ?? 500,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: _OnlineToggleBtn(
+                    isOnline: prov.isOnline,
+                    onTap: () => prov.toggleOnline(),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -82,6 +97,54 @@ class _CollectorMapTabState extends State<CollectorMapTab> {
   }
 }
 
+class _CapacityBar extends StatelessWidget {
+  const _CapacityBar({required this.current, required this.max});
+  final double current;
+  final double max;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (current / max).clamp(0.0, 1.0);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.premiumBlack,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(50),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("VEHICLE LOAD", style: AppTextStyles.small.copyWith(color: Colors.white60, letterSpacing: 1.2)),
+              Text("${(percent * 100).toInt()}%", style: AppTextStyles.small.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: percent,
+            backgroundColor: Colors.white10,
+            color: percent > 0.8 ? AppColors.error : AppColors.success,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          const SizedBox(height: 8),
+          Text("${current.toInt()}kg / ${max.toInt()}kg capacity", style: AppTextStyles.small.copyWith(color: Colors.white38, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+}
+
 class _EarningsPill extends StatelessWidget {
   const _EarningsPill({required this.earnings, required this.pickups});
   final double earnings;
@@ -92,10 +155,16 @@ class _EarningsPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.black,
+        color: AppColors.premiumBlack,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white12),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(50), blurRadius: 20)],
+        border: Border.all(color: Colors.white10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(50),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -103,8 +172,8 @@ class _EarningsPill extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-            child: const Icon(PhosphorIconsFill.coins, color: Colors.white, size: 16),
+            decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+            child: const Icon(LucideIcons.banknote, color: Colors.white, size: 16),
           ),
           const SizedBox(width: 12),
           Text(
@@ -115,8 +184,8 @@ class _EarningsPill extends StatelessWidget {
           Container(width: 1, height: 16, color: Colors.white24),
           const SizedBox(width: 12),
           Text(
-            "$pickups jobs",
-            style: AppTextStyles.label.copyWith(color: Colors.white70),
+            "$pickups jobs today",
+            style: AppTextStyles.small.copyWith(color: Colors.white70),
           ),
         ],
       ),
@@ -131,26 +200,48 @@ class _OnlineToggleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isOnline ? AppColors.danger : AppColors.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 84, height: 84,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: color.withAlpha(120), blurRadius: 25, spreadRadius: 5),
-            const BoxShadow(color: Colors.white24, blurRadius: 0, spreadRadius: 4),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            isOnline ? "STOP" : "GO",
-            style: AppTextStyles.h1.copyWith(color: Colors.white, fontSize: 22, letterSpacing: 1.0),
+    final color = isOnline ? AppColors.error : AppColors.success;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isOnline)
+          FadeInDown(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+              ),
+              child: Text(
+                "You're Online",
+                style: AppTextStyles.small.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 88, height: 88,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: color.withAlpha(100), blurRadius: 30, spreadRadius: 5),
+                const BoxShadow(color: Colors.white12, blurRadius: 0, spreadRadius: 4),
+              ],
+              border: Border.all(color: Colors.white24, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                isOnline ? "STOP" : "GO",
+                style: AppTextStyles.h2.copyWith(color: Colors.white, fontSize: 18, letterSpacing: 1.0, fontWeight: FontWeight.w900),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -226,7 +317,7 @@ class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with S
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(color: AppColors.primary.withAlpha(50), borderRadius: BorderRadius.circular(20)),
                   child: Text("NEW PICKUP", style: AppTextStyles.label.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 32),
@@ -239,9 +330,13 @@ class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with S
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(PhosphorIconsFill.mapPin, color: Colors.white70, size: 20),
-                    const SizedBox(width: 12),
+                    const Icon(LucideIcons.mapPin, color: Colors.white70, size: 20),
+                    const SizedBox(width: 8),
                     Text(LocationService.formatDistance(distMeters), style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                    const SizedBox(width: 16),
+                    const Icon(LucideIcons.clock, color: Colors.white70, size: 20),
+                    const SizedBox(width: 8),
+                    Text("${(distMeters / 400).ceil()} min", style: AppTextStyles.h3.copyWith(color: Colors.white)),
                   ],
                 ),
                 const SizedBox(height: 40),
@@ -269,7 +364,14 @@ class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with S
                           boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(100), blurRadius: 20)],
                         ),
                         child: Center(
-                          child: Text("ACCEPT", style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("ACCEPT", style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                              const SizedBox(height: 4),
+                              Text("$_seconds s", style: AppTextStyles.label.copyWith(color: Colors.white70)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -289,3 +391,4 @@ class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with S
     );
   }
 }
+

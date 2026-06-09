@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 class AddressSelectionSheet extends StatefulWidget {
   const AddressSelectionSheet({
@@ -10,11 +12,13 @@ class AddressSelectionSheet extends StatefulWidget {
     required this.currentAddress,
     required this.onAddressConfirmed,
     required this.onCancel,
+    this.showHandle = true,
   });
 
   final String currentAddress;
   final Function(String address) onAddressConfirmed;
   final VoidCallback onCancel;
+  final bool showHandle;
 
   @override
   State<AddressSelectionSheet> createState() => _AddressSelectionSheetState();
@@ -38,20 +42,22 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+        borderRadius: widget.showHandle ? const BorderRadius.vertical(top: Radius.circular(32)) : null,
+        boxShadow: widget.showHandle ? [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))] : null,
       ),
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+      padding: EdgeInsets.fromLTRB(24, widget.showHandle ? 12 : 0, 24, 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
-          ),
-          const SizedBox(height: 24),
+          if (widget.showHandle) ...[
+            Center(
+              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+            ),
+            const SizedBox(height: 24),
+          ],
           
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -61,8 +67,8 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                 onTap: widget.onCancel,
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
-                  child: const Icon(Icons.close, size: 20),
+                  decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+                  child: const Icon(LucideIcons.x, size: 20),
                 ),
               ),
             ],
@@ -70,39 +76,37 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
           
           const SizedBox(height: 32),
           
-          Text("LOCATION", style: AppTextStyles.label.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                  child: const Icon(Icons.location_on, color: Colors.white, size: 18),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _addressCtrl,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      hintText: 'Pickup address',
-                    ),
-                    style: AppTextStyles.h4,
-                  ),
-                ),
-              ],
-            ),
+          // Use AppTextField to conform to the design system.
+          AppTextField(
+            controller: _addressCtrl,
+            label: 'LOCATION',
+            hint: 'Pickup address',
+            prefixIcon: const Icon(LucideIcons.mapPin, size: 20),
           ),
           
+          const SizedBox(height: 16),
+
+          // Map Thumbnail Preview placeholder
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.primary300.withAlpha(20),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.map, color: AppColors.primary900, size: 32),
+                  const SizedBox(height: 8),
+                  Text('Map Preview', style: AppTextStyles.small.copyWith(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 32),
           
           FadeInUp(

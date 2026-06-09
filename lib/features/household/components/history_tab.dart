@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,6 +10,7 @@ import '../../../core/utils/formatters.dart';
 import '../providers/household_provider.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/app_bar.dart';
+import '../../../shared/widgets/skeleton.dart';
 
 class HistoryTab extends StatelessWidget {
   const HistoryTab({super.key});
@@ -39,7 +40,7 @@ class HistoryTab extends StatelessWidget {
         showBack: false,
       ),
       body: prov.loading
-        ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+        ? const SkeletonList(itemCount: 8, itemHeight: 120)
         : bookings.isEmpty
           ? const _EmptyHistory()
           : ListView(
@@ -69,12 +70,12 @@ class HistoryTab extends StatelessWidget {
                   ),
                 ),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Text("Recent Bookings", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Text("Recent Bookings", style: AppTextStyles.h3),
                 ),
 
-                ...bookings.map((b) => FadeInUp(
+                ...completed.map((b) => FadeInUp(
                   child: BookingCard(
                     booking: b,
                     onTap: () => _showDetailSheet(context, b),
@@ -139,21 +140,39 @@ class _BookingDetailSheet extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Booking Detail', style: AppTextStyles.h2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: statusColor.withAlpha(25), borderRadius: BorderRadius.circular(12)),
-                child: Text(Fmt.statusLabel(status), style: AppTextStyles.label.copyWith(color: statusColor, fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(color: statusColor.withAlpha(25), borderRadius: BorderRadius.circular(16)),
+                    child: Text(Fmt.statusLabel(status), style: AppTextStyles.small.copyWith(color: statusColor, fontWeight: FontWeight.w800)),
+                  ),
+                  const SizedBox(width: 8),
+                  if (status == 'COMPLETED')
+                    GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Downloading receipt...'), behavior: SnackBarBehavior.floating),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: AppColors.primary.withAlpha(10), shape: BoxShape.circle, border: Border.all(color: AppColors.primary.withAlpha(20))),
+                        child: Icon(LucideIcons.download, size: 20, color: AppColors.primary),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 32),
 
-          _InfoRow(icon: PhosphorIconsRegular.mapPin, label: 'Address', value: address),
-          _InfoRow(icon: PhosphorIconsRegular.trash, label: 'Category', value: Fmt.categoryLabel(category ?? '')),
-          if (binSize != null) _InfoRow(icon: PhosphorIconsRegular.package, label: 'Bin Size', value: binSize),
-          _InfoRow(icon: PhosphorIconsRegular.calendarBlank, label: 'Date', value: createdAt != null ? Fmt.shortDate(createdAt) : '—'),
-          if (actualKg > 0) _InfoRow(icon: PhosphorIconsRegular.scales, label: 'Actual Weight', value: '${actualKg.toStringAsFixed(1)} kg'),
-          _InfoRow(icon: PhosphorIconsRegular.user, label: 'Collector', value: collectorName),
+          _InfoRow(icon: LucideIcons.mapPin, label: 'Address', value: address),
+          _InfoRow(icon: LucideIcons.trash2, label: 'Category', value: Fmt.categoryLabel(category ?? '')),
+          if (binSize != null) _InfoRow(icon: LucideIcons.package, label: 'Bin Size', value: binSize),
+          _InfoRow(icon: LucideIcons.calendar, label: 'Date', value: createdAt != null ? Fmt.shortDate(createdAt) : '—'),
+          if (actualKg > 0) _InfoRow(icon: LucideIcons.scale, label: 'Actual Weight', value: '${actualKg.toStringAsFixed(1)} kg'),
+          _InfoRow(icon: LucideIcons.user, label: 'Collector', value: collectorName),
 
           const SizedBox(height: 24),
           const Divider(),

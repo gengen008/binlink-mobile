@@ -40,6 +40,9 @@ class CollectorProvider extends ChangeNotifier {
   // Earnings helpers
   // Platform takes 10%; collector earns 90% of totalAmount
   static const _collectorRate = 0.9;
+  Map<String, dynamic>? _earningsSummary;
+
+  double get totalEarnings => Fmt.toDouble(_earningsSummary?['lifetime']?['netEarnings']);
 
   double get todayEarnings => _completedPickups.where((b) {
     final d = DateTime.tryParse(b['completedAt'] as String? ?? '');
@@ -58,6 +61,14 @@ class CollectorProvider extends ChangeNotifier {
   }).length;
 
   int get totalPickups => _completedPickups.length;
+
+  Future<void> loadEarningsSummary() async {
+    try {
+      final res = await ApiClient.get('/api/collectors/earnings/summary');
+      _earningsSummary = Map<String, dynamic>.from(res.data['data'] as Map);
+      notifyListeners();
+    } catch (_) {}
+  }
 
   Future<void> loadDashboard() async {
     _setLoading(true);
@@ -88,6 +99,7 @@ class CollectorProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    loadEarningsSummary().catchError((_) {});
     _listenForNewBookings();
   }
 
@@ -106,6 +118,15 @@ class CollectorProvider extends ChangeNotifier {
       final id = (data as Map<String, dynamic>)['bookingId'] as String?;
       if (id != null) {
         _pendingRequests.removeWhere((r) => r['id'] == id);
+        notifyListeners();
+      }
+    });
+
+    SocketService.on('booking:completed', (data) {
+      final booking = Map<String, dynamic>.from(data as Map);
+      _activePickups.removeWhere((p) => p['id'] == booking['id']);
+      if (!_completedPickups.any((p) => p['id'] == booking['id'])) {
+        _completedPickups.insert(0, booking);
         notifyListeners();
       }
     });
@@ -290,11 +311,12 @@ class CollectorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> requestPayout(String momoNumber, double amount) async {
+  Future<bool> requestPayout(String momoNumber, double amount, String network) async {
     try {
       await ApiClient.post('/api/collectors/payout', {
         'momoNumber': momoNumber,
         'amount': amount,
+        'network': network,
       });
       await loadWallet();
       return true;

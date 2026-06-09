@@ -17,7 +17,7 @@
         android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
 
 <!-- MapLibre GL — no API key meta-data required -->
 

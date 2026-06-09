@@ -16,6 +16,7 @@ import 'features/household/screens/notifications_screen.dart';
 import 'features/household/screens/help_screen.dart';
 import 'features/household/screens/privacy_screen.dart';
 import 'features/household/screens/edit_profile_screen.dart';
+import 'features/household/screens/saved_addresses_screen.dart';
 import 'features/household/screens/subscriptions_screen.dart';
 import 'features/collector/providers/collector_provider.dart';
 import 'features/collector/screens/map_screen.dart';
@@ -53,7 +54,8 @@ class BinLinkApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: themeProv.themeMode,
+          // Force collector flavor to always use dark/amber theme
+          themeMode: FlavorConfig.isCollector ? ThemeMode.dark : themeProv.themeMode,
           initialRoute: '/splash',
           routes: {
             '/splash':          (_) => const SplashScreen(),
@@ -68,7 +70,8 @@ class BinLinkApp extends StatelessWidget {
             '/help':            (_) => const HelpScreen(),
             '/privacy':         (_) => const PrivacyScreen(),
             '/edit-profile':    (_) => const EditProfileScreen(),
-            '/payment':         (_) => const SubscriptionsScreen(),
+            '/saved-addresses': (_) => const SavedAddressesScreen(),
+            '/subscriptions':   (_) => const SubscriptionsScreen(),
           },
         ),
       ),

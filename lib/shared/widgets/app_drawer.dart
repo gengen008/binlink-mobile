@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import 'app_dot_separator.dart';
+import '../../features/household/screens/edit_profile_screen.dart';
 
 /// Household side drawer.
 ///
 /// [onTabSwitch] — optional callback to switch the home screen tab index.
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key, this.onTabSwitch});
+  const AppDrawer({super.key, this.onTabSwitch, this.currentIndex = 0});
 
   final void Function(int tab)? onTabSwitch;
+  final int currentIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -23,136 +25,139 @@ class AppDrawer extends StatelessWidget {
     final initials = Fmt.initials(name);
 
     return Container(
-      width: MediaQuery.sizeOf(context).width / 1.5,
+      width: MediaQuery.sizeOf(context).width * 0.8,
       margin: const EdgeInsets.only(right: 30),
       child: ClipRRect(
         borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(10),
-          bottomRight: Radius.circular(10),
+          topRight: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
         child: Drawer(
           backgroundColor: Colors.white,
           child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 70),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-
-                  // ── Profile header ──────────────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Profile header ──────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    border: const Border(bottom: BorderSide(color: AppColors.border)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 30),
-                            child: Container(
-                              width: 110,
-                              height: 110,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withAlpha(30),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  initials,
-                                  style: AppTextStyles.h2.copyWith(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary300.withAlpha(50),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            initials,
+                            style: AppTextStyles.h1.copyWith(color: AppColors.primary900),
                           ),
-                          const SizedBox(height: 14),
-                          Text(name, style: AppTextStyles.h3,
-                              textAlign: TextAlign.center),
-                          const SizedBox(height: 15),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 50),
-                            child: GestureDetector(
-                              onTap: () => _navigate(context, '/edit-profile'),
-                              child: Container(
-                                height: 33,
-                                width: 125,
-                                decoration: BoxDecoration(
-                                  color: AppColors.secondary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text('Edit Profile',
-                                        style: AppTextStyles.h4.copyWith(fontSize: 14, color: Colors.white)),
-                                  ],
-                                ),
-                              ),
-                            ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(name, style: AppTextStyles.h2),
+                      Text(user?.email ?? '', style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                        },
+                        child: Container(
+                          height: 44, // 44px min touch target
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary900,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.pencil, color: Colors.white, size: 16),
+                              const SizedBox(width: 8),
+                              Text('Edit Profile', style: AppTextStyles.small.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
+                ),
 
-                  const SizedBox(height: 10),
-                  const AppDotSeparator(
-                    dashWidth: 2.0,
-                    dashHeight: 1.0,
-                    color: AppColors.border,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                // ── Menu items ─────────────────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    children: [
+                      _DrawerListTile(
+                        icon: LucideIcons.house,
+                        label: 'Home',
+                        isActive: currentIndex == 0,
+                        onTap: () {
+                          Navigator.pop(context);
+                          onTabSwitch?.call(0);
+                        },
+                      ),
+                      _DrawerListTile(
+                        icon: LucideIcons.history,
+                        label: 'Pickup History',
+                        isActive: currentIndex == 1,
+                        onTap: () {
+                          Navigator.pop(context);
+                          onTabSwitch?.call(1);
+                        },
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(color: AppColors.divider),
+                      ),
+                      _DrawerListTile(
+                        icon: LucideIcons.bell,
+                        label: 'Notifications',
+                        onTap: () => _navigate(context, '/notifications'),
+                      ),
+                      _DrawerListTile(
+                        icon: LucideIcons.creditCard,
+                        label: 'Payments & Plans',
+                        onTap: () => _navigate(context, '/payment'),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(color: AppColors.divider),
+                      ),
+                      _DrawerListTile(
+                        icon: LucideIcons.circleHelp,
+                        label: 'Help & Support',
+                        onTap: () => _navigate(context, '/help'),
+                      ),
+                      _DrawerListTile(
+                        icon: LucideIcons.shieldCheck,
+                        label: 'Privacy Policy',
+                        onTap: () => _navigate(context, '/privacy'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                ),
 
-                  // ── Menu items ─────────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.only(left: 25),
-                    child: Column(
-                      children: [
-                        _DrawerListTile(
-                          label: 'Home',
-                          onTap: () {
-                            Navigator.pop(context);
-                            onTabSwitch?.call(0);
-                          },
-                        ),
-                        _DrawerListTile(
-                          label: 'Pickup History',
-                          onTap: () {
-                            Navigator.pop(context);
-                            onTabSwitch?.call(1);
-                          },
-                        ),
-                        _DrawerListTile(
-                          label: 'Notifications',
-                          onTap: () => _navigate(context, '/notifications'),
-                        ),
-                        _DrawerListTile(
-                          label: 'Payments & Plans',
-                          onTap: () => _navigate(context, '/payment'),
-                        ),
-                        _DrawerListTile(
-                          label: 'Help & Support',
-                          onTap: () => _navigate(context, '/help'),
-                        ),
-                        _DrawerListTile(
-                          label: 'Privacy Policy',
-                          onTap: () => _navigate(context, '/privacy'),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  const Divider(height: 24),
-                  _DrawerListTile(
+                const Divider(color: AppColors.border, height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _DrawerListTile(
+                    icon: LucideIcons.logOut,
                     label: 'Log out',
+                    isDestructive: true,
                     onTap: () => _handleLogout(context, auth),
                   ),
-                  const SizedBox(height: 20),
-                  const Spacer(),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -177,16 +182,46 @@ class AppDrawer extends StatelessWidget {
 }
 
 class _DrawerListTile extends StatelessWidget {
-  const _DrawerListTile({required this.label, required this.onTap});
+  const _DrawerListTile({
+    required this.icon,
+    required this.label, 
+    required this.onTap,
+    this.isActive = false,
+    this.isDestructive = false,
+  });
 
+  final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool isActive;
+  final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      title: Text(label, style: AppTextStyles.h4),
+    final color = isDestructive 
+        ? AppColors.error 
+        : (isActive ? AppColors.primary : AppColors.textPrimary);
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary.withAlpha(20) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: color, size: 22),
+        title: Text(
+          label, 
+          style: AppTextStyles.body.copyWith(
+            color: color, 
+            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600
+          )
+        ),
+        minLeadingWidth: 20,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }

@@ -26,7 +26,8 @@ dependencies:
   # Location + GPS
   geolocator: ^12.0.0
 
-  # Icons (Phosphor is primary icon system)
+  # Icons (Lucide is primary icon system, Phosphor for filled states)
+  lucide_icons_flutter: ^3.1.14
   phosphor_flutter: ^2.1.0
 
   # Fonts
@@ -67,7 +68,9 @@ dependencies:
   fl_chart: ^0.70.2
 
   # Animations
+  lottie: ^3.1.2
   animate_do: ^3.3.2
+  shimmer: ^3.0.0
 
   # SVG rendering
   flutter_svg: ^2.0.10+1
@@ -126,5 +129,11 @@ flutter:
     - assets/icons/auth/
     - assets/icons/collector/
     - assets/v4/illustrations/
+    - assets/lottie/
+    - assets/lottie/booking/
+    - assets/lottie/loading/
+    - assets/lottie/payments/
+    - assets/lottie/empty_states/
+    - assets/lottie/tracking/
     - assets/v4/icons/
     - assets/v4/3d/

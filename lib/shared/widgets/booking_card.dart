@@ -87,9 +87,13 @@ class BookingCard extends StatelessWidget {
 
   String _getCategoryAsset(String? category) {
     switch (category) {
-      case 'PLASTIC': return AppAssets.recycleBin;
+      case 'PLASTIC': return AppAssets.bottle;
       case 'ORGANIC': return AppAssets.leaf;
-      case 'CONSTRUCTION': return AppAssets.truck3d;
+      case 'CONSTRUCTION': return AppAssets.construction;
+      case 'E-WASTE': return AppAssets.laptop;
+      case 'METAL': return AppAssets.trashPile;
+      case 'RECYCLING': return AppAssets.recycleBin;
+      case 'HOUSEHOLD':
       default: return AppAssets.bin3d;
     }
   }
@@ -110,9 +114,8 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         Fmt.statusLabel(status).toUpperCase(),
-        style: AppTextStyles.label.copyWith(
+        style: AppTextStyles.small.copyWith(
           color: color,
-          fontSize: 9,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
         ),

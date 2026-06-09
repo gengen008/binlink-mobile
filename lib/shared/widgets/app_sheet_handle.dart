@@ -20,7 +20,7 @@ class AppSheetHandle extends StatelessWidget {
 
   final double topPadding;
   final double bottomPadding;
-  /// Defaults to AppColors.sheetHandle.
+  /// Defaults to AppColors.border.
   final Color? color;
 
   @override
@@ -35,7 +35,7 @@ class AppSheetHandle extends StatelessWidget {
           width: AppSpacing.sheetHandleW,
           height: AppSpacing.sheetHandleH,
           decoration: BoxDecoration(
-            color: color ?? AppColors.sheetHandle,
+            color: color ?? AppColors.border,
             borderRadius: BorderRadius.circular(AppRadius.full),
           ),
         ),

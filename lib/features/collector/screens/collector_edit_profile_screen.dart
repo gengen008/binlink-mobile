@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
@@ -93,7 +93,7 @@ class _CollectorEditProfileScreenState
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: Icon(PhosphorIconsRegular.arrowLeft,
+                      icon: Icon(LucideIcons.arrowLeft,
                           color: AppColors.secondary),
                     ),
                     Expanded(
@@ -147,7 +147,7 @@ class _CollectorEditProfileScreenState
                           controller: _nameCtrl,
                           label: '',
                           hint: 'Your full name',
-                          prefixIcon: const Icon(PhosphorIconsRegular.user,
+                          prefixIcon: const Icon(LucideIcons.user,
                               color: AppColors.muted, size: 20),
                           validator: (v) => (v?.trim().isEmpty ?? true)
                               ? 'Name is required'
@@ -165,7 +165,7 @@ class _CollectorEditProfileScreenState
                           label: '',
                           hint: '+233 xx xxx xxxx',
                           keyboardType: TextInputType.phone,
-                          prefixIcon: const Icon(PhosphorIconsRegular.phone,
+                          prefixIcon: const Icon(LucideIcons.phone,
                               color: AppColors.muted, size: 20),
                         ),
 
@@ -210,7 +210,7 @@ class _CollectorEditProfileScreenState
                           controller: _plateCtrl,
                           label: '',
                           hint: 'e.g. GR-1234-23',
-                          prefixIcon: const Icon(PhosphorIconsRegular.truck,
+                          prefixIcon: const Icon(LucideIcons.truck,
                               color: AppColors.muted, size: 20),
                         ),
 
@@ -220,7 +220,7 @@ class _CollectorEditProfileScreenState
                           label: 'Save Changes',
                           loading: _saving,
                           onPressed: _save,
-                          icon: const Icon(PhosphorIconsRegular.checkCircle,
+                          icon: const Icon(LucideIcons.circleCheck,
                               color: AppColors.white, size: 20),
                         ),
                       ],

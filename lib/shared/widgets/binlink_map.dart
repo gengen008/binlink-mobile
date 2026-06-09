@@ -89,39 +89,43 @@ class BinLinkMapState extends State<BinLinkMap> {
   }
 
   void _updateMapLayers(BinLinkMap? oldWidget) {
-    if (_controller == null) return;
+    if (_controller == null || !_styleLoaded) return;
+    try {
+      // ── Update Route Polyline ──
+      if (widget.routePoints != oldWidget?.routePoints) {
+        _drawRoute();
+      }
 
-    // ── Update Route Polyline ──
-    if (widget.routePoints != oldWidget?.routePoints) {
-      _drawRoute();
-    }
+      // ── Update Collector Markers ──
+      if (widget.collectors != oldWidget?.collectors) {
+        _updateCollectors();
+      }
 
-    // ── Update Collector Markers ──
-    if (widget.collectors != oldWidget?.collectors) {
-      _updateCollectors();
-    }
+      // ── Update Pickup Pin ──
+      if (widget.pickupPosition != oldWidget?.pickupPosition) {
+        _updatePickupPin();
+      }
 
-    // ── Update Pickup Pin ──
-    if (widget.pickupPosition != oldWidget?.pickupPosition) {
-      _updatePickupPin();
-    }
-
-    // ── Update Navigation State ──
-    if (widget.isNavigating && widget.myLocation != null) {
-      _controller?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(widget.myLocation!.latitude, widget.myLocation!.longitude),
-            zoom: 17.5,
-            bearing: widget.myHeading,
-            tilt: 45,
+      // ── Update Navigation State ──
+      if (widget.isNavigating && widget.myLocation != null) {
+        _controller?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(widget.myLocation!.latitude, widget.myLocation!.longitude),
+              zoom: 17.5,
+              bearing: widget.myHeading,
+              tilt: 45,
+            ),
           ),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      debugPrint('[Map] Error updating layers: $e');
     }
   }
 
   void _drawRoute() async {
+    if (_controller == null || !_styleLoaded) return;
     const layerId = 'route-line';
     const sourceId = 'route-source';
 
@@ -132,33 +136,38 @@ class BinLinkMapState extends State<BinLinkMap> {
 
     if (widget.routePoints.isEmpty) return;
 
-    final coordinates = widget.routePoints
-        .map((p) => [p.longitude, p.latitude])
-        .toList();
+    try {
+      final coordinates = widget.routePoints
+          .map((p) => [p.longitude, p.latitude])
+          .toList();
 
-    await _controller?.addSource(sourceId, GeojsonSourceProperties(
-      data: {
-        'type': 'Feature',
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': coordinates,
+      await _controller?.addSource(sourceId, GeojsonSourceProperties(
+        data: {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': coordinates,
+          },
         },
-      },
-    ));
+      ));
 
-    await _controller?.addLineLayer(
-      sourceId,
-      layerId,
-      LineLayerProperties(
-        lineColor: AppColors.primary.toHexShortString(),
-        lineWidth: 5.0,
-        lineJoin: 'round',
-        lineCap: 'round',
-      ),
-    );
+      await _controller?.addLineLayer(
+        sourceId,
+        layerId,
+        LineLayerProperties(
+          lineColor: AppColors.primary.toHexShortString(),
+          lineWidth: 5.0,
+          lineJoin: 'round',
+          lineCap: 'round',
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Map] Error drawing route: $e');
+    }
   }
 
   void _updateCollectors() async {
+    if (_controller == null || !_styleLoaded) return;
     const layerId = 'collector-layer';
     const sourceId = 'collector-source';
 
@@ -169,45 +178,50 @@ class BinLinkMapState extends State<BinLinkMap> {
 
     if (widget.collectors.isEmpty) return;
 
-    final features = widget.collectors.map((c) {
-      final lat = (c['lastLat'] as num?)?.toDouble() ?? 0.0;
-      final lng = (c['lastLng'] as num?)?.toDouble() ?? 0.0;
-      final bearing = (c['bearing'] as num?)?.toDouble() ?? 0.0;
+    try {
+      final features = widget.collectors.map((c) {
+        final lat = (c['lastLat'] as num?)?.toDouble() ?? 0.0;
+        final lng = (c['lastLng'] as num?)?.toDouble() ?? 0.0;
+        final bearing = (c['bearing'] as num?)?.toDouble() ?? 0.0;
 
-      return {
-        'type': 'Feature',
-        'geometry': {
-          'type': 'Point',
-          'coordinates': [lng, lat],
+        return {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'Point',
+            'coordinates': [lng, lat],
+          },
+          'properties': {
+            'id': c['id'],
+            'bearing': bearing,
+          },
+        };
+      }).toList();
+
+      await _controller?.addSource(sourceId, GeojsonSourceProperties(
+        data: {
+          'type': 'FeatureCollection',
+          'features': features,
         },
-        'properties': {
-          'id': c['id'],
-          'bearing': bearing,
-        },
-      };
-    }).toList();
+      ));
 
-    await _controller?.addSource(sourceId, GeojsonSourceProperties(
-      data: {
-        'type': 'FeatureCollection',
-        'features': features,
-      },
-    ));
-
-    await _controller?.addSymbolLayer(
-      sourceId,
-      layerId,
-      SymbolLayerProperties(
-        iconImage: 'truck-icon',
-        iconRotate: ['get', 'bearing'],
-        iconSize: 0.5,
-        iconAllowOverlap: true,
-        iconIgnorePlacement: true,
-      ),
-    );
+      await _controller?.addSymbolLayer(
+        sourceId,
+        layerId,
+        SymbolLayerProperties(
+          iconImage: 'truck-icon',
+          iconRotate: ['get', 'bearing'],
+          iconSize: 0.5,
+          iconAllowOverlap: true,
+          iconIgnorePlacement: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Map] Error updating collectors: $e');
+    }
   }
 
   void _updatePickupPin() async {
+    if (_controller == null || !_styleLoaded) return;
     const layerId = 'pickup-layer';
     const sourceId = 'pickup-source';
 
@@ -218,25 +232,29 @@ class BinLinkMapState extends State<BinLinkMap> {
 
     if (widget.pickupPosition == null) return;
 
-    await _controller?.addSource(sourceId, GeojsonSourceProperties(
-      data: {
-        'type': 'Feature',
-        'geometry': {
-          'type': 'Point',
-          'coordinates': [widget.pickupPosition!.longitude, widget.pickupPosition!.latitude],
+    try {
+      await _controller?.addSource(sourceId, GeojsonSourceProperties(
+        data: {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'Point',
+            'coordinates': [widget.pickupPosition!.longitude, widget.pickupPosition!.latitude],
+          },
         },
-      },
-    ));
+      ));
 
-    await _controller?.addSymbolLayer(
-      sourceId,
-      layerId,
-      const SymbolLayerProperties(
-        iconImage: 'pickup-pin',
-        iconSize: 0.8,
-        iconAllowOverlap: true,
-      ),
-    );
+      await _controller?.addSymbolLayer(
+        sourceId,
+        layerId,
+        const SymbolLayerProperties(
+          iconImage: 'pickup-pin',
+          iconSize: 0.8,
+          iconAllowOverlap: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Map] Error updating pickup pin: $e');
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
@@ -118,7 +119,9 @@ class _CollectorSheet extends StatelessWidget {
                             )
                           else ...[
                             ...List.generate(5, (i) => Icon(
-                              i < rating.floor() ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                              i < rating.floor() 
+                                  ? PhosphorIcons.star(PhosphorIconsStyle.fill) 
+                                  : PhosphorIcons.star(PhosphorIconsStyle.regular),
                               color: AppColors.warning,
                               size: 14,
                             )),
@@ -145,16 +148,16 @@ class _CollectorSheet extends StatelessWidget {
             child: Row(
               children: [
                 if (vehicle != null)
-                  _InfoChip(icon: PhosphorIconsRegular.truck, label: vehicle.replaceAll('_', ' ')),
+                  _InfoChip(icon: LucideIcons.truck, label: vehicle.replaceAll('_', ' ')),
                 if (vehicle != null) const SizedBox(width: 10),
                 const _InfoChip(
-                  icon: PhosphorIconsRegular.clock,
+                  icon: LucideIcons.clock,
                   label: '~10-15 min',
                   color: AppColors.warning,
                 ),
                 if (plate != null) ...[
                   const SizedBox(width: 10),
-                  _InfoChip(icon: PhosphorIconsRegular.identificationCard, label: plate),
+                  _InfoChip(icon: LucideIcons.contact, label: plate),
                 ],
               ],
             ),
@@ -183,7 +186,7 @@ class _CollectorSheet extends StatelessWidget {
                       minimumSize: const Size(0, 56),
                       shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBR),
                     ),
-                    child: const Icon(PhosphorIconsRegular.phone, size: 22),
+                    child: const Icon(LucideIcons.phone, size: 22),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -198,7 +201,7 @@ class _CollectorSheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(PhosphorIconsFill.trashSimple, size: 20),
+                        const Icon(LucideIcons.trash2, size: 20),
                         const SizedBox(width: 10),
                         Text('Book Pickup', style: AppTextStyles.button),
                       ],

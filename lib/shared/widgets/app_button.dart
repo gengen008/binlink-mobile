@@ -6,7 +6,7 @@ import '../../core/theme/app_text_styles.dart';
 
 enum AppButtonVariant { primary, secondary, danger, ghost, dark }
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   const AppButton({
     super.key,
     required this.label,
@@ -27,58 +27,84 @@ class AppButton extends StatelessWidget {
   final double height;
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> with SingleTickerProviderStateMixin {
+  late AnimationController _scaleCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0.96, upperBound: 1.0, value: 1.0);
+  }
+
+  @override
+  void dispose() {
+    _scaleCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final (bg, fg, shadow) = _colors();
+    final (bg, fg, shadow, borderColor) = _colors();
 
     return GestureDetector(
-      onTap: (loading || onPressed == null) ? null : () {
+      onTapDown: (_) => widget.onPressed != null ? _scaleCtrl.reverse() : null,
+      onTapUp: (_) => widget.onPressed != null ? _scaleCtrl.forward() : null,
+      onTapCancel: () => widget.onPressed != null ? _scaleCtrl.forward() : null,
+      onTap: (widget.loading || widget.onPressed == null) ? null : () {
         HapticFeedback.lightImpact();
-        onPressed!();
+        widget.onPressed!();
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: fullWidth ? double.infinity : null,
-        height: height,
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: AppRadius.mdBR,
-          boxShadow: shadow != null ? [
-            BoxShadow(color: shadow.withAlpha(80), blurRadius: 12, offset: const Offset(0, 4)),
-          ] : null,
-        ),
-        child: Center(
-          child: loading
-              ? SizedBox(
-                  width: 24, height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 3, color: fg),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[icon!, const SizedBox(width: 10)],
-                    Text(
-                      label,
-                      style: AppTextStyles.button.copyWith(color: fg),
-                    ),
-                  ],
-                ),
+      child: ScaleTransition(
+        scale: _scaleCtrl,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: widget.fullWidth ? double.infinity : null,
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: AppRadius.mdBR,
+            border: borderColor != null ? Border.all(color: borderColor, width: 1.5) : null,
+            boxShadow: shadow != null ? [
+              BoxShadow(color: shadow.withAlpha(80), blurRadius: 12, offset: const Offset(0, 4)),
+            ] : null,
+          ),
+          child: Center(
+            child: widget.loading
+                ? SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 3, color: fg),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (widget.icon != null) ...[widget.icon!, const SizedBox(width: 10)],
+                      Text(
+                        widget.label,
+                        style: AppTextStyles.button.copyWith(color: fg),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
   }
 
-  (Color, Color, Color?) _colors() {
-    switch (variant) {
+  (Color, Color, Color?, Color?) _colors() {
+    switch (widget.variant) {
       case AppButtonVariant.primary:
-        return (AppColors.primary, Colors.white, AppColors.primary);
+        return (AppColors.primary, Colors.white, AppColors.primary, null);
       case AppButtonVariant.secondary:
-        return (AppColors.surface, AppColors.textPrimary, null);
+        return (Colors.white, AppColors.textPrimary, null, AppColors.border);
       case AppButtonVariant.danger:
-        return (AppColors.danger, Colors.white, AppColors.danger);
+        return (AppColors.danger, Colors.white, AppColors.danger, null);
       case AppButtonVariant.ghost:
-        return (Colors.transparent, AppColors.primary, null);
+        return (Colors.transparent, AppColors.primary, null, null);
       case AppButtonVariant.dark:
-        return (AppColors.black, Colors.white, Colors.black);
+        return (AppColors.black, Colors.white, Colors.black, null);
     }
   }
 }

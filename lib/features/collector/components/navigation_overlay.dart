@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
@@ -87,11 +87,11 @@ class NavigationOverlay extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _LaneIcon(icon: PhosphorIconsFill.arrowElbowLeftUp, isActive: false),
+                _LaneIcon(icon: LucideIcons.cornerLeftUp, isActive: false),
                 const SizedBox(width: 8),
-                _LaneIcon(icon: PhosphorIconsFill.arrowUp, isActive: true),
+                _LaneIcon(icon: LucideIcons.arrowUp, isActive: true),
                 const SizedBox(width: 8),
-                _LaneIcon(icon: PhosphorIconsFill.arrowUp, isActive: false),
+                _LaneIcon(icon: LucideIcons.arrowUp, isActive: false),
               ],
             ),
           ),
@@ -102,10 +102,10 @@ class NavigationOverlay extends StatelessWidget {
 
   IconData _getManeuverIcon(String m) {
     switch (m.toLowerCase()) {
-      case 'left': return PhosphorIconsBold.arrowElbowLeftUp;
-      case 'right': return PhosphorIconsBold.arrowElbowRightUp;
-      case 'uturn': return PhosphorIconsBold.arrowUDownLeft;
-      default: return PhosphorIconsBold.arrowUp;
+      case 'left': return LucideIcons.cornerLeftUp;
+      case 'right': return LucideIcons.cornerRightUp;
+      case 'uturn': return LucideIcons.rotateCcw;
+      default: return LucideIcons.arrowUp;
     }
   }
 }

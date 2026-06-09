@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_radius.dart';
@@ -49,7 +49,7 @@ class AppNotificationCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(
-                PhosphorIconsRegular.bell,
+                LucideIcons.bell,
                 color: isRead ? AppColors.muted : AppColors.primary,
                 size: 18,
               ),

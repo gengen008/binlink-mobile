@@ -1,6 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/config/app_flavor.dart';
@@ -77,7 +77,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
+      SnackBar(
+        content: Text(msg), 
+        backgroundColor: AppColors.danger,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 
@@ -86,67 +91,102 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primary.withAlpha(40),
+              AppColors.background,
+              AppColors.background,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 
-                // ── Uber Style Header ──
+                // ── Apple/Uber Style Header ──
                 FadeInDown(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 80, height: 80,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24)),
+                        width: 72, height: 72,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white, 
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 20, offset: const Offset(0, 8))
+                          ],
+                        ),
                         child: Image.asset(AppAssets.bin3d),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
                       Text(
-                        FlavorConfig.isCollector ? "Hello Collector," : "Hello,",
-                        style: AppTextStyles.h1,
+                        FlavorConfig.isCollector ? "Welcome back,\nCollector" : "Welcome to\nBinLink",
+                        style: AppTextStyles.display.copyWith(fontSize: 36, height: 1.1),
                       ),
+                      const SizedBox(height: 12),
                       Text(
-                        "Sign in to continue",
-                        style: AppTextStyles.h2.copyWith(color: AppColors.textSecondary),
+                        "Sign in to start your journey",
+                        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 56),
 
                 FadeInUp(
                   child: Column(
                     children: [
                       AppTextField(
                         controller: _emailCtrl,
-                        label: 'Email',
+                        label: 'EMAIL ADDRESS',
                         hint: 'name@example.com',
                         keyboardType: TextInputType.emailAddress,
-                        prefixIcon: const Icon(PhosphorIconsRegular.envelope, size: 20),
+                        prefixIcon: const Icon(LucideIcons.mail, size: 20),
                         validator: Validators.email,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       AppTextField(
                         controller: _passCtrl,
-                        label: 'Password',
+                        label: 'PASSWORD',
                         hint: 'Enter password',
                         obscureText: true,
                         showToggle: true,
-                        prefixIcon: const Icon(PhosphorIconsRegular.lock, size: 20),
+                        prefixIcon: const Icon(LucideIcons.lock, size: 20),
                         validator: Validators.password,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          child: Text(
+                            'Forgot Password?', 
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       AppButton(
-                        label: 'Sign In',
+                        label: 'Continue',
                         loading: auth.loading,
                         onPressed: _loginEmail,
                       ),
@@ -154,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 FadeInUp(
                   delay: const Duration(milliseconds: 200),
@@ -163,14 +203,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Expanded(child: Divider()),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("OR", style: AppTextStyles.label),
+                        child: Text("OR", style: AppTextStyles.small.copyWith(fontWeight: FontWeight.bold, letterSpacing: 2)),
                       ),
                       const Expanded(child: Divider()),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 FadeInUp(
                   delay: const Duration(milliseconds: 300),
@@ -180,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 48),
 
                 FadeInUp(
                   delay: const Duration(milliseconds: 400),
@@ -190,11 +230,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: RichText(
                         text: TextSpan(
                           text: "Don't have an account? ",
-                          style: AppTextStyles.bodySmall,
+                          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                           children: [
                             TextSpan(
-                              text: "Sign up",
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                              text: "Create account",
+                              style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
@@ -202,13 +242,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 40),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+              ),
+              ),
+              ),
+              ),
+              ),
+              );
+              }
 }
 
 class _GoogleButtonV4 extends StatelessWidget {
@@ -218,25 +260,15 @@ class _GoogleButtonV4 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: loading ? null : onPressed,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 58,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(AppAssets.googleIcon, width: 24, height: 24),
-            const SizedBox(width: 12),
-            Text("Continue with Google", style: AppTextStyles.h4),
-          ],
-        ),
+    return AppButton(
+      label: 'Continue with Google',
+      variant: AppButtonVariant.secondary,
+      icon: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.black.withAlpha(10))),
+        child: Image.asset(AppAssets.googleIcon, width: 16, height: 18),
       ),
+      onPressed: loading ? null : onPressed,
     );
   }
 }

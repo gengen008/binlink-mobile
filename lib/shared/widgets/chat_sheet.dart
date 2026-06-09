@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
@@ -161,7 +161,7 @@ class _ChatSheetState extends State<ChatSheet> {
                         color: AppColors.primary.withAlpha(25),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(PhosphorIconsFill.chatCircle,
+                      child: Icon(LucideIcons.messageCircle,
                           color: AppColors.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
@@ -221,7 +221,7 @@ class _ChatSheetState extends State<ChatSheet> {
                                 border: Border.all(color: AppColors.border),
                               ),
                               child: const Icon(
-                                  PhosphorIconsRegular.chatTeardrop,
+                                  LucideIcons.messageSquare,
                                   color: AppColors.muted, size: 28),
                             ),
                             const SizedBox(height: 16),
@@ -293,7 +293,7 @@ class _MessageBubble extends StatelessWidget {
                 border: Border.all(
                     color: AppColors.primary.withAlpha(60)),
               ),
-              child: const Icon(PhosphorIconsFill.user,
+              child: const Icon(LucideIcons.user,
                   color: AppColors.muted, size: 14),
             ),
             const SizedBox(width: 8),
@@ -424,7 +424,7 @@ class _ChatInput extends StatelessWidget {
                           strokeWidth: 2,
                           color: AppColors.primary),
                     )
-                  : const Icon(PhosphorIconsFill.paperPlaneTilt,
+                  : const Icon(LucideIcons.send,
                       color: AppColors.white, size: 20),
             ),
           ),

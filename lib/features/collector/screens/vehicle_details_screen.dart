@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
@@ -28,11 +28,11 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
   bool    _saving      = false;
 
   static const _types = [
-    {'key': 'PICKUP_TRUCK', 'label': 'Pickup Truck',  'icon': PhosphorIconsFill.truck},
-    {'key': 'TIPPER',       'label': 'Tipper Truck',  'icon': PhosphorIconsFill.truck},
-    {'key': 'TRICYCLE',     'label': 'Tricycle',      'icon': PhosphorIconsFill.motorcycle},
-    {'key': 'MOTORBIKE',    'label': 'Motorbike',     'icon': PhosphorIconsFill.motorcycle},
-    {'key': 'VAN',          'label': 'Van',           'icon': PhosphorIconsFill.van},
+    {'key': 'PICKUP_TRUCK', 'label': 'Pickup Truck',  'icon': LucideIcons.truck},
+    {'key': 'TIPPER',       'label': 'Tipper Truck',  'icon': LucideIcons.truck},
+    {'key': 'TRICYCLE',     'label': 'Tricycle',      'icon': LucideIcons.bike},
+    {'key': 'MOTORBIKE',    'label': 'Motorbike',     'icon': LucideIcons.bike},
+    {'key': 'VAN',          'label': 'Van',           'icon': LucideIcons.truck},
   ];
 
   @override
@@ -89,7 +89,6 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
           child: Column(
             children: [
@@ -99,12 +98,10 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: Icon(PhosphorIconsRegular.arrowLeft,
-                          color: AppColors.secondary),
+                      icon: const Icon(LucideIcons.arrowLeft),
                     ),
                     Expanded(
-                      child: Text('Vehicle Details', style: AppTextStyles.appBarTitle.copyWith(
-                        color: AppColors.secondary)),
+                      child: Text('Vehicle Details', style: AppTextStyles.appBarTitle),
                     ),
                   ],
                 ),
@@ -176,7 +173,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                           label: '',
                           hint: 'e.g. GR 1234-23',
                           prefixIcon: const Icon(
-                            PhosphorIconsRegular.identificationCard,
+                            LucideIcons.contact,
                             color: AppColors.muted, size: 20,
                           ),
                           validator: (v) => (v?.trim().isEmpty ?? true)
@@ -192,7 +189,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                           label: '',
                           hint: 'e.g. White, Red',
                           prefixIcon: const Icon(
-                            PhosphorIconsRegular.palette,
+                            LucideIcons.palette,
                             color: AppColors.muted, size: 20,
                           ),
                         ),
@@ -236,7 +233,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                           hint: 'Any additional vehicle info',
                           maxLines: 2,
                           prefixIcon: const Icon(
-                            PhosphorIconsRegular.notepad,
+                            LucideIcons.notebook,
                             color: AppColors.muted, size: 20,
                           ),
                         ),
@@ -246,7 +243,7 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                           label: 'Save Vehicle Details',
                           loading: _saving,
                           onPressed: _save,
-                          icon: const Icon(PhosphorIconsRegular.checkCircle,
+                          icon: const Icon(LucideIcons.circleCheck,
                               color: AppColors.white, size: 20),
                         ),
                       ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/household_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -63,7 +63,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: Icon(PhosphorIconsRegular.arrowLeft,
+                      icon: Icon(LucideIcons.arrowLeft,
                           color: AppColors.secondary),
                     ),
                     Expanded(
@@ -77,7 +77,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                           color: AppColors.secondary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(PhosphorIconsRegular.plus,
+                        child: const Icon(LucideIcons.plus,
                             color: Colors.white, size: 20),
                       ),
                     ),
@@ -106,7 +106,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                                   shape: BoxShape.circle,
                                   border: Border.all(color: AppColors.border),
                                 ),
-                                child: const Icon(PhosphorIconsRegular.mapPin,
+                                child: const Icon(LucideIcons.mapPin,
                                     color: AppColors.muted, size: 32),
                               ),
                               const SizedBox(height: 20),
@@ -124,7 +124,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                                 onPressed: _showAddSheet,
                                 fullWidth: false,
                                 height: 46,
-                                icon: const Icon(PhosphorIconsRegular.plus,
+                                icon: const Icon(LucideIcons.plus,
                                     color: AppColors.white, size: 18),
                               ),
                             ],
@@ -179,7 +179,7 @@ class _AddressTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.danger.withAlpha(80)),
         ),
-        child: const Icon(PhosphorIconsRegular.trash, color: AppColors.danger, size: 22),
+        child: const Icon(LucideIcons.trash2, color: AppColors.danger, size: 22),
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -217,7 +217,7 @@ class _AddressTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(PhosphorIconsRegular.dotsThreeVertical,
+            const Icon(LucideIcons.ellipsisVertical,
                 color: AppColors.muted, size: 18),
           ],
         ),
@@ -235,9 +235,9 @@ class _AddressTile extends StatelessWidget {
 
   IconData _labelIcon(String label) {
     switch (label.toUpperCase()) {
-      case 'HOME':   return PhosphorIconsFill.house;
-      case 'OFFICE': return PhosphorIconsFill.buildings;
-      default:       return PhosphorIconsFill.mapPin;
+      case 'HOME':   return LucideIcons.house;
+      case 'OFFICE': return LucideIcons.building;
+      default:       return LucideIcons.mapPin;
     }
   }
 }
@@ -344,7 +344,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
             label: '',
             hint: 'e.g. 45 Accra-Tema Motorway, Accra',
             maxLines: 2,
-            prefixIcon: const Icon(PhosphorIconsRegular.mapPin,
+            prefixIcon: const Icon(LucideIcons.mapPin,
                 color: AppColors.muted, size: 20),
           ),
 
@@ -356,7 +356,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
             controller: _notesCtrl,
             label: '',
             hint: 'e.g. Blue gate, near the mango tree',
-            prefixIcon: const Icon(PhosphorIconsRegular.notepad,
+            prefixIcon: const Icon(LucideIcons.notebook,
                 color: AppColors.muted, size: 20),
           ),
 
@@ -376,7 +376,7 @@ class _AddAddressSheetState extends State<_AddAddressSheet> {
                     if (mounted) setState(() => _saving = false);
                   }
                 : null,
-            icon: const Icon(PhosphorIconsRegular.checkCircle,
+            icon: const Icon(LucideIcons.circleCheck,
                 color: AppColors.white, size: 20),
           ),
         ],

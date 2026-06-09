@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -86,14 +86,22 @@ class _HelpScreenState extends State<HelpScreen> {
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
                                 color: isOpen
-                                    ? AppColors.primary.withAlpha(15)
-                                    : AppColors.fieldFill,
-                                borderRadius: BorderRadius.circular(15),
+                                    ? AppColors.primary.withAlpha(10)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isOpen
-                                      ? AppColors.primary.withAlpha(80)
-                                      : AppColors.fieldFill,
+                                      ? AppColors.primary.withAlpha(30)
+                                      : AppColors.border,
                                 ),
+                                boxShadow: [
+                                  if (!isOpen)
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(5),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                ],
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
@@ -117,7 +125,7 @@ class _HelpScreenState extends State<HelpScreen> {
                                           duration: const Duration(
                                               milliseconds: 200),
                                           child: const Icon(
-                                            PhosphorIconsRegular.caretDown,
+                                            LucideIcons.chevronDown,
                                             color: AppColors.muted,
                                             size: 18,
                                           ),
@@ -168,7 +176,7 @@ class _HelpScreenState extends State<HelpScreen> {
                             ),
                             const SizedBox(height: 15),
                             _ContactRow(
-                              icon: PhosphorIconsRegular.phone,
+                              icon: LucideIcons.phone,
                               label: 'Customer Support',
                               value: '+233 24 000 0000',
                               onTap: () => launchUrl(
@@ -177,7 +185,7 @@ class _HelpScreenState extends State<HelpScreen> {
                             ),
                             const SizedBox(height: 12),
                             _ContactRow(
-                              icon: PhosphorIconsRegular.envelopeSimple,
+                              icon: LucideIcons.mail,
                               label: 'Email Support',
                               value: 'help@binlink.eco',
                               onTap: () => launchUrl(
@@ -239,7 +247,7 @@ class _ContactRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(PhosphorIconsRegular.arrowRight,
+          const Icon(LucideIcons.arrowRight,
               color: AppColors.muted, size: 10),
         ],
       ),

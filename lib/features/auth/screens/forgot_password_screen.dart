@@ -1,6 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../components/auth_header.dart';
@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 autofillHints: const [AutofillHints.email],
                                 prefixIcon: const Icon(
-                                    PhosphorIconsRegular.envelope,
+                                    LucideIcons.mail,
                                     color: AppColors.muted,
                                     size: 20),
                                 validator: Validators.email,
@@ -145,7 +145,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                               child: const Center(
                                 child: Icon(
-                                  PhosphorIconsRegular.envelopeOpen,
+                                  LucideIcons.mailOpen,
                                   color: AppColors.success,
                                   size: 36,
                                 ),

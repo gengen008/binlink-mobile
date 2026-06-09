@@ -1,23 +1,28 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' show MapLibreMapController, CameraUpdate, LatLng;
 import 'package:latlong2/latlong.dart' as ll;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:lottie/lottie.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/services/places_service.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/household_provider.dart';
-import '../../../shared/widgets/collector_bottom_sheet.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/searching_radar_widget.dart';
+import '../../../shared/widgets/collector_bottom_sheet.dart';
 import '../../../shared/widgets/chat_sheet.dart';
 import '../../../shared/widgets/binlink_map.dart';
 import 'service_selection_sheet.dart';
 import 'address_selection_sheet.dart';
 import '../screens/payment_screen.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 enum HomeSheetState { idle, serviceSelection, addressSelection, searching, tracking }
 
@@ -39,6 +44,7 @@ class _HomeTabState extends State<HomeTab> {
   String _currentAddress = '';
   ll.LatLng? _pickupPosition;
   int _extraBags = 0;
+  String? _preSelectedCategory;
 
   DateTime? _scheduledDate;
   String? _scheduledTimePreference;
@@ -68,9 +74,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
 
-  void _startBookingFlow() {
+  void _startBookingFlow({String? category}) {
     if (widget.myPos == null) return;
     setState(() {
+      _preSelectedCategory = category;
       _sheetState = HomeSheetState.serviceSelection;
       _pickupPosition = widget.myPos;
     });
@@ -212,7 +219,6 @@ class _HomeTabState extends State<HomeTab> {
             right: 20,
             child: FadeInDown(
               child: _TopSearchPill(
-                onMenuTap: () => Scaffold.of(context).openDrawer(),
                 onSearchTap: _startBookingFlow,
               ),
             ),
@@ -224,7 +230,7 @@ class _HomeTabState extends State<HomeTab> {
             top: MediaQuery.of(context).padding.top + 16,
             left: 20,
             child: _FloatingCircularBtn(
-              icon: PhosphorIconsRegular.arrowLeft,
+              icon: LucideIcons.arrowLeft,
               onTap: _cancelBooking,
             ),
           ),
@@ -256,6 +262,36 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _buildBottomContent(Map<String, dynamic>? active) {
     final prov = context.read<HouseholdProvider>();
+
+    // ── Multi-step Progress Indicator ──
+    Widget? progressHeader;
+    if ([HomeSheetState.serviceSelection, HomeSheetState.addressSelection].contains(_sheetState)) {
+      final step = _sheetState == HomeSheetState.serviceSelection ? 1 : 2;
+      progressHeader = Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _StepDot(isActive: step >= 1, isCompleted: step > 1),
+                Container(width: 40, height: 2, color: step > 1 ? AppColors.primary : AppColors.border),
+                _StepDot(isActive: step >= 2, isCompleted: step > 2),
+                Container(width: 40, height: 2, color: step > 2 ? AppColors.primary : AppColors.border),
+                _StepDot(isActive: step >= 3, isCompleted: step > 3),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     switch (_sheetState) {
       case HomeSheetState.idle:
         return _IdleBottomSheet(
@@ -271,60 +307,100 @@ class _HomeTabState extends State<HomeTab> {
           }),
         );
       case HomeSheetState.serviceSelection:
-        return ServiceSelectionSheet(
-          onServiceSelected: _onServiceSelected,
-          onCancel: _cancelBooking,
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (progressHeader != null) progressHeader,
+            ServiceSelectionSheet(
+              initialCategory: _preSelectedCategory,
+              onServiceSelected: _onServiceSelected,
+              onCancel: _cancelBooking,
+              showHandle: progressHeader == null,
+            ),
+          ],
         );
       case HomeSheetState.addressSelection:
-        return AddressSelectionSheet(
-          currentAddress: _currentAddress,
-          onAddressConfirmed: _onAddressConfirmed,
-          onCancel: _cancelBooking,
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (progressHeader != null) progressHeader,
+            AddressSelectionSheet(
+              currentAddress: _currentAddress,
+              onAddressConfirmed: _onAddressConfirmed,
+              onCancel: _cancelBooking,
+              showHandle: progressHeader == null,
+            ),
+          ],
         );
-      case HomeSheetState.searching:
-        return _SearchingSheet();
-      case HomeSheetState.tracking:
-        return active != null ? _TrackingBottomSheet(booking: active) : const SizedBox();
-    }
-  }
+case HomeSheetState.searching:
+  return _SearchingSheet();
+case HomeSheetState.tracking:
+  return active != null ? _TrackingBottomSheet(booking: active) : const SizedBox();
+}
+return const SizedBox();
+}
+}
+
+class _StepDot extends StatelessWidget {
+const _StepDot({required this.isActive, required this.isCompleted});
+final bool isActive;
+final bool isCompleted;
+
+@override
+Widget build(BuildContext context) {
+return Container(
+width: 12, height: 12,
+decoration: BoxDecoration(
+  color: isCompleted ? AppColors.primary : (isActive ? AppColors.primary : Colors.white),
+  shape: BoxShape.circle,
+  border: Border.all(color: isActive ? AppColors.primary : AppColors.border, width: 2),
+),
+child: isCompleted ? const Icon(LucideIcons.check, size: 8, color: Colors.white) : null,
+);
+}
 }
 
 // ── Components ──────────────────────────────────────────────────────────
 
 class _TopSearchPill extends StatelessWidget {
-  const _TopSearchPill({required this.onMenuTap, required this.onSearchTap});
-  final VoidCallback onMenuTap;
+  const _TopSearchPill({required this.onSearchTap});
   final VoidCallback onSearchTap;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: Colors.black.withAlpha(15),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
+          ),
         ],
+        border: Border.all(color: AppColors.border, width: 0.5),
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onMenuTap,
-            child: const Icon(PhosphorIconsRegular.list, size: 24, color: AppColors.textPrimary),
-          ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: GestureDetector(
               onTap: onSearchTap,
               child: Text(
-                "Ready for a pickup?",
-                style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary, fontSize: 18),
+                "Where to collect from?",
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 17,
+                ),
               ),
             ),
           ),
-          Image.asset(AppAssets.search, width: 24, height: 24, color: AppColors.primary),
+          const VerticalDivider(width: 32, indent: 16, endIndent: 16),
+          Icon(PhosphorIcons.magnifyingGlass(PhosphorIconsStyle.bold), size: 22, color: AppColors.primary900),
         ],
       ),
     );
@@ -366,7 +442,7 @@ class _IdleBottomSheet extends StatelessWidget {
     required this.onAddressTap,
   });
   final Map<String, dynamic>? activeBooking;
-  final VoidCallback onRequestNow;
+  final Function({String? category}) onRequestNow;
   final VoidCallback onSchedule;
   final VoidCallback onShowTracking;
   final List<Map<String, dynamic>> savedAddresses;
@@ -374,6 +450,8 @@ class _IdleBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -383,14 +461,33 @@ class _IdleBottomSheet extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              _CategoryCardV4(image: AppAssets.bin3d, label: 'Household', onTap: onRequestNow),
-              _CategoryCardV4(image: AppAssets.truck3d, label: 'Construction', onTap: onRequestNow),
-              _CategoryCardV4(image: AppAssets.recycleBin, label: 'Recycling', onTap: onRequestNow),
-              _CategoryCardV4(image: AppAssets.leaf, label: 'Organic', onTap: onRequestNow),
+              _CategoryCardV4(image: AppAssets.bin3d, label: 'Household', onTap: () => onRequestNow(category: 'Household')),
+              _CategoryCardV4(image: AppAssets.recycleBin, label: 'Recycling', onTap: () => onRequestNow(category: 'Recycling')),
+              _CategoryCardV4(image: AppAssets.leaf, label: 'Organic', onTap: () => onRequestNow(category: 'Organic')),
+              _CategoryCardV4(image: AppAssets.bottle, label: 'Plastic', onTap: () => onRequestNow(category: 'Plastic')),
+              _CategoryCardV4(image: AppAssets.laptop, label: 'E-Waste', onTap: () => onRequestNow(category: 'E-Waste')),
+              _CategoryCardV4(image: AppAssets.construction, label: 'Construction', onTap: () => onRequestNow(category: 'Construction')),
+              _CategoryCardV4(image: AppAssets.trashPile, label: 'Metal', onTap: () => onRequestNow(category: 'Metal')),
             ],
           ),
         ),
         const SizedBox(height: 16),
+
+        // ── Wallet & Rewards Row ──
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _WalletCard(points: user?.ecoPoints ?? 0),
+              const SizedBox(width: 12),
+              _RewardsCard(kg: user?.totalKgRecycled ?? 0.0),
+              const SizedBox(width: 12),
+              _PromoCard(),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
         
         // ── Main Action Sheet ──
         FadeInUp(
@@ -414,22 +511,23 @@ class _IdleBottomSheet extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _ActionBtnV4(
-                        icon: PhosphorIconsFill.calendar,
+                        icon: LucideIcons.calendar,
                         title: "Schedule",
                         subtitle: "Plan ahead",
                         color: AppColors.surface,
+                        borderColor: AppColors.border,
                         onTap: onSchedule,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _ActionBtnV4(
-                        icon: PhosphorIconsFill.lightning,
+                        icon: LucideIcons.zap,
                         title: "Request",
-                        subtitle: "Instant",
-                        color: AppColors.primaryLight,
-                        textColor: AppColors.primary,
-                        onTap: onRequestNow,
+                        subtitle: "Instant pickup",
+                        color: AppColors.premiumBlack,
+                        textColor: Colors.white,
+                        onTap: () => onRequestNow(),
                       ),
                     ),
                   ],
@@ -440,39 +538,42 @@ class _IdleBottomSheet extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 16),
                 if (savedAddresses.isEmpty)
-                  Row(
-                    children: [
-                      const Icon(PhosphorIconsFill.mapPin, color: AppColors.textMuted, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Saved Addresses", style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
-                            Text("No addresses saved yet", style: AppTextStyles.label.copyWith(fontSize: 10)),
-                          ],
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/saved-addresses'), // Assuming route exists
+                    child: Row(
+                      children: [
+                        const Icon(LucideIcons.mapPin, color: AppColors.textMuted, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Saved Addresses", style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary)),
+                              Text("Tap to add a new address", style: AppTextStyles.small.copyWith(color: AppColors.primary900)),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Icon(PhosphorIconsRegular.caretRight, color: AppColors.textMuted),
-                    ],
+                        const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
+                      ],
+                    ),
                   )
                 else
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Quick Pickup", style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      Text("Quick Pickup", style: AppTextStyles.small.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                       const SizedBox(height: 12),
                       ...savedAddresses.take(3).map((a) => ListTile(
                         onTap: () => onAddressTap(a),
                         contentPadding: EdgeInsets.zero,
                         leading: Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10)),
-                          child: const Icon(PhosphorIconsFill.mapPin, size: 18),
+                          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(LucideIcons.mapPin, size: 18),
                         ),
-                        title: Text(a['label'], style: AppTextStyles.h4),
-                        subtitle: Text(a['address'], style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        trailing: const Icon(PhosphorIconsRegular.caretRight, size: 16),
+                        title: Text(a['label'], style: AppTextStyles.title.copyWith(fontSize: 16)),
+                        subtitle: Text(a['address'], style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: const Icon(LucideIcons.chevronRight, size: 16, color: AppColors.textMuted),
                       )),
                     ],
                   ),
@@ -484,6 +585,95 @@ class _IdleBottomSheet extends StatelessWidget {
     );
   }
 }
+
+class _WalletCard extends StatelessWidget {
+  const _WalletCard({required this.points});
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160, height: 100,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withAlpha(40),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.wallet, color: Colors.white, size: 18),
+          const Spacer(),
+          Text('Eco Balance', style: AppTextStyles.small.copyWith(color: Colors.white70)),
+          Text('$points pts', style: AppTextStyles.h3.copyWith(color: Colors.white, fontSize: 18)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RewardsCard extends StatelessWidget {
+  const _RewardsCard({required this.kg});
+  final double kg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160, height: 100,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.success,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: AppColors.success.withAlpha(40), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.leaf, color: Colors.white, size: 18),
+          const Spacer(),
+          Text('Total Saved', style: AppTextStyles.small.copyWith(color: Colors.white70)),
+          Text('${kg.toStringAsFixed(1)} kg', style: AppTextStyles.h3.copyWith(color: Colors.white, fontSize: 18)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PromoCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160, height: 100,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary700,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: AppColors.primary700.withAlpha(40), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.gift, color: Colors.white, size: 18),
+          const Spacer(),
+          Text('Rewards', style: AppTextStyles.small.copyWith(color: Colors.white70)),
+          Text('View all', style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+}
+
 
 class _CategoryCardV4 extends StatelessWidget {
   _CategoryCardV4({required this.image, required this.label, required this.onTap});
@@ -525,6 +715,7 @@ class _ActionBtnV4 extends StatelessWidget {
     required this.subtitle,
     required this.color,
     this.textColor,
+    this.borderColor,
     required this.onTap,
   });
   final IconData icon;
@@ -532,6 +723,7 @@ class _ActionBtnV4 extends StatelessWidget {
   final String subtitle;
   final Color color;
   final Color? textColor;
+  final Color? borderColor;
   final VoidCallback onTap;
 
   @override
@@ -540,7 +732,11 @@ class _ActionBtnV4 extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(24)),
+        decoration: BoxDecoration(
+          color: color, 
+          borderRadius: BorderRadius.circular(24),
+          border: borderColor != null ? Border.all(color: borderColor!) : null,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -588,7 +784,7 @@ class _ActiveBannerV4 extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(PhosphorIconsRegular.caretRight, color: Colors.white),
+            const Icon(LucideIcons.chevronRight, color: Colors.white),
           ],
         ),
       ),
@@ -596,7 +792,29 @@ class _ActiveBannerV4 extends StatelessWidget {
   }
 }
 
-class _SearchingSheet extends StatelessWidget {
+class _SearchingSheet extends StatefulWidget {
+  @override
+  State<_SearchingSheet> createState() => _SearchingSheetState();
+}
+
+class _SearchingSheetState extends State<_SearchingSheet> {
+  int _seconds = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() => _seconds++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -605,15 +823,44 @@ class _SearchingSheet extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SearchingRadarWidget(radius: 40, ringColor: AppColors.primary),
+          SizedBox(
+            height: 200,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SearchingRadarWidget(radius: 100, ringColor: AppColors.primary),
+                Lottie.asset(
+                  AppAssets.lottieSearching,
+                  width: 120,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+                    child: Icon(LucideIcons.truck, color: AppColors.primary, size: 40),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 32),
-          Text('Matching with Collector', style: AppTextStyles.h2),
+          Text('Finding your collector', style: AppTextStyles.h2),
           const SizedBox(height: 8),
-          Text('This usually takes less than a minute.', style: AppTextStyles.bodySmall),
+          Text('Searching... $_seconds s', style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 40),
+          AppButton(
+            label: 'Cancel Request',
+            variant: AppButtonVariant.secondary,
+            onPressed: () {
+              final prov = context.read<HouseholdProvider>();
+              final activeId = prov.activeBooking?['id'];
+              if (activeId != null) prov.cancelBooking(activeId);
+            },
+          ),
         ],
       ),
     );
@@ -627,9 +874,10 @@ class _TrackingBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = booking['status'] as String? ?? 'PENDING';
+    final collector = booking['collector'];
     
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -638,44 +886,76 @@ class _TrackingBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 24),
+          
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-                child: Icon(PhosphorIconsFill.truck, color: AppColors.primary, size: 24),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(status == 'ACCEPTED' || status == 'EN_ROUTE' ? "Calculating ETA..." : "Pickup in progress", style: AppTextStyles.h2.copyWith(color: AppColors.primary900)),
+                  Text(Fmt.statusLabel(status), style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(child: Text(Fmt.statusLabel(status), style: AppTextStyles.h2.copyWith(color: AppColors.primary))),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.primary300.withAlpha(50), shape: BoxShape.circle),
+                child: const Icon(LucideIcons.truck, color: AppColors.primary900, size: 24),
+              ),
             ],
           ),
+          
+          const SizedBox(height: 24),
+          _TrackingStatusProgressBar(status: status),
           const SizedBox(height: 32),
-          if (booking['collector'] != null) ...[
+          if (collector != null) ...[
             Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppColors.surface,
-                  child: Text(Fmt.initials(booking['collector']['fullName']), style: AppTextStyles.h3),
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppColors.background,
+                      backgroundImage: collector['profilePhoto'] != null 
+                        ? NetworkImage(collector['profilePhoto']) 
+                        : null,
+                      child: collector['profilePhoto'] == null 
+                        ? Text(Fmt.initials(collector['fullName']), style: AppTextStyles.h3)
+                        : null,
+                    ),
+                    Positioned(
+                      right: 0, bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.check, color: Colors.white, size: 12),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(booking['collector']['fullName'] ?? 'Collector', style: AppTextStyles.h3),
-                      Text(
-                        booking['collector']['vehiclePlate'] != null
-                            ? "Vehicle #${booking['collector']['vehiclePlate']}"
-                            : "Collector Vehicle",
-                        style: AppTextStyles.label,
+                      Text(collector['fullName'] ?? 'Collector', style: AppTextStyles.title),
+                      Row(
+                        children: [
+                          const Icon(LucideIcons.star, color: AppColors.warning, size: 14),
+                          const SizedBox(width: 4),
+                          Text(collector['rating']?.toString() ?? '5.0', style: AppTextStyles.small.copyWith(color: AppColors.textPrimary)),
+                          const SizedBox(width: 12),
+                          Text(collector['vehiclePlate'] ?? 'No Plate', style: AppTextStyles.small.copyWith(fontWeight: FontWeight.bold)),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                _RoundIconBtn(icon: PhosphorIconsFill.phone, onTap: () => launchUrl(Uri.parse('tel:${booking['collector']['phone'] ?? ''}'))),
+                _RoundIconBtn(icon: LucideIcons.phone, onTap: () => launchUrl(Uri.parse('tel:${collector['phone'] ?? ''}'))),
                 const SizedBox(width: 12),
-                _RoundIconBtn(icon: PhosphorIconsFill.chatCircle, onTap: () => showChatSheet(context, bookingId: booking['id'], myRole: 'HOUSEHOLD')),
+                _RoundIconBtn(icon: LucideIcons.messageCircle, onTap: () => showChatSheet(context, bookingId: booking['id'], myRole: 'HOUSEHOLD')),
               ],
             ),
           ],
@@ -684,9 +964,9 @@ class _TrackingBottomSheet extends StatelessWidget {
           const SizedBox(height: 24),
           Row(
             children: [
-              const Icon(PhosphorIconsRegular.mapPin, color: AppColors.textMuted, size: 20),
+              const Icon(LucideIcons.mapPin, color: AppColors.textMuted, size: 20),
               const SizedBox(width: 12),
-              Expanded(child: Text(booking['pickupAddress'] ?? '', style: AppTextStyles.bodyMedium)),
+              Expanded(child: Text(booking['pickupAddress'] ?? '', style: AppTextStyles.body)),
             ],
           ),
         ],
@@ -705,8 +985,12 @@ class _RoundIconBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
-        child: Icon(icon, size: 22, color: AppColors.textPrimary),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withAlpha(15), 
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.primary.withAlpha(30)),
+        ),
+        child: Icon(icon, size: 22, color: AppColors.primary),
       ),
     );
   }
@@ -773,6 +1057,7 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primary : AppColors.surface,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -802,14 +1087,14 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryLight : AppColors.surface,
+                      color: isSelected ? AppColors.primary : AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
+                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
                     ),
                     child: Column(
                       children: [
-                        Text(label, style: AppTextStyles.h4.copyWith(color: isSelected ? AppColors.primary : AppColors.textPrimary)),
-                        Text(hours, style: AppTextStyles.label.copyWith(fontSize: 10)),
+                        Text(label, style: AppTextStyles.h4.copyWith(color: isSelected ? Colors.white : AppColors.textPrimary)),
+                        Text(hours, style: AppTextStyles.label.copyWith(fontSize: 10, color: isSelected ? Colors.white70 : AppColors.textSecondary)),
                       ],
                     ),
                   ),
@@ -818,13 +1103,9 @@ class _SchedulePickerSheetState extends State<_SchedulePickerSheet> {
             }).toList(),
           ),
           const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context, {'date': _selectedDate, 'timePreference': _timePreference}),
-              child: const Text('Confirm Schedule'),
-            ),
+          AppButton(
+            label: 'Confirm Schedule',
+            onPressed: () => Navigator.pop(context, {'date': _selectedDate, 'timePreference': _timePreference}),
           ),
         ],
       ),
@@ -842,7 +1123,14 @@ class _LocationLoadingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+            Lottie.asset(
+              AppAssets.lottieLoading,
+              width: 150,
+              errorBuilder: (context, error, stackTrace) => CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 3,
+              ),
+            ),
             const SizedBox(height: 24),
             Text('Locating you...', style: AppTextStyles.h3),
           ],
@@ -875,13 +1163,13 @@ class _PaymentMethodPicker extends StatelessWidget {
           const SizedBox(height: 24),
           _PaymentOption(
             label: 'Cash on Pickup',
-            icon: PhosphorIconsFill.money,
+            icon: LucideIcons.banknote,
             onTap: () => Navigator.pop(context, 'CASH'),
           ),
           const SizedBox(height: 12),
           _PaymentOption(
             label: 'Mobile Money',
-            icon: PhosphorIconsFill.phone,
+            icon: LucideIcons.smartphone,
             onTap: () => Navigator.pop(context, 'MOMO'),
           ),
         ],
@@ -911,7 +1199,78 @@ class _PaymentOption extends StatelessWidget {
         child: Icon(icon, color: AppColors.textPrimary),
       ),
       title: Text(label, style: AppTextStyles.h4),
-      trailing: const Icon(PhosphorIconsRegular.caretRight, size: 18),
+      trailing: const Icon(LucideIcons.chevronRight, size: 18),
+    );
+  }
+}
+
+class _TrackingStatusProgressBar extends StatelessWidget {
+  const _TrackingStatusProgressBar({required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final stages = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'COLLECTING'];
+    int currentIndex = stages.indexOf(status);
+    if (currentIndex == -1) {
+      if (['COMPLETED', 'COLLECTED'].contains(status)) currentIndex = stages.length;
+      else currentIndex = 0;
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(stages.length, (i) {
+            final isActive = i <= currentIndex;
+            final isLast = i == stages.length - 1;
+            return Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.primary : AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  if (!isLast) const SizedBox(width: 4),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _StatusLabel(label: 'Assigned', isActive: currentIndex >= 0),
+            _StatusLabel(label: 'On Way',   isActive: currentIndex >= 1),
+            _StatusLabel(label: 'Arrived',  isActive: currentIndex >= 2),
+            _StatusLabel(label: 'Collecting', isActive: currentIndex >= 3),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusLabel extends StatelessWidget {
+  const _StatusLabel({required this.label, required this.isActive});
+  final String label;
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTextStyles.small.copyWith(
+        color: isActive ? AppColors.primary : AppColors.textMuted,
+        fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+        fontSize: 10,
+      ),
     );
   }
 }

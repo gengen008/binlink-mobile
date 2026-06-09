@@ -8,13 +8,13 @@ import '../../core/theme/app_colors.dart';
 /// Three concentric rings expand outward with staggered 667 ms delays, each
 /// fading from [ringColor] to transparent over [duration].
 class SearchingRadarWidget extends StatefulWidget {
-  const SearchingRadarWidget({
+  SearchingRadarWidget({
     super.key,
     this.radius       = 70.0,
     Color? ringColor,
     this.strokeWidth  = 2.0,
     this.duration     = const Duration(milliseconds: 2000),
-  }) : ringColor = ringColor ?? AppColors.steelBlue;
+  }) : ringColor = ringColor ?? AppColors.primary;
 
   final double radius;
   final Color  ringColor;

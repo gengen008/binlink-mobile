@@ -1,6 +1,7 @@
 /// BinLink Eco — Asset Paths
 ///
 /// V4: Using 3D Assets and Premium Illustrations.
+/// Updated for V3 with Lottie and additional premium tokens.
 class AppAssets {
   AppAssets._();
 
@@ -88,6 +89,21 @@ class AppAssets {
   static const onboarding3 = 'assets/v4/illustrations/collection_u2np.svg';
   static const onboarding4 = 'assets/v4/illustrations/connected_8wvi.svg';
   static const emptyState  = 'assets/v4/illustrations/no_data_qbuo.svg';
+  
+  // ── Lottie Animations ────────────────────────────────────────────────────
+  static const lottieSplash      = 'assets/lottie/splash.json';
+  static const lottieLoading     = 'assets/lottie/loading/loading.json';
+  static const lottieSearching   = 'assets/lottie/booking/searching.json';
+  static const lottieSuccess     = 'assets/lottie/success.json';
+  static const lottieError       = 'assets/lottie/error.json';
+  static const lottieWallet      = 'assets/lottie/wallet.json';
+  static const lottieBell        = 'assets/lottie/notifications.json';
+  static const lottieLocation    = 'assets/lottie/location_permission.json';
+  static const lottieFinding     = 'assets/lottie/booking/finding_collector.json';
+  static const lottieAssigned    = 'assets/lottie/booking/collector_assigned.json';
+  static const lottieArrived     = 'assets/lottie/booking/collector_arrived.json';
+  static const lottieComplete    = 'assets/lottie/booking/collection_complete.json';
+  static const lottiePayment     = 'assets/lottie/payments/payment_success.json';
   
   // ── Legacy Aliases & Missing Tokens ──────────────────────────────────────
   static const emptyPickups       = emptyState;

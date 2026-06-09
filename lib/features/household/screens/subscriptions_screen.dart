@@ -1,19 +1,18 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_assets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/app_bar.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/skeleton.dart';
 import '../providers/household_provider.dart';
 
-/// Subscriptions / Payments & Plans screen.
-///
-/// Shows the user's active subscription plan and allows cancellation.
-/// Wired to: GET /api/subscriptions/mine (via HouseholdProvider.subscriptions)
-///           DELETE /api/subscriptions/:id (via HouseholdProvider.cancelSubscription)
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
 
@@ -25,7 +24,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   @override
   void initState() {
     super.initState();
-    // Refresh on enter
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HouseholdProvider>().loadSubscriptions();
     });
@@ -35,23 +33,22 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBR),
-        title: Text('Cancel Plan', style: AppTextStyles.h4),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('Cancel Plan', style: AppTextStyles.h3),
         content: Text(
-          'Are you sure you want to cancel your subscription? You can still book one-off pickups.',
+          'Are you sure you want to cancel your subscription? You can still book one-off pickups anytime.',
           style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Keep Plan',
-                style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+            child: Text('Keep Plan', style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Cancel Plan',
-                style: AppTextStyles.label.copyWith(color: AppColors.danger)),
+            child: Text('Cancel Plan', style: AppTextStyles.body.copyWith(color: AppColors.danger, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -62,7 +59,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Subscription cancelled'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primary900,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -75,129 +73,119 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: const AppScaffoldBar(title: 'Payments & Plans'),
       body: prov.loading
-            ? Center(
-                child: CircularProgressIndicator(
-                    color: AppColors.primary, strokeWidth: 2),
+            ? const Padding(
+                padding: EdgeInsets.all(24),
+                child: SkeletonList(itemCount: 3, itemHeight: 180),
               )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Info banner ──────────────────────────────────────
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 500),
-                      child: _InfoBanner(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ── Section heading ──────────────────────────────────
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 100),
-                      child: Text('Active Plans',
-                          style: AppTextStyles.h4.copyWith(
-                              color: AppColors.muted)),
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (activeSubs.isEmpty) ...[
+            : RefreshIndicator(
+                onRefresh: () => prov.loadSubscriptions(),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Premium Info Header ──
                       FadeInDown(
-                        duration: const Duration(milliseconds: 500),
-                        delay: const Duration(milliseconds: 200),
-                        child: _EmptyPlans(),
+                        child: _PremiumInfoCard(),
                       ),
-                    ] else ...[
-                      ...activeSubs.asMap().entries.map((e) {
-                        final delay =
-                            Duration(milliseconds: 200 + e.key * 80);
-                        return FadeInDown(
-                          duration: const Duration(milliseconds: 500),
-                          delay: delay,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _SubCard(
-                              sub: e.value,
-                              onCancel: () =>
-                                  _cancelSub(e.value['id'] as String),
+
+                      const SizedBox(height: 32),
+
+                      Text('ACTIVE PLANS', style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                      const SizedBox(height: 16),
+
+                      if (activeSubs.isEmpty) ...[
+                        FadeInUp(
+                          child: _EmptyPlans(),
+                        ),
+                      ] else ...[
+                        ...activeSubs.asMap().entries.map((e) {
+                          return FadeInUp(
+                            delay: Duration(milliseconds: e.key * 100),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _SubCardV4(
+                                sub: e.value,
+                                onCancel: () => _cancelSub(e.value['id'] as String),
+                              ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ],
+
+                      const SizedBox(height: 32),
+                      Text('PRICING REFERENCE', style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                      const SizedBox(height: 16),
+                      FadeInUp(
+                        delay: const Duration(milliseconds: 300),
+                        child: _PricingReference(),
+                      ),
                     ],
-
-                    const SizedBox(height: 32),
-
-                    // ── Pricing info ─────────────────────────────────────
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 300),
-                      child: _PricingCard(),
-                    ),
-                  ],
+                  ),
                 ),
               ),
     );
   }
 }
 
-// ── Info banner ───────────────────────────────────────────────────────────────
-
-class _InfoBanner extends StatelessWidget {
+class _PremiumInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(15),
-        borderRadius: AppRadius.mdBR,
-        border: Border.all(color: AppColors.primary.withAlpha(60)),
+        color: AppColors.primary900,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: AppColors.primary900.withAlpha(30), blurRadius: 25, offset: const Offset(0, 10))
+        ],
       ),
       child: Row(
         children: [
-          Icon(PhosphorIconsFill.info,
-              color: AppColors.primary, size: 20),
-          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'BinLink uses cash-on-delivery only. Pay your collector directly upon arrival.',
-              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Scheduled Pickups', style: AppTextStyles.title.copyWith(color: Colors.white)),
+                const SizedBox(height: 4),
+                Text(
+                  'Manage your recurring waste collection plans and billing here.',
+                  style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: 16),
+          Lottie.asset(AppAssets.lottieWallet, width: 60, height: 60),
         ],
       ),
     );
   }
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-
 class _EmptyPlans extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.mdBR,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
-          const Icon(PhosphorIconsRegular.calendarBlank,
-              color: AppColors.muted, size: 40),
-          const SizedBox(height: 12),
-          Text('No active plans',
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary)),
-          const SizedBox(height: 6),
+          Lottie.asset(AppAssets.lottieSearching, height: 120),
+          const SizedBox(height: 24),
+          Text('No active plans', style: AppTextStyles.h3),
+          const SizedBox(height: 8),
           Text(
-            'Book a recurring pickup from the home screen\nto start a subscription plan.',
-            style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+            'You haven\'t subscribed to any recurring pickups yet.',
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -206,10 +194,8 @@ class _EmptyPlans extends StatelessWidget {
   }
 }
 
-// ── Subscription card ─────────────────────────────────────────────────────────
-
-class _SubCard extends StatelessWidget {
-  const _SubCard({required this.sub, required this.onCancel});
+class _SubCardV4 extends StatelessWidget {
+  const _SubCardV4({required this.sub, required this.onCancel});
   final Map<String, dynamic> sub;
   final VoidCallback onCancel;
 
@@ -224,110 +210,66 @@ class _SubCard extends StatelessWidget {
     final isPaused  = status == 'PAUSED';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isPaused ? AppColors.card : AppColors.cardElevated,
-        borderRadius: AppRadius.mdBR,
-        border: Border.all(
-          color: isPaused
-              ? AppColors.border
-              : AppColors.primary.withAlpha(60),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 15, offset: const Offset(0, 5))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Icon
               Container(
-                width: 40, height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(20),
-                  borderRadius: AppRadius.smBR,
-                  border: Border.all(color: AppColors.primary.withAlpha(50)),
-                ),
-                child: Icon(PhosphorIconsFill.recycle,
-                    color: AppColors.primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${_freqLabel(frequency)} Pickup',
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                    Text(
-                      '${Fmt.binSizeLabel(binSize)} • ${Fmt.currency(amount)}',
-                      style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-              // Status badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isPaused
-                      ? AppColors.warning.withAlpha(20)
-                      : AppColors.success.withAlpha(20),
-                  borderRadius: AppRadius.fullBR,
-                  border: Border.all(
-                    color: isPaused
-                        ? AppColors.warning.withAlpha(60)
-                        : AppColors.success.withAlpha(60),
-                  ),
+                  color: (isPaused ? AppColors.warning : AppColors.success).withAlpha(20),
+                  borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
-                  isPaused ? 'Paused' : 'Active',
-                  style: AppTextStyles.chip.copyWith(
+                  status.toUpperCase(),
+                  style: AppTextStyles.small.copyWith(
                     color: isPaused ? AppColors.warning : AppColors.success,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
+              ),
+              IconButton(
+                onPressed: onCancel,
+                icon: const Icon(LucideIcons.ellipsisVertical, size: 20, color: AppColors.textMuted),
               ),
             ],
           ),
-
+          const SizedBox(height: 16),
+          Text('${_freqLabel(frequency)} Pickup', style: AppTextStyles.h2.copyWith(fontSize: 24)),
+          const SizedBox(height: 4),
+          Text(
+            '${Fmt.binSizeLabel(binSize)} • ${Fmt.currency(amount)} per pickup',
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          ),
+          
           if (nextDt != null) ...[
-            const SizedBox(height: 12),
-            const Divider(color: AppColors.border, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 20),
             Row(
               children: [
-                const Icon(PhosphorIconsRegular.calendar,
-                    color: AppColors.muted, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  'Next pickup: ${Fmt.date(nextDt)}',
-                  style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary),
+                const Icon(LucideIcons.calendar, size: 18, color: AppColors.primary900),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('NEXT PICKUP', style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w800, fontSize: 10)),
+                    Text(Fmt.date(nextDt), style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+                  ],
                 ),
               ],
             ),
           ],
-
-          const SizedBox(height: 12),
-          const Divider(color: AppColors.border, height: 1),
-          const SizedBox(height: 8),
-
-          // Cancel button
-          GestureDetector(
-            onTap: onCancel,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(PhosphorIconsRegular.x,
-                    color: AppColors.danger, size: 14),
-                const SizedBox(width: 6),
-                Text('Cancel Plan',
-                    style: AppTextStyles.caption.copyWith(
-                        color: AppColors.danger)),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -344,75 +286,37 @@ class _SubCard extends StatelessWidget {
   }
 }
 
-// ── Pricing reference card ────────────────────────────────────────────────────
-
-class _PricingCard extends StatelessWidget {
+class _PricingReference extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppRadius.mdBR,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(PhosphorIconsFill.wallet,
-                  color: AppColors.muted, size: 18),
-              const SizedBox(width: 8),
-              Text('Pickup Pricing', style: AppTextStyles.h4),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const _PriceRow(label: 'Small (≤120L)',  price: 'GHC 30'),
-          const _PriceRow(label: 'Medium (180L)',  price: 'GHC 40'),
-          const _PriceRow(label: 'Large (240L)',   price: 'GHC 50'),
-          const _PriceRow(label: 'Extra bag',      price: 'GHC 6'),
-          const SizedBox(height: 12),
-          const Divider(color: AppColors.border, height: 1),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(PhosphorIconsRegular.coinVertical,
-                  color: AppColors.muted, size: 14),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Cash on delivery only. Pay your collector directly.',
-                  style: AppTextStyles.caption.copyWith(
-                      color: AppColors.muted),
-                ),
-              ),
-            ],
-          ),
+          _priceItem('Small Bin (≤120L)', 'GHC 30'),
+          const Divider(height: 32),
+          _priceItem('Medium Bin (180L)', 'GHC 40'),
+          const Divider(height: 32),
+          _priceItem('Large Bin (240L)', 'GHC 50'),
+          const Divider(height: 32),
+          _priceItem('Extra Bag', 'GHC 6'),
         ],
       ),
     );
   }
-}
 
-class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.label, required this.price});
-  final String label;
-  final String price;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
-          Text(price,
-              style: AppTextStyles.mono.copyWith(color: AppColors.primaryLight)),
-        ],
-      ),
+  Widget _priceItem(String label, String price) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600)),
+        Text(price, style: AppTextStyles.h3.copyWith(fontSize: 18, color: AppColors.primary900)),
+      ],
     );
   }
 }

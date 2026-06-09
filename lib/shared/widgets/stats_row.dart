@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_radius.dart';
@@ -76,21 +76,21 @@ class StatsRow extends StatelessWidget {
     return Row(
       children: [
         StatChip(
-          icon: PhosphorIconsFill.trashSimple,
+          icon: LucideIcons.trash2,
           label: 'Pickups',
           value: '$totalPickups',
           color: AppColors.primary,
         ),
         const SizedBox(width: 8),
         StatChip(
-          icon: PhosphorIconsFill.wallet,
+          icon: LucideIcons.wallet,
           label: 'Spent',
           value: '₵${totalSpent.toStringAsFixed(0)}',
           color: AppColors.secondary,
         ),
         const SizedBox(width: 8),
         StatChip(
-          icon: PhosphorIconsFill.leaf,
+          icon: LucideIcons.leaf,
           label: 'Recycled',
           value: '${kgRecycled.toInt()}kg',
           color: AppColors.success,

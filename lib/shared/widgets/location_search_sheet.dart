@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/services/places_service.dart';
 import '../../core/services/location_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -171,7 +171,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: const Icon(PhosphorIconsRegular.arrowLeft,
+                    child: const Icon(LucideIcons.arrowLeft,
                         color: AppColors.white, size: 18),
                   ),
                 ),
@@ -211,7 +211,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                     child: _searching
                         ? SizedBox(width: 18, height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
-                        : Icon(PhosphorIconsRegular.magnifyingGlass,
+                        : Icon(LucideIcons.search,
                             color: AppColors.primary, size: 18),
                   ),
                   suffixIcon: _ctrl.text.isNotEmpty
@@ -222,7 +222,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(12),
-                            child: Icon(PhosphorIconsRegular.x,
+                            child: Icon(LucideIcons.x,
                                 color: AppColors.muted, size: 16),
                           ),
                         )
@@ -255,7 +255,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         ? SizedBox(width: 20, height: 20,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: AppColors.primary))
-                        : Icon(PhosphorIconsFill.crosshair,
+                        : Icon(LucideIcons.crosshair,
                             color: AppColors.primary, size: 20),
                     const SizedBox(width: 12),
                     Column(
@@ -317,7 +317,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: Icon(PhosphorIconsRegular.mapPin,
+                          child: Icon(LucideIcons.mapPin,
                               color: AppColors.primary, size: 18),
                         ),
                         const SizedBox(width: 12),
@@ -339,7 +339,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                             ],
                           ),
                         ),
-                        const Icon(PhosphorIconsRegular.arrowUpLeft,
+                        const Icon(LucideIcons.arrowUpLeft,
                             color: AppColors.muted, size: 14),
                       ],
                     ),

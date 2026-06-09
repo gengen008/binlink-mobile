@@ -1,13 +1,11 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../components/auth_header.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -24,14 +22,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey   = GlobalKey<FormState>();
   final _nameCtrl  = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
-
-  final String _role = FlavorConfig.defaultRole;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
   }
@@ -43,7 +41,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email:    _emailCtrl.text.trim(),
       password: _passCtrl.text,
       fullName: _nameCtrl.text.trim(),
-      role:     _role,
+      phone:    _phoneCtrl.text.trim(),
+      role:     FlavorConfig.defaultRole,
     );
     if (!mounted) return;
     if (ok) {
@@ -52,32 +51,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         FlavorConfig.isCollector ? '/collector' : '/household',
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error ?? 'Registration failed'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      _showError(auth.error ?? 'Registration failed');
     }
   }
 
-  Future<void> _registerGoogle() async {
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.loginWithGoogle(role: _role);
-    if (!mounted) return;
-    if (ok) {
-      Navigator.pushReplacementNamed(
-        context,
-        FlavorConfig.isCollector ? '/collector' : '/household',
-      );
-    } else if (auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error!),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-    }
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg), 
+        backgroundColor: AppColors.danger,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
@@ -85,207 +71,135 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primary.withAlpha(40),
+              AppColors.background,
+              AppColors.background,
+            ],
           ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-
-                authHeader(context),
-
-                const SizedBox(height: 36),
-
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Create Account',
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.secondary,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          FlavorConfig.registerSubtitle,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-
-                        AppTextField(
-                          controller: _nameCtrl,
-                          label: 'Full Name',
-                          hint: 'Your full name',
-                          autofillHints: const [AutofillHints.name],
-                          prefixIcon: const Icon(PhosphorIconsRegular.user,
-                              color: AppColors.muted, size: 20),
-                          validator: (v) =>
-                              Validators.required(v, 'Full name'),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
-
-                        AppTextField(
-                          controller: _emailCtrl,
-                          label: 'Email address',
-                          hint: 'you@example.com',
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          prefixIcon: const Icon(
-                              PhosphorIconsRegular.envelope,
-                              color: AppColors.muted,
-                              size: 20),
-                          validator: Validators.email,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 12),
-
-                        AppTextField(
-                          controller: _passCtrl,
-                          label: 'Password',
-                          hint: 'At least 8 characters',
-                          obscureText: true,
-                          showToggle: true,
-                          autofillHints: const [AutofillHints.newPassword],
-                          prefixIcon: const Icon(PhosphorIconsRegular.lock,
-                              color: AppColors.muted, size: 20),
-                          validator: Validators.password,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _register(),
-                        ),
-                        const SizedBox(height: 24),
-
-                        AppButton(
-                          label: 'Create Account',
-                          loading: auth.loading,
-                          onPressed: _register,
-                        ),
-                      ],
-                    ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
+                    child: const Icon(LucideIcons.arrowLeft, size: 20),
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
-                FadeInUp(
-                  duration: const Duration(milliseconds: 550),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'or',
-                            style: AppTextStyles.caption.copyWith(
-                                color: AppColors.muted),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                FadeInUp(
-                  duration: const Duration(milliseconds: 600),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _GoogleRegisterButton(
-                      loading: auth.loading,
-                      onPressed: _registerGoogle,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                FadeInUp(
-                  duration: const Duration(milliseconds: 650),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(height: 32),
+                
+                FadeInDown(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Already have an account?',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.muted,
-                        ),
+                        "Join BinLink",
+                        style: AppTextStyles.display.copyWith(fontSize: 36, height: 1.1),
                       ),
-                      const SizedBox(width: 4),
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Text(
-                          'Sign In',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      Text(
+                        FlavorConfig.registerSubtitle,
+                        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 48),
+
+                FadeInUp(
+                  child: Column(
+                    children: [
+                      AppTextField(
+                        controller: _nameCtrl,
+                        label: 'FULL NAME',
+                        hint: 'John Doe',
+                        prefixIcon: const Icon(LucideIcons.user, size: 20),
+                        validator: Validators.required,
+                      ),
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        controller: _emailCtrl,
+                        label: 'EMAIL ADDRESS',
+                        hint: 'name@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(LucideIcons.mail, size: 20),
+                        validator: Validators.email,
+                      ),
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        controller: _phoneCtrl,
+                        label: 'PHONE NUMBER',
+                        hint: '024XXXXXXX',
+                        keyboardType: TextInputType.phone,
+                        prefixIcon: const Icon(LucideIcons.phone, size: 20),
+                        validator: Validators.phone,
+                      ),
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        controller: _passCtrl,
+                        label: 'PASSWORD',
+                        hint: 'Create password',
+                        obscureText: true,
+                        showToggle: true,
+                        prefixIcon: const Icon(LucideIcons.lock, size: 20),
+                        validator: Validators.password,
+                      ),
+                      const SizedBox(height: 40),
+                      AppButton(
+                        label: 'Create Account',
+                        loading: auth.loading,
+                        onPressed: _register,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: RichText(
+                        text: TextSpan(
+                          text: "Already have an account? ",
+                          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                          children: [
+                            TextSpan(
+                              text: "Sign in",
+                              style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GoogleRegisterButton extends StatelessWidget {
-  const _GoogleRegisterButton(
-      {required this.loading, required this.onPressed});
-  final bool loading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: loading ? null : onPressed,
-      borderRadius: AppRadius.buttonBR,
-      child: Container(
-        height: 52,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppRadius.buttonBR,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(AppAssets.googleIcon, width: 22, height: 22),
-            const SizedBox(width: 10),
-            Text(
-              'Continue with Google',
-              style: AppTextStyles.button.copyWith(
-                color: AppColors.secondary,
-                fontWeight: FontWeight.w500,
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              ),
+              ),
+              ),
+              ),
+              );
+              }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart' as ll;
@@ -9,7 +10,6 @@ import '../../../core/l10n/strings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
-import '../../../shared/widgets/app_drawer.dart';
 import '../providers/household_provider.dart';
 import '../components/home_tab.dart';
 import '../components/history_tab.dart';
@@ -76,7 +76,6 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     final s = S.of(context);
 
     return Scaffold(
-      drawer: AppDrawer(onTabSwitch: _onTabChanged),
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -85,95 +84,27 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
           const ProfileTab(),
         ],
       ),
-      bottomNavigationBar: _BinLinkBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onTabChanged,
-        items: [
-          _NavBtn(
-            icon: PhosphorIconsRegular.house,
-            activeIcon: PhosphorIconsFill.house,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _onTabChanged,
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(LucideIcons.house), 
+            selectedIcon: Icon(PhosphorIcons.house(PhosphorIconsStyle.fill)),
             label: s.home,
           ),
-          _NavBtn(
-            icon: PhosphorIconsRegular.clockCounterClockwise,
-            activeIcon: PhosphorIconsFill.clockCounterClockwise,
+          NavigationDestination(
+            icon: const Icon(LucideIcons.history), 
+            selectedIcon: Icon(PhosphorIcons.clockCounterClockwise(PhosphorIconsStyle.fill)),
             label: s.history,
           ),
-          _NavBtn(
-            icon: PhosphorIconsRegular.user,
-            activeIcon: PhosphorIconsFill.user,
+          NavigationDestination(
+            icon: const Icon(LucideIcons.user), 
+            selectedIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.fill)),
             label: s.profile,
           ),
         ],
       ),
     );
   }
-}
-
-class _BinLinkBottomNav extends StatelessWidget {
-  const _BinLinkBottomNav({
-    required this.currentIndex,
-    required this.onTap,
-    required this.items,
-  });
-
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  final List<_NavBtn> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: List.generate(items.length, (i) {
-              final item = items[i];
-              final isSelected = currentIndex == i;
-              return Expanded(
-                child: InkWell(
-                  onTap: () => onTap(i),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        color: isSelected ? AppColors.primary : AppColors.textMuted,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isSelected ? AppColors.primary : AppColors.textMuted,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavBtn {
-  const _NavBtn({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-  });
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -45,7 +45,7 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     _ContactCard(
-                      icon: PhosphorIconsRegular.phone,
+                      icon: LucideIcons.phone,
                       label: 'Call Us',
                       value: '+233 55 123 4567',
                       onTap: () =>
@@ -55,7 +55,7 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     _ContactCard(
-                      icon: PhosphorIconsRegular.envelope,
+                      icon: LucideIcons.mail,
                       label: 'Email Support',
                       value: 'collectors@binlink.eco',
                       onTap: () => launchUrl(
@@ -67,7 +67,7 @@ class CollectorHelpScreen extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     _ContactCard(
-                      icon: PhosphorIconsRegular.whatsappLogo,
+                      icon: LucideIcons.messageSquare,
                       label: 'WhatsApp',
                       value: 'Chat with an agent',
                       onTap: () => launchUrl(
@@ -185,8 +185,8 @@ class _FaqTileState extends State<_FaqTile> {
                   ),
                   Icon(
                     _open
-                        ? PhosphorIconsRegular.caretUp
-                        : PhosphorIconsRegular.caretDown,
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
                     color: AppColors.primary,
                     size: 18,
                   ),
@@ -256,7 +256,7 @@ class _ContactCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(PhosphorIconsRegular.arrowRight,
+            const Icon(LucideIcons.arrowRight,
                 color: AppColors.muted, size: 10),
           ],
         ),

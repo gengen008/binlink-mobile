@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:animate_do/animate_do.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../providers/collector_provider.dart';
 import '../screens/vehicle_details_screen.dart';
 import '../screens/collector_edit_profile_screen.dart';
 import '../screens/collector_help_screen.dart';
@@ -21,6 +23,7 @@ class CollectorProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final collectorProv = context.watch<CollectorProvider>();
     final user = auth.user;
 
     return Scaffold(
@@ -64,8 +67,11 @@ class CollectorProfileTab extends StatelessWidget {
                       ),
                     ),
                     _RoundActionBtn(
-                      icon: PhosphorIconsFill.pencilSimple,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorEditProfileScreen())),
+                      icon: LucideIcons.pencil,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorEditProfileScreen()));
+                      },
                     ),
                   ],
                 ),
@@ -76,7 +82,7 @@ class CollectorProfileTab extends StatelessWidget {
 
             // ── Earnings Card ──
             FadeInUp(
-              child: _EarningsCardV4(amount: Fmt.toDouble(user?.totalEarned ?? 0)),
+              child: _EarningsCardV4(amount: collectorProv.totalEarnings),
             ),
 
             const SizedBox(height: 32),
@@ -84,11 +90,23 @@ class CollectorProfileTab extends StatelessWidget {
             // ── Collector Stats ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
+              child: Column(
                 children: [
-                  _CollectorStatTile(label: 'Total Jobs', value: '${user?.totalPickups ?? 0}', icon: PhosphorIconsFill.checkCircle),
-                  const SizedBox(width: 16),
-                  _CollectorStatTile(label: 'Rating', value: '${user?.rating ?? 5.0} ★', icon: PhosphorIconsFill.star),
+                  Row(
+                    children: [
+                      _CollectorStatTile(label: 'Total Jobs', value: '${user?.totalPickups ?? 0}', icon: LucideIcons.circleCheck),
+                      const SizedBox(width: 16),
+                      _CollectorStatTile(label: 'Rating', value: '${user?.rating ?? 5.0} ★', icon: LucideIcons.star),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _CollectorStatTile(label: 'Total kg', value: '${Fmt.toDouble(user?.totalKgRecycled).toInt()}', icon: LucideIcons.leaf),
+                      const SizedBox(width: 16),
+                      _CollectorStatTile(label: 'Eco Points', value: '${user?.ecoPoints ?? 0}', icon: LucideIcons.zap),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -99,16 +117,16 @@ class CollectorProfileTab extends StatelessWidget {
             _DriverMenuSection(
               title: "Vehicle & Fleet",
               items: [
-                _DriverMenuItem(icon: PhosphorIconsFill.truck, label: 'Vehicle Details', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleDetailsScreen()))),
-                _DriverMenuItem(icon: PhosphorIconsFill.bell, label: 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorNotificationsScreen()))),
+                _DriverMenuItem(icon: LucideIcons.truck, label: 'Vehicle Details', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleDetailsScreen()))),
+                _DriverMenuItem(icon: LucideIcons.bell, label: 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorNotificationsScreen()))),
               ],
             ),
 
             _DriverMenuSection(
               title: "Support",
               items: [
-                _DriverMenuItem(icon: PhosphorIconsFill.question, label: 'Help Center', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorHelpScreen()))),
-                _DriverMenuItem(icon: PhosphorIconsFill.shieldCheck, label: 'Legal & Privacy', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorPrivacyScreen()))),
+                _DriverMenuItem(icon: LucideIcons.circleHelp, label: 'Help Center', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorHelpScreen()))),
+                _DriverMenuItem(icon: LucideIcons.shieldCheck, label: 'Legal & Privacy', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectorPrivacyScreen()))),
               ],
             ),
 
@@ -116,13 +134,36 @@ class CollectorProfileTab extends StatelessWidget {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: TextButton(
-                onPressed: () => auth.signOut(),
-                style: TextButton.styleFrom(
+              child: OutlinedButton(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: AppColors.premiumBlack,
+                      title: Text('Sign Out', style: AppTextStyles.h3.copyWith(color: Colors.white)),
+                      content: Text('Are you sure you want to sign out?', style: AppTextStyles.body.copyWith(color: Colors.white70)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text('Cancel', style: AppTextStyles.body.copyWith(color: Colors.white70)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text('Sign Out', style: AppTextStyles.body.copyWith(color: AppColors.danger, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    auth.signOut();
+                  }
+                },
+                style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.danger,
+                  side: const BorderSide(color: AppColors.danger, width: 1.5),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: Text('Sign Out', style: AppTextStyles.h4.copyWith(color: AppColors.danger)),
+                child: Text('Sign Out', style: AppTextStyles.button.copyWith(color: AppColors.danger)),
               ),
             ),
           ],
@@ -151,7 +192,7 @@ class _EarningsCardV4 extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: AppColors.primary.withAlpha(20), shape: BoxShape.circle),
-            child: Icon(PhosphorIconsFill.bank, color: AppColors.primary, size: 28),
+            child: Icon(LucideIcons.landmark, color: AppColors.primary, size: 28),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -163,7 +204,7 @@ class _EarningsCardV4 extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(PhosphorIconsRegular.caretRight, color: Colors.white24, size: 24),
+          const Icon(LucideIcons.chevronRight, color: Colors.white24, size: 24),
         ],
       ),
     );
@@ -233,11 +274,11 @@ class _DriverMenuItem extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: AppColors.premiumBlack, borderRadius: BorderRadius.circular(12)),
-        child: Icon(icon, size: 20, color: Colors.white70),
+        decoration: BoxDecoration(color: AppColors.primary.withAlpha(20), borderRadius: BorderRadius.circular(12)),
+        child: Icon(icon, size: 20, color: AppColors.primary),
       ),
       title: Text(label, style: AppTextStyles.h4.copyWith(color: Colors.white)),
-      trailing: const Icon(PhosphorIconsRegular.caretRight, size: 18, color: Colors.white24),
+      trailing: const Icon(LucideIcons.chevronRight, size: 18, color: Colors.white24),
     );
   }
 }
@@ -252,8 +293,8 @@ class _RoundActionBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.premiumBlack, shape: BoxShape.circle),
-        child: Icon(icon, size: 22, color: Colors.white70),
+        decoration: BoxDecoration(color: AppColors.primary.withAlpha(20), shape: BoxShape.circle),
+        child: Icon(icon, size: 22, color: AppColors.primary),
       ),
     );
   }

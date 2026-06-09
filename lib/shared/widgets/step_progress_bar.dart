@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Animated 5-step horizontal progress bar for the booking wizard.
@@ -46,7 +46,7 @@ class StepProgressBar extends StatelessWidget {
                       ),
                       child: Center(
                         child: isDone
-                            ? const Icon(PhosphorIconsBold.check,
+                            ? const Icon(LucideIcons.check,
                                 color: AppColors.white, size: 14)
                             : Text(
                                 '${i + 1}',

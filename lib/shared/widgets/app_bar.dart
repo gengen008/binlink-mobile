@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -41,14 +41,16 @@ class AppScaffoldBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = backgroundColor ?? AppColors.appBarBg;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = backgroundColor ?? theme.scaffoldBackgroundColor;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: isDark ? AppColors.premiumBlack : Colors.white,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
       child: Material(
         color: bg,
@@ -113,20 +115,22 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onBack ?? () => Navigator.maybePop(context),
       child: Container(
         width: 45,
         height: 45,
-        decoration: const BoxDecoration(
-          color: AppColors.appBarAction,
-          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withAlpha(10) : AppColors.surface,
+          borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+          border: isDark ? Border.all(color: Colors.white10) : Border.all(color: AppColors.border),
         ),
         child: Center(
           child: Icon(
-            PhosphorIconsRegular.arrowLeft,
+            LucideIcons.arrowLeft,
             size: 18,
-            color: AppColors.secondary,
+            color: isDark ? Colors.white : AppColors.secondary,
           ),
         ),
       ),
@@ -185,7 +189,7 @@ class AppHomeBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = backgroundColor ?? AppColors.appBarBg;
+    final bg = backgroundColor ?? AppColors.surface;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(

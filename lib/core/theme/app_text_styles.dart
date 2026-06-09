@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// BinLink "V4" Typography System
-///
-/// Uber/Bolt Standard: Ultra-bold headers, high-contrast, professional.
+/// BINLINK V3 — Typography System
+/// Using Plus Jakarta Sans with a fixed hierarchy.
 class AppTextStyles {
   AppTextStyles._();
 
-  // ── Headers (Plus Jakarta Sans) ──────────────────────────────────────────
+  static const String _fontFamily = 'Plus Jakarta Sans';
 
-  /// 32/800 — Ultra-bold hero text
+  /// 48/800 — Ultra Hero text
+  static TextStyle get display => GoogleFonts.plusJakartaSans(
+        fontSize: 48,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+        letterSpacing: -1.5,
+      );
+
+  /// 32/800 — Page Headers
   static TextStyle get h1 => GoogleFonts.plusJakartaSans(
         fontSize: 32,
         fontWeight: FontWeight.w800,
@@ -18,96 +25,86 @@ class AppTextStyles {
         letterSpacing: -1.0,
       );
 
-  /// 24/700 — Bold section headers
+  /// 28/700 — Section Headers
   static TextStyle get h2 => GoogleFonts.plusJakartaSans(
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: -0.5,
       );
 
-  /// 18/700 — Compact bold headers
+  /// 24/700 — Sub-headers
   static TextStyle get h3 => GoogleFonts.plusJakartaSans(
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
       );
 
-  /// 16/600 — Semi-bold labels
-  static TextStyle get h4 => GoogleFonts.plusJakartaSans(
-        fontSize: 16,
+  /// 20/600 — Card Titles / Feature Titles
+  static TextStyle get title => GoogleFonts.plusJakartaSans(
+        fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
 
-  // ── Body ──────────────────────────────────────────────────────────────────
-
-  /// 16/500 — Primary body (Standard Uber/Bolt size)
+  /// 16/500 — Primary Body
   static TextStyle get body => GoogleFonts.plusJakartaSans(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
-        height: 1.4,
+        height: 1.5,
       );
 
-  /// 14/500 — Secondary body
-  static TextStyle get bodySmall => GoogleFonts.plusJakartaSans(
+  /// 14/500 — Secondary Body / Labels
+  static TextStyle get caption => GoogleFonts.plusJakartaSans(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.textSecondary,
       );
 
-  /// 12/600 — Meta labels
-  static TextStyle get label => GoogleFonts.plusJakartaSans(
+  /// 12/600 — Meta info
+  static TextStyle get small => GoogleFonts.plusJakartaSans(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: AppColors.textMuted,
         letterSpacing: 0.5,
       );
 
-  // ── Operational (DM Mono) ──────────────────────────────────────────────────
+  // ── UI Components ─────────────────────────────────────────────────────────
 
-  /// 26/600 — Large Prices/Numbers
-  static TextStyle get monoLg => GoogleFonts.dmMono(
-        fontSize: 26,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+  static TextStyle get button => GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
       );
 
-  /// 16/500 — Standard Numbers
+  static TextStyle get appBarTitle => h3.copyWith(fontSize: 22, letterSpacing: -0.5);
+
+  // ── Operational (Numbers) ──────────────────────────────────────────────────
   static TextStyle get mono => GoogleFonts.dmMono(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
       );
 
-  // ── UI Components ─────────────────────────────────────────────────────────
-
-  static TextStyle get button => GoogleFonts.plusJakartaSans(
-        fontSize: 17,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
+  static TextStyle get monoSm => GoogleFonts.dmMono(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textPrimary,
       );
 
-  static TextStyle get appBarTitle => GoogleFonts.plusJakartaSans(
-        fontSize: 20,
+  static TextStyle get monoLg => GoogleFonts.dmMono(
+        fontSize: 24,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
       );
 
-  // ── Legacy Aliases & Missing Tokens ──────────────────────────────────────
-  static TextStyle get monoSm       => mono.copyWith(fontSize: 12);
-  static TextStyle get appBarSub    => label;
-  static TextStyle get drawerTitle  => h3;
-  static TextStyle get drawerItem   => h4;
-  static TextStyle get buttonSm     => button.copyWith(fontSize: 14);
-
-  // ── Legacy Aliases ────────────────────────────────────────────────────────
-  static TextStyle get display    => h1;
-  static TextStyle get title      => h2;
-  static TextStyle get section    => h3;
+  // ── Legacy Compatibility (Internal use) ──────────────────────────────────
+  static TextStyle get h4 => title.copyWith(fontSize: 16);
   static TextStyle get bodyMedium => body.copyWith(fontWeight: FontWeight.w600);
-  static TextStyle get meta       => label;
-  static TextStyle get caption    => label.copyWith(fontSize: 11);
-  static TextStyle get chip       => caption;
+  static TextStyle get bodySmall => caption;
+  static TextStyle get label => small;
+  static TextStyle get chip => small;
+  static TextStyle get meta => small;
+  static TextStyle get section => h4.copyWith(color: AppColors.textSecondary, letterSpacing: 1.2);
 }

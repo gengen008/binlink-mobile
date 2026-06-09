@@ -1,63 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/app_flavor.dart';
-import 'core/config/env.dart';
-import 'core/services/fcm_service.dart';
+import 'core/config/core_initializer.dart';
 import 'app.dart';
 
 void main() {
-  runZonedGuarded(_appMain, _handleError);
-}
-
-Future<void> _appMain() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  FlavorConfig.flavor = AppFlavor.household;
-
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {}
-
-  try {
-    await Supabase.initialize(
-      url: Env.supabaseUrl,
-      publishableKey: Env.supabaseAnonKey,
-    );
-  } catch (_) {}
-
-  try {
-    await Firebase.initializeApp();
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true, badge: true, sound: true,
-    );
-    FcmService.listenForRefresh();
-  } catch (_) {
-    FlutterError.onError = FlutterError.presentError;
-  }
-
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFFFFFFFF),
-    systemNavigationBarIconBrightness: Brightness.dark,
-  ));
-
-  runApp(const BinLinkApp());
-}
-
-void _handleError(Object error, StackTrace stack) {
-  FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  runZonedGuarded(() async {
+    await CoreInitializer.init(AppFlavor.household);
+    runApp(const BinLinkApp());
+  }, CoreInitializer.handleError);
 }
