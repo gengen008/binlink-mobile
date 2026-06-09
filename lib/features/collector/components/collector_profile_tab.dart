@@ -155,7 +155,10 @@ class CollectorProfileTab extends StatelessWidget {
                     ),
                   );
                   if (confirm == true) {
-                    auth.signOut();
+                    await auth.signOut();
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                    }
                   }
                 },
                 style: OutlinedButton.styleFrom(

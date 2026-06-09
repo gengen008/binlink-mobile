@@ -256,7 +256,6 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
           await context.read<CollectorProvider>().reportException(widget.booking['id'], reason, note);
           if (context.mounted) {
             Navigator.pop(context);
-            Navigator.pop(context); 
           }
         },
       ),

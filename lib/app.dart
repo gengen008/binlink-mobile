@@ -72,6 +72,7 @@ class BinLinkApp extends StatelessWidget {
             '/edit-profile':    (_) => const EditProfileScreen(),
             '/saved-addresses': (_) => const SavedAddressesScreen(),
             '/subscriptions':   (_) => const SubscriptionsScreen(),
+            '/payment':         (_) => const SubscriptionsScreen(),
           },
         ),
       ),
