@@ -221,6 +221,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
               AppAssets.lottieSuccess,
               width: 200,
               repeat: false,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                LucideIcons.circleCheck,
+                color: AppColors.success,
+                size: 80,
+              ),
             ),
             const SizedBox(height: 32),
             FadeInUp(

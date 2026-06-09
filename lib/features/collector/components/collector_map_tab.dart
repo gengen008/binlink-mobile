@@ -292,8 +292,8 @@ class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with S
   Widget build(BuildContext context) {
     final distMeters = LocationService.distanceMeters(
       widget.collectorPos.latitude, widget.collectorPos.longitude,
-      (widget.request['pickupLat'] as num).toDouble(), 
-      (widget.request['pickupLng'] as num).toDouble(),
+      (widget.request['pickupLat'] as num?)?.toDouble() ?? 0.0,
+      (widget.request['pickupLng'] as num?)?.toDouble() ?? 0.0,
     );
     final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.9;
 

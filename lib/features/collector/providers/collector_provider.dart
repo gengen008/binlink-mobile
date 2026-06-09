@@ -107,28 +107,34 @@ class CollectorProvider extends ChangeNotifier {
     if (_listeningForBookings) return;
     _listeningForBookings = true;
     SocketService.on('booking:new', (data) {
-      final booking = Map<String, dynamic>.from(data as Map);
-      if (!_pendingRequests.any((r) => r['id'] == booking['id'])) {
-        _pendingRequests.insert(0, booking);
-        notifyListeners();
-      }
+      try {
+        final booking = Map<String, dynamic>.from(data as Map);
+        if (!_pendingRequests.any((r) => r['id'] == booking['id'])) {
+          _pendingRequests.insert(0, booking);
+          notifyListeners();
+        }
+      } catch (_) {}
     });
 
     SocketService.on('booking:taken', (data) {
-      final id = (data as Map<String, dynamic>)['bookingId'] as String?;
-      if (id != null) {
-        _pendingRequests.removeWhere((r) => r['id'] == id);
-        notifyListeners();
-      }
+      try {
+        final id = (data as Map<String, dynamic>)['bookingId'] as String?;
+        if (id != null) {
+          _pendingRequests.removeWhere((r) => r['id'] == id);
+          notifyListeners();
+        }
+      } catch (_) {}
     });
 
     SocketService.on('booking:completed', (data) {
-      final booking = Map<String, dynamic>.from(data as Map);
-      _activePickups.removeWhere((p) => p['id'] == booking['id']);
-      if (!_completedPickups.any((p) => p['id'] == booking['id'])) {
-        _completedPickups.insert(0, booking);
-        notifyListeners();
-      }
+      try {
+        final booking = Map<String, dynamic>.from(data as Map);
+        _activePickups.removeWhere((p) => p['id'] == booking['id']);
+        if (!_completedPickups.any((p) => p['id'] == booking['id'])) {
+          _completedPickups.insert(0, booking);
+          notifyListeners();
+        }
+      } catch (_) {}
     });
   }
 

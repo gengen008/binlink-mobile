@@ -225,12 +225,15 @@ class BinLinkMapState extends State<BinLinkMap> {
     const layerId = 'pickup-layer';
     const sourceId = 'pickup-source';
 
+    // Cache before any await — parent widget may rebuild with null during async gaps
+    final pos = widget.pickupPosition;
+
     try {
       await _controller?.removeLayer(layerId);
       await _controller?.removeSource(sourceId);
     } catch (_) {}
 
-    if (widget.pickupPosition == null) return;
+    if (pos == null) return;
 
     try {
       await _controller?.addSource(sourceId, GeojsonSourceProperties(
@@ -238,7 +241,7 @@ class BinLinkMapState extends State<BinLinkMap> {
           'type': 'Feature',
           'geometry': {
             'type': 'Point',
-            'coordinates': [widget.pickupPosition!.longitude, widget.pickupPosition!.latitude],
+            'coordinates': [pos.longitude, pos.latitude],
           },
         },
       ));

@@ -134,36 +134,44 @@ class HouseholdProvider extends ChangeNotifier {
     SocketService.joinBookingRoom(bookingId);
 
     SocketService.on('booking:accepted', (data) {
-      _updateBookingStatus(bookingId, 'ACCEPTED');
-      final collector = (data as Map<String, dynamic>)['collector'];
-      if (_activeBooking != null && collector != null) {
-        _activeBooking = {..._activeBooking!, 'collector': collector, 'status': 'ACCEPTED'};
-        notifyListeners();
-      }
+      try {
+        _updateBookingStatus(bookingId, 'ACCEPTED');
+        final d = data as Map<String, dynamic>;
+        final collector = d['collector'];
+        if (_activeBooking != null && collector != null) {
+          _activeBooking = {..._activeBooking!, 'collector': collector, 'status': 'ACCEPTED'};
+          notifyListeners();
+        }
+      } catch (_) {}
     });
 
     SocketService.on('booking:status', (data) {
-      final d = data as Map<String, dynamic>;
-      if (d['bookingId'] == bookingId) {
-        _updateBookingStatus(bookingId, d['status'] as String);
+      try {
+        final d = data as Map<String, dynamic>;
+        final status = d['status'] as String?;
+        if (d['bookingId'] != bookingId || status == null) return;
+        _updateBookingStatus(bookingId, status);
         if (_activeBooking != null) {
-          _activeBooking = {..._activeBooking!, 'status': d['status']};
+          _activeBooking = {..._activeBooking!, 'status': status};
         }
         notifyListeners();
-      }
+      } catch (_) {}
     });
 
     SocketService.on('collector:location', (data) {
-      final d = data as Map<String, dynamic>;
-      final rawLat = (d['lat'] as num).toDouble();
-      final rawLng = (d['lng'] as num).toDouble();
-      // Apply Kalman filter — rejects teleport glitches, smooths Ghana 3G noise
-      final smooth = _gpsSmoother.process(rawLat, rawLng);
-      if (smooth != null) {
-        _collectorLat = smooth.lat;
-        _collectorLng = smooth.lng;
-        notifyListeners();
-      }
+      try {
+        final d = data as Map<String, dynamic>;
+        final rawLat = (d['lat'] as num?)?.toDouble();
+        final rawLng = (d['lng'] as num?)?.toDouble();
+        if (rawLat == null || rawLng == null) return;
+        // Apply Kalman filter — rejects teleport glitches, smooths Ghana 3G noise
+        final smooth = _gpsSmoother.process(rawLat, rawLng);
+        if (smooth != null) {
+          _collectorLat = smooth.lat;
+          _collectorLng = smooth.lng;
+          notifyListeners();
+        }
+      } catch (_) {}
     });
   }
 
