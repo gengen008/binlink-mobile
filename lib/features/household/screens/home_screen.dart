@@ -7,8 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../core/l10n/strings.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
 import '../providers/household_provider.dart';
 import '../components/home_tab.dart';

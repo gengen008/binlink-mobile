@@ -337,7 +337,6 @@ case HomeSheetState.searching:
 case HomeSheetState.tracking:
   return active != null ? _TrackingBottomSheet(booking: active) : const SizedBox();
 }
-return const SizedBox();
 }
 }
 

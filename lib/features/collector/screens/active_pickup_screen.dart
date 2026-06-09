@@ -8,8 +8,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_assets.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/collector_provider.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -51,7 +49,6 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   Widget build(BuildContext context) {
     final prov = context.watch<CollectorProvider>();
     final hhName = widget.booking['household']?['fullName'] as String? ?? 'Household';
-    final address = widget.booking['pickupAddress'] as String? ?? '—';
     final lat = (widget.booking['pickupLat'] as num?)?.toDouble() ?? 0.0;
     final lng = (widget.booking['pickupLng'] as num?)?.toDouble() ?? 0.0;
 

@@ -7,7 +7,6 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const String _fontFamily = 'Plus Jakarta Sans';
 
   /// 48/800 — Ultra Hero text
   static TextStyle get display => GoogleFonts.plusJakartaSans(

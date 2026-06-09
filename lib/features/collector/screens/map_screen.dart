@@ -7,8 +7,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/l10n/strings.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/location_service.dart';
 import '../providers/collector_provider.dart';
 import '../components/collector_map_tab.dart';
