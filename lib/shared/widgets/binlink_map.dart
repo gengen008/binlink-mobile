@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import '../../core/config/env.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_assets.dart';
 
 /// BinLink Map V4 — Maplibre GL + SmartMaps Vector Tiles.
 ///
@@ -76,16 +76,90 @@ class BinLinkMapState extends State<BinLinkMap> {
 
   void _onStyleLoaded() async {
     _styleLoaded = true;
-    // Add images for markers
-    await _controller?.addImage('truck-icon', await _loadAssetImage(AppAssets.truck));
-    await _controller?.addImage('pickup-pin', await _loadAssetImage(AppAssets.pin));
-    
+    try {
+      await _controller?.addImage('truck-icon', await _makeTruckIcon());
+      await _controller?.addImage('pickup-pin', await _makePickupPin());
+    } catch (e) {
+      debugPrint('[Map] Failed to add marker icons: $e');
+    }
     _updateMapLayers(null);
   }
 
-  Future<Uint8List> _loadAssetImage(String assetPath) async {
-    final byteData = await DefaultAssetBundle.of(context).load(assetPath);
-    return byteData.buffer.asUint8List();
+  /// Programmatically renders a circular collector marker (Bolt-style).
+  Future<Uint8List> _makeTruckIcon() async {
+    const size = 56.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size, size));
+    const cx = size / 2;
+    const cy = size / 2;
+    const r  = size / 2 - 2;
+
+    // Drop shadow
+    canvas.drawCircle(
+      const Offset(cx, cy + 2),
+      r,
+      Paint()..color = Colors.black.withAlpha(40)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+
+    // Filled circle — primary color
+    canvas.drawCircle(
+      const Offset(cx, cy),
+      r,
+      Paint()..color = AppColors.primary,
+    );
+
+    // White border
+    canvas.drawCircle(
+      const Offset(cx, cy),
+      r,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+
+    // White directional arrow (pointing up = north bearing=0)
+    final arrow = Path()
+      ..moveTo(cx,      cy - 12) // tip
+      ..lineTo(cx - 9,  cy + 10)
+      ..lineTo(cx,      cy + 4)
+      ..lineTo(cx + 9,  cy + 10)
+      ..close();
+    canvas.drawPath(arrow, Paint()..color = Colors.white);
+
+    final picture = recorder.endRecording();
+    final img  = await picture.toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+
+  /// Programmatically renders a pickup location pin.
+  Future<Uint8List> _makePickupPin() async {
+    const size = 56.0;
+    const cx = size / 2;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size, size));
+
+    final paint = Paint()..color = AppColors.success;
+
+    // Circle head
+    canvas.drawCircle(const Offset(cx, 18), 14, paint);
+
+    // Pin tail
+    final tail = Path()
+      ..moveTo(cx - 10, 26)
+      ..quadraticBezierTo(cx, 50, cx, 50)
+      ..quadraticBezierTo(cx, 50, cx + 10, 26)
+      ..close();
+    canvas.drawPath(tail, paint);
+
+    // White inner dot
+    canvas.drawCircle(const Offset(cx, 18), 5, Paint()..color = Colors.white);
+
+    final picture = recorder.endRecording();
+    final img  = await picture.toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
   }
 
   void _updateMapLayers(BinLinkMap? oldWidget) {

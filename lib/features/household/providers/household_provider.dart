@@ -56,9 +56,14 @@ class HouseholdProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadOnlineCollectors() async {
+  Future<void> loadOnlineCollectors({double? lat, double? lng}) async {
     try {
-      final res = await ApiClient.get('/api/collectors/online');
+      final params = <String, dynamic>{
+        if (lat != null) 'lat': lat.toString(),
+        if (lng != null) 'lng': lng.toString(),
+        if (lat != null) 'radiusKm': '15',
+      };
+      final res = await ApiClient.get('/api/collectors/online', params: params.isNotEmpty ? params : null);
       _onlineCollectors = List<Map<String, dynamic>>.from(res.data['data'] as List);
       notifyListeners();
     } catch (_) {}
@@ -204,21 +209,38 @@ class HouseholdProvider extends ChangeNotifier {
   }
 
   void _onZoneCollector(dynamic data) {
-    final d = data as Map<String, dynamic>;
-    // Update cached position so the badge count is accurate
-    final id  = d['collectorId'] as String;
-    final idx = _onlineCollectors.indexWhere((c) => c['id'] == id);
-    if (idx >= 0) {
-      _onlineCollectors[idx] = {
-        ..._onlineCollectors[idx],
-        'lastLat': d['lat'],
-        'lastLng': d['lng'],
-      };
-    }
-    // Forward to stream — CollectorLayer consumes this without rebuilding widgets
-    if (!_zoneEvents.isClosed) {
-      _zoneEvents.add({...d, 'event': _kZoneMove});
-    }
+    try {
+      final d   = data as Map<String, dynamic>;
+      final id  = d['collectorId'] as String;
+      final lat = (d['lat'] as num?)?.toDouble();
+      final lng = (d['lng'] as num?)?.toDouble();
+      if (lat == null || lng == null) return;
+
+      final idx = _onlineCollectors.indexWhere((c) => c['id'] == id);
+      if (idx >= 0) {
+        // Update existing collector's position
+        _onlineCollectors[idx] = {
+          ..._onlineCollectors[idx],
+          'lastLat': lat,
+          'lastLng': lng,
+          if (d['bearing'] != null) 'bearing': (d['bearing'] as num).toDouble(),
+        };
+      } else {
+        // Collector appeared in zone without a zone:online event — add them
+        _onlineCollectors.add({
+          'id':      id,
+          'lastLat': lat,
+          'lastLng': lng,
+          'bearing': (d['bearing'] as num?)?.toDouble() ?? 0.0,
+        });
+      }
+      // Notify map to re-render collector layer
+      notifyListeners();
+
+      if (!_zoneEvents.isClosed) {
+        _zoneEvents.add({...d, 'event': _kZoneMove});
+      }
+    } catch (_) {}
   }
 
   void _onZoneOnline(dynamic data) {

@@ -24,6 +24,7 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   // Null until the device provides a real GPS fix — never hardcoded.
   ll.LatLng? _myPos;
   StreamSubscription<Position>? _posSub;
+  HouseholdProvider? _hp;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   @override
   void dispose() {
     _posSub?.cancel();
+    _hp?.unsubscribeFromNearby();
     super.dispose();
   }
 
@@ -56,12 +58,21 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     });
 
     if (!mounted) return;
-    final hp = context.read<HouseholdProvider>();
+    _hp = context.read<HouseholdProvider>();
+
+    // Load data in parallel — pass GPS coords for proximity filtering
+    final lat = _myPos?.latitude;
+    final lng = _myPos?.longitude;
     await Future.wait([
-      hp.loadBookings(),
-      hp.loadOnlineCollectors(),
-      hp.loadSubscriptions(),
+      _hp!.loadBookings(),
+      _hp!.loadOnlineCollectors(lat: lat, lng: lng),
+      _hp!.loadSubscriptions(),
     ]);
+
+    // Subscribe to real-time zone events so collector markers animate live
+    if (_myPos != null && mounted) {
+      _hp!.subscribeToNearby(_myPos!.latitude, _myPos!.longitude);
+    }
   }
 
   void _onTabChanged(int index) {
