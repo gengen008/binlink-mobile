@@ -369,6 +369,7 @@ class CollectorProvider extends ChangeNotifier {
     _locationSub?.cancel();
     SocketService.off('booking:new');
     SocketService.off('booking:taken');
+    SocketService.off('booking:completed');
     _listeningForBookings = false;
     super.dispose();
   }
