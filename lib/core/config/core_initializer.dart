@@ -39,9 +39,10 @@ class CoreInitializer {
       await Firebase.initializeApp();
       
       // Route Flutter framework errors to Crashlytics
+      // recordFlutterError (non-fatal) — NOT recordFlutterFatalError which kills the app
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
-        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        FirebaseCrashlytics.instance.recordFlutterError(details);
       };
 
       // Enable crash reporting

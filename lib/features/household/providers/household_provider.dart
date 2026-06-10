@@ -251,6 +251,7 @@ class HouseholdProvider extends ChangeNotifier {
         'id':      id,
         'lastLat': d['lat'],
         'lastLng': d['lng'],
+        if (d['bearing'] != null) 'bearing': (d['bearing'] as num).toDouble(),
       });
       notifyListeners();
     }

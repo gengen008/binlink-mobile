@@ -5,7 +5,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 
-class AddressSelectionSheet extends StatelessWidget {
+class AddressSelectionSheet extends StatefulWidget {
   const AddressSelectionSheet({
     super.key,
     required this.currentAddress,
@@ -20,18 +20,36 @@ class AddressSelectionSheet extends StatelessWidget {
   final bool showHandle;
 
   @override
+  State<AddressSelectionSheet> createState() => _AddressSelectionSheetState();
+}
+
+class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentAddress);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ctrl = TextEditingController(text: currentAddress);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: showHandle ? const BorderRadius.vertical(top: Radius.circular(24)) : null,
+        borderRadius: widget.showHandle ? const BorderRadius.vertical(top: Radius.circular(24)) : null,
       ),
       padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).viewInsets.bottom + 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showHandle) ...[
+          if (widget.showHandle) ...[
             Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
           ],
@@ -40,7 +58,7 @@ class AddressSelectionSheet extends StatelessWidget {
             children: [
               Text('Confirm Pickup Location', style: AppTextStyles.h2),
               GestureDetector(
-                onTap: onCancel,
+                onTap: widget.onCancel,
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
@@ -51,7 +69,7 @@ class AddressSelectionSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           AppTextField(
-            controller: ctrl,
+            controller: _ctrl,
             label: 'ADDRESS',
             hint: 'Enter specific address or landmark',
             prefixIcon: Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.fill), size: 20, color: AppColors.primary),
@@ -59,7 +77,7 @@ class AddressSelectionSheet extends StatelessWidget {
           const SizedBox(height: 32),
           AppButton(
             label: 'Confirm Address',
-            onPressed: () => onAddressConfirmed(ctrl.text),
+            onPressed: () => widget.onAddressConfirmed(_ctrl.text),
           ),
         ],
       ),

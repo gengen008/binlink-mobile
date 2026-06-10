@@ -235,6 +235,17 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ),
 
+        // ── Collector Count Pill (Bolt/Uber-style) ──
+        if (_sheetState == HomeSheetState.idle && prov.onlineCollectors.isNotEmpty)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 88,
+            left: 20,
+            child: FadeInDown(
+              delay: const Duration(milliseconds: 200),
+              child: _CollectorCountPill(count: prov.onlineCollectors.length),
+            ),
+          ),
+
         // ── Back Button (When Booking) ──
         if (_sheetState != HomeSheetState.idle)
           Positioned(
@@ -310,11 +321,16 @@ class _HomeTabState extends State<HomeTab> {
           onSchedule: _startScheduleFlow,
           onShowTracking: () => setState(() => _sheetState = HomeSheetState.tracking),
           savedAddresses: prov.savedAddresses,
-          onAddressTap: (a) => setState(() {
-            _pickupPosition = ll.LatLng((a['lat'] as num).toDouble(), (a['lng'] as num).toDouble());
-            _currentAddress = a['address'] as String? ?? '';
-            _sheetState = HomeSheetState.serviceSelection;
-          }),
+          onAddressTap: (a) {
+            final lat = (a['lat'] as num?)?.toDouble();
+            final lng = (a['lng'] as num?)?.toDouble();
+            if (lat == null || lng == null) return;
+            setState(() {
+              _pickupPosition = ll.LatLng(lat, lng);
+              _currentAddress = a['address'] as String? ?? '';
+              _sheetState = HomeSheetState.serviceSelection;
+            });
+          },
         );
       case HomeSheetState.serviceSelection:
         return Column(
@@ -1086,6 +1102,52 @@ class _StatusLabel extends StatelessWidget {
         color: isActive ? AppColors.primary : AppColors.textMuted,
         fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
         fontSize: 10,
+      ),
+    );
+  }
+}
+
+/// Bolt/Uber-style pill showing how many collectors are live on the map.
+class _CollectorCountPill extends StatelessWidget {
+  const _CollectorCountPill({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$count ${count == 1 ? 'collector' : 'collectors'} nearby',
+            style: AppTextStyles.small.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

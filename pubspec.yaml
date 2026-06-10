@@ -98,42 +98,31 @@ flutter:
     # Images
     - assets/images/defaultavatar.png
     - assets/images/onboarding/
-    # SVG
-    - assets/svg/binlink_logo.svg
-    - assets/svg/binlink_logo_premium.svg
-    - assets/svg/pickup_marker.svg
-    - assets/svg/onboarding_1.svg
-    - assets/svg/onboarding_2.svg
-    - assets/svg/onboarding_3.svg
-    - assets/svg/onboarding_4.svg
-    - assets/svg/collector_marker.svg
-    - assets/svg/collector_truck.svg
-    - assets/svg/rubbish_bin.svg
-    - assets/svg/recycling_bag.svg
-    - assets/svg/verified_badge.svg
-    - assets/svg/empty_pickups.svg
-    - assets/svg/empty_notifications.svg
-    - assets/svg/empty_earnings.svg
-    - assets/svg/google.svg
-    - assets/svg/locate.svg
-    - assets/svg/drawer.svg
-    - assets/svg/cash.svg
-    - assets/svg/envelope.svg
-    - assets/svg/globe-africa.svg
-    # Icons (organized by category)
+    # Branding (SVGs: google, apple, paystack)
+    - assets/branding/
+    - assets/branding/splash/
+    - assets/branding/app_icon/
+    # Icons (category directories that exist)
     - assets/icons/navigation/
     - assets/icons/booking/
     - assets/icons/waste/
     - assets/icons/payments/
     - assets/icons/profile/
     - assets/icons/tracking/
-    - assets/icons/auth/
-    - assets/icons/collector/
-    - assets/v4/illustrations/
+    - assets/icons/wallet/
+    - assets/icons/brands/
+    # Lottie animations
     - assets/lottie/
     - assets/lottie/booking/
     - assets/lottie/loading/
     - assets/lottie/payments/
     - assets/lottie/empty_states/
-    - assets/v4/icons/
+    - assets/lottie/success/
+    - assets/lottie/errors/
+    - assets/lottie/wallet/
+    - assets/lottie/notifications/
+    # Illustrations (SVG)
+    - assets/illustrations/empty_states/
+    - assets/illustrations/onboarding/
+    # 3D assets
     - assets/v4/3d/

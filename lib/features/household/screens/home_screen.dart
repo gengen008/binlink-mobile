@@ -23,8 +23,14 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   int _currentIndex = 0;
   // Null until the device provides a real GPS fix — never hardcoded.
   ll.LatLng? _myPos;
+  // Last position used for zone subscription — used to detect significant moves
+  ll.LatLng? _subscribedPos;
   StreamSubscription<Position>? _posSub;
+  Timer? _collectorPollTimer;
   HouseholdProvider? _hp;
+
+  // Minimum distance (meters) before re-subscribing to a new zone
+  static const double _zoneResubscribeThresholdMeters = 800;
 
   @override
   void initState() {
@@ -35,6 +41,7 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   @override
   void dispose() {
     _posSub?.cancel();
+    _collectorPollTimer?.cancel();
     _hp?.unsubscribeFromNearby();
     super.dispose();
   }
@@ -53,8 +60,26 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     }
 
     // Phase 3: live stream — updates whenever user moves ≥10 m
+    // Also triggers zone re-subscription if user moves significantly
     _posSub = LocationService.getPositionStream().listen((p) {
-      if (mounted) setState(() => _myPos = ll.LatLng(p.latitude, p.longitude));
+      if (!mounted) return;
+      final newPos = ll.LatLng(p.latitude, p.longitude);
+      setState(() => _myPos = newPos);
+
+      // Re-subscribe to zone if user has moved more than threshold
+      if (_hp != null && _subscribedPos != null) {
+        final dist = Geolocator.distanceBetween(
+          _subscribedPos!.latitude, _subscribedPos!.longitude,
+          newPos.latitude, newPos.longitude,
+        );
+        if (dist > _zoneResubscribeThresholdMeters) {
+          _hp!.unsubscribeFromNearby();
+          _hp!.subscribeToNearby(newPos.latitude, newPos.longitude);
+          _subscribedPos = newPos;
+          // Also refresh REST collector list for new zone
+          _hp!.loadOnlineCollectors(lat: newPos.latitude, lng: newPos.longitude);
+        }
+      }
     });
 
     if (!mounted) return;
@@ -72,7 +97,15 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     // Subscribe to real-time zone events so collector markers animate live
     if (_myPos != null && mounted) {
       _hp!.subscribeToNearby(_myPos!.latitude, _myPos!.longitude);
+      _subscribedPos = _myPos;
     }
+
+    // Periodic poll every 30s — catches collectors that joined between socket events
+    _collectorPollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted || _hp == null) return;
+      final pos = _myPos;
+      _hp!.loadOnlineCollectors(lat: pos?.latitude, lng: pos?.longitude);
+    });
   }
 
   void _onTabChanged(int index) {

@@ -4,7 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/household_provider.dart';
@@ -227,7 +226,11 @@ class _EmptyHistory extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(AppAssets.emptyPickups, height: 120),
+          SvgPicture.asset(
+            'assets/illustrations/empty_states/no_data.svg',
+            height: 120,
+            placeholderBuilder: (_) => const SizedBox(height: 120),
+          ),
           const SizedBox(height: 32),
           Text('No pickups yet', style: AppTextStyles.h2),
           const SizedBox(height: 8),
