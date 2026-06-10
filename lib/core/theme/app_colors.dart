@@ -7,12 +7,13 @@ class AppColors {
   AppColors._();
 
   // ── Mandatory Primary Palette (Household / Core) ───────────────────────────
-  static const Color primary900 = Color(0xFF021024);
-  static const Color primary800 = Color(0xFF052659);
-  static const Color primary700 = Color(0xFF163B75);
-  static const Color primary600 = Color(0xFF5483B3); // Interactive Steel Blue
-  static const Color primary500 = Color(0xFF7DA0CA);
-  static const Color primary300 = Color(0xFFC1E8FF);
+  // Updated to High-Energy Bolt Green
+  static const Color primary900 = Color(0xFF022C22); // Darker Green
+  static const Color primary800 = Color(0xFF064E3B);
+  static const Color primary700 = Color(0xFF047857);
+  static const Color primary600 = Color(0xFF22C55E); // High-Energy Bolt Green
+  static const Color primary500 = Color(0xFF4ADE80);
+  static const Color primary300 = Color(0xFF86EFAC);
 
   // ── Collector Brand (Amber/Orange) ─────────────────────────────────────────
   static const Color amber900 = Color(0xFF78350F);
@@ -50,7 +51,6 @@ class AppColors {
   static const Color cardElevated = Color(0xFFFFFFFF);
 
   // ── Functional Aliases ─────────────────────────────────────────────────────
-  // V3 FIX: primary aliases to brand primary based on flavor
   static Color get primary      => FlavorConfig.isCollector ? amber500 : primary600;
   static Color get secondary    => FlavorConfig.isCollector ? amber600 : primary700;
   static Color get primaryLight => FlavorConfig.isCollector ? amber100 : primary300;

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// BINLINK V3 — Typography System
-/// Using Plus Jakarta Sans with a fixed hierarchy.
+/// BINLINK V4 — Typography System
+/// Headings: Plus Jakarta Sans
+/// Body: Inter
 class AppTextStyles {
   AppTextStyles._();
 
+  // ── Headings (Plus Jakarta Sans) ──────────────────────────────────────────
 
   /// 48/800 — Ultra Hero text
   static TextStyle get display => GoogleFonts.plusJakartaSans(
@@ -46,34 +48,36 @@ class AppTextStyles {
         color: AppColors.textPrimary,
       );
 
-  /// 16/500 — Primary Body
-  static TextStyle get body => GoogleFonts.plusJakartaSans(
+  // ── Body & Meta (Inter) ───────────────────────────────────────────────────
+
+  /// 16/400 — Primary Body
+  static TextStyle get body => GoogleFonts.inter(
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.5,
       );
 
-  /// 14/500 — Secondary Body / Labels
-  static TextStyle get caption => GoogleFonts.plusJakartaSans(
+  /// 14/400 — Secondary Body / Labels
+  static TextStyle get caption => GoogleFonts.inter(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
       );
 
-  /// 12/600 — Meta info
-  static TextStyle get small => GoogleFonts.plusJakartaSans(
+  /// 12/500 — Meta info
+  static TextStyle get small => GoogleFonts.inter(
         fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: AppColors.textMuted,
         letterSpacing: 0.5,
       );
 
   // ── UI Components ─────────────────────────────────────────────────────────
 
-  static TextStyle get button => GoogleFonts.plusJakartaSans(
+  static TextStyle get button => GoogleFonts.inter(
         fontSize: 16,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: Colors.white,
       );
 
@@ -100,9 +104,9 @@ class AppTextStyles {
 
   // ── Legacy Compatibility (Internal use) ──────────────────────────────────
   static TextStyle get h4 => title.copyWith(fontSize: 16);
-  static TextStyle get bodyMedium => body.copyWith(fontWeight: FontWeight.w600);
+  static TextStyle get bodyMedium => body.copyWith(fontWeight: FontWeight.w500);
   static TextStyle get bodySmall => caption;
-  static TextStyle get label => small;
+  static TextStyle get label => small.copyWith(letterSpacing: 1.0, fontWeight: FontWeight.w600);
   static TextStyle get chip => small;
   static TextStyle get meta => small;
   static TextStyle get section => h4.copyWith(color: AppColors.textSecondary, letterSpacing: 1.2);

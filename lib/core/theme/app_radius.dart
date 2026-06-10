@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// BinLink "Base" Design System — Radius Tokens
 ///
-/// World-class mobility standard: 16px.
+/// Uber/Bolt Standard: 24px for cards and containers.
 class AppRadius {
   AppRadius._();
 
@@ -13,8 +13,8 @@ class AppRadius {
   /// 12px — status pills
   static const double sm = 12.0;
 
-  /// 16px — Standard Radius (Cards, Buttons, Inputs)
-  static const double md = 16.0;
+  /// 24px — Standard Radius (Cards, Buttons, Inputs)
+  static const double md = 24.0;
 
   /// 24px — Bottom sheets top corners
   static const double lg = 24.0;

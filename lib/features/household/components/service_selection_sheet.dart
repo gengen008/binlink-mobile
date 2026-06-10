@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../shared/widgets/app_button.dart';
 
 class ServiceSelectionSheet extends StatefulWidget {
@@ -35,19 +34,19 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
   }
 
   final _categories = [
-    {'id': 'Household',    'icon': AppAssets.bin3d},
-    {'id': 'Recycling',    'icon': AppAssets.recycleBin},
-    {'id': 'Organic',      'icon': AppAssets.leaf},
-    {'id': 'Plastic',      'icon': AppAssets.bottle},
-    {'id': 'E-Waste',      'icon': AppAssets.laptop},
-    {'id': 'Construction', 'icon': AppAssets.construction},
-    {'id': 'Metal',        'icon': AppAssets.trashPile},
+    {'id': 'Household',    'icon': PhosphorIcons.house(PhosphorIconsStyle.fill)},
+    {'id': 'Recycling',    'icon': PhosphorIcons.recycle(PhosphorIconsStyle.fill)},
+    {'id': 'Organic',      'icon': PhosphorIcons.leaf(PhosphorIconsStyle.fill)},
+    {'id': 'Plastic',      'icon': PhosphorIcons.package(PhosphorIconsStyle.fill)},
+    {'id': 'E-Waste',      'icon': PhosphorIcons.laptop(PhosphorIconsStyle.fill)},
+    {'id': 'Construction', 'icon': PhosphorIcons.hammer(PhosphorIconsStyle.fill)},
+    {'id': 'Metal',        'icon': PhosphorIcons.trash(PhosphorIconsStyle.fill)},
   ];
 
   final _sizes = [
-    {'id': 'SMALL',  'label': 'Standard Bin', 'price': 30, 'icon': AppAssets.bin3d, 'desc': 'Best for daily home waste'},
-    {'id': 'MEDIUM', 'label': 'Family Bin',   'price': 40, 'icon': AppAssets.trashBin, 'desc': 'Ideal for large families'},
-    {'id': 'LARGE',  'label': 'Industrial',   'price': 50, 'icon': AppAssets.truck3d, 'desc': 'Bulk/Construction load'},
+    {'id': 'SMALL',  'label': 'Standard Bin', 'price': 30, 'icon': PhosphorIcons.trash(PhosphorIconsStyle.fill), 'desc': 'Best for daily home waste'},
+    {'id': 'MEDIUM', 'label': 'Family Bin',   'price': 40, 'icon': PhosphorIcons.trash(PhosphorIconsStyle.fill), 'desc': 'Ideal for large families'},
+    {'id': 'LARGE',  'label': 'Industrial',   'price': 50, 'icon': PhosphorIcons.truck(PhosphorIconsStyle.fill), 'desc': 'Bulk/Construction load'},
   ];
 
   @override
@@ -58,8 +57,7 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: widget.showHandle ? const BorderRadius.vertical(top: Radius.circular(32)) : null,
-        boxShadow: widget.showHandle ? [BoxShadow(color: Colors.black12, blurRadius: 30, offset: const Offset(0, -10))] : null,
+        borderRadius: widget.showHandle ? const BorderRadius.vertical(top: Radius.circular(24)) : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -81,7 +79,7 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.x, size: 20),
+                    child: Icon(PhosphorIcons.x(PhosphorIconsStyle.bold), size: 20),
                   ),
                 ),
               ],
@@ -100,7 +98,7 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
                 final c = _categories[i];
                 final isSelected = _selectedCategory == c['id'];
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = c['id']!),
+                  onTap: () => setState(() => _selectedCategory = c['id'] as String),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 105,
@@ -113,9 +111,9 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(c['icon']!, width: 32, height: 32),
+                        Icon(c['icon'] as IconData, size: 32, color: isSelected ? AppColors.primary : AppColors.textSecondary),
                         const SizedBox(height: 8),
-                        Text(c['id']!, 
+                        Text(c['id'] as String, 
                           textAlign: TextAlign.center,
                           style: AppTextStyles.label.copyWith(
                             fontSize: 10,
@@ -153,12 +151,19 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: isSelected ? AppColors.primaryLight.withAlpha(20) : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(24),
                               border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 2 : 1),
                             ),
                             child: Row(
                               children: [
-                                Image.asset(s['icon'] as String, width: 48, height: 48),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? AppColors.primary.withAlpha(20) : AppColors.background,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(s['icon'] as IconData, size: 28, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+                                ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
@@ -191,14 +196,14 @@ class _ServiceSelectionSheetState extends State<ServiceSelectionSheet> {
                           ],
                         ),
                         const Spacer(),
-                        _CounterBtn(icon: LucideIcons.minus, onTap: () => setState(() { if(_extraBags > 0) _extraBags--; })),
+                        _CounterBtn(icon: PhosphorIcons.minus(PhosphorIconsStyle.bold), onTap: () => setState(() { if(_extraBags > 0) _extraBags--; })),
                         const SizedBox(width: 16),
                         SizedBox(
                           width: 30,
                           child: Center(child: Text("$_extraBags", style: AppTextStyles.h3)),
                         ),
                         const SizedBox(width: 16),
-                        _CounterBtn(icon: LucideIcons.plus, isPrimary: true, onTap: () => setState(() => _extraBags++)),
+                        _CounterBtn(icon: PhosphorIcons.plus(PhosphorIconsStyle.bold), isPrimary: true, onTap: () => setState(() => _extraBags++)),
                       ],
                     ),
                   ),
