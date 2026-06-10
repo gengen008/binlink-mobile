@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:animate_do/animate_do.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_assets.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -59,7 +59,7 @@ class CollectorProfileTab extends StatelessWidget {
                             children: [
                               Text(user?.fullName ?? 'Collector', style: AppTextStyles.h2.copyWith(color: Colors.white)),
                               const SizedBox(width: 8),
-                              Image.asset(AppAssets.verifiedBadge, width: 18, height: 18),
+                              Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 18, color: AppColors.primary),
                             ],
                           ),
                           Text(user?.email ?? '', style: AppTextStyles.bodySmall.copyWith(color: Colors.white70)),

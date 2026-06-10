@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/app_assets.dart';
 
 /// BinLink app bar for all screens.
 ///
@@ -156,12 +155,7 @@ class DrawerMenuButton extends StatelessWidget {
           borderRadius: const BorderRadius.all(Radius.circular(8.0)),
         ),
         child: Center(
-          child: SvgPicture.asset(
-            AppAssets.drawer,
-            height: 20,
-            width: 20,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-          ),
+          child: Icon(PhosphorIcons.list(PhosphorIconsStyle.bold), color: Colors.white, size: 24),
         ),
       ),
     );

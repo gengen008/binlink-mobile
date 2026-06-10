@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart' as ll;
@@ -87,17 +86,17 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
         onDestinationSelected: _onTabChanged,
         destinations: [
           NavigationDestination(
-            icon: const Icon(LucideIcons.house), 
+            icon: Icon(PhosphorIcons.house(PhosphorIconsStyle.regular)), 
             selectedIcon: Icon(PhosphorIcons.house(PhosphorIconsStyle.fill)),
             label: s.home,
           ),
           NavigationDestination(
-            icon: const Icon(LucideIcons.history), 
+            icon: Icon(PhosphorIcons.clockCounterClockwise(PhosphorIconsStyle.regular)), 
             selectedIcon: Icon(PhosphorIcons.clockCounterClockwise(PhosphorIconsStyle.fill)),
             label: s.history,
           ),
           NavigationDestination(
-            icon: const Icon(LucideIcons.user), 
+            icon: Icon(PhosphorIcons.user(PhosphorIconsStyle.regular)), 
             selectedIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.fill)),
             label: s.profile,
           ),

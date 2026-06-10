@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
@@ -148,16 +147,16 @@ class _CollectorSheet extends StatelessWidget {
             child: Row(
               children: [
                 if (vehicle != null)
-                  _InfoChip(icon: LucideIcons.truck, label: vehicle.replaceAll('_', ' ')),
+                  _InfoChip(icon: PhosphorIcons.truck(PhosphorIconsStyle.fill), label: vehicle.replaceAll('_', ' ')),
                 if (vehicle != null) const SizedBox(width: 10),
-                const _InfoChip(
-                  icon: LucideIcons.clock,
+                _InfoChip(
+                  icon: PhosphorIcons.clock(PhosphorIconsStyle.fill),
                   label: '~10-15 min',
                   color: AppColors.warning,
                 ),
                 if (plate != null) ...[
                   const SizedBox(width: 10),
-                  _InfoChip(icon: LucideIcons.contact, label: plate),
+                  _InfoChip(icon: PhosphorIcons.identificationCard(PhosphorIconsStyle.fill), label: plate),
                 ],
               ],
             ),
@@ -186,7 +185,7 @@ class _CollectorSheet extends StatelessWidget {
                       minimumSize: const Size(0, 56),
                       shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBR),
                     ),
-                    child: const Icon(LucideIcons.phone, size: 22),
+                    child: Icon(PhosphorIcons.phone(PhosphorIconsStyle.fill), size: 22),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -201,7 +200,7 @@ class _CollectorSheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(LucideIcons.trash2, size: 20),
+                        Icon(PhosphorIcons.truck(PhosphorIconsStyle.fill), size: 20),
                         const SizedBox(width: 10),
                         Text('Book Pickup', style: AppTextStyles.button),
                       ],
