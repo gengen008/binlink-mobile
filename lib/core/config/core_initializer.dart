@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' show MapLibreMap;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_flavor.dart';
 import 'env.dart';
@@ -14,6 +15,13 @@ class CoreInitializer {
   static Future<void> init(AppFlavor flavor) async {
     WidgetsFlutterBinding.ensureInitialized();
     FlavorConfig.flavor = flavor;
+
+    // MapLibre default (virtual display) hosts the map in a SurfaceView,
+    // which Flutter virtual displays do NOT support — covering the map with
+    // a sheet or moving it offstage (IndexedStack tab switch) crashes the
+    // process natively on many devices. Hybrid composition makes maplibre
+    // 0.26.1 render via TextureView instead, which survives both.
+    MapLibreMap.useHybridComposition = true;
 
     // 1. Load Environment Variables
     try {
