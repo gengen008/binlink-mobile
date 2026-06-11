@@ -114,6 +114,7 @@ jobs:
             --target lib/main_household.dart \
             --release \
             --no-pub \
+            --build-number ${{ github.run_number }} \
             --suppress-analytics
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -135,6 +136,7 @@ jobs:
             --target lib/main_collector.dart \
             --release \
             --no-pub \
+            --build-number ${{ github.run_number }} \
             --suppress-analytics
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -175,6 +177,9 @@ jobs:
           | **BinLink Collector** | \`BinLink-Collector-v2.apk\` | Collectors accepting & completing jobs |
 
           ## How to install
+          > ⚠️ **If you installed BinLink before June 11 2026: UNINSTALL the old app first.**
+          > The app signing key changed — Android will refuse to update over the old version.
+
           1. Download the APK for your role
           2. On Android: **Settings → Apps → Special access → Install unknown apps** → allow your browser or file manager
           3. Open the downloaded APK and tap **Install**

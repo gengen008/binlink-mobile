@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/config/env.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -35,6 +37,8 @@ class _ChatSheetState extends State<ChatSheet> {
   bool _sending = false;
 
   RealtimeChannel? _channel;
+  Timer? _pollTimer;
+  bool _realtimeOk = false;
 
   @override
   void initState() {
@@ -43,27 +47,63 @@ class _ChatSheetState extends State<ChatSheet> {
     _load();
   }
 
-  void _subscribeRealtime() {
-    _channel = Supabase.instance.client
-        .channel('chat_${widget.bookingId}')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'chat_messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'booking_id',
-            value: widget.bookingId,
-          ),
-          callback: (payload) {
-            if (!mounted) return;
-            final msg = _normalise(payload.newRecord);
-            if (_messages.any((m) => m['id'] == msg['id'])) return;
-            setState(() => _messages.add(msg));
-            _scrollToBottom();
-          },
-        )
-        .subscribe();
+  /// Supabase.instance throws LateInitializationError if initialize() failed
+  /// at app startup (e.g. no network at launch). Never let that crash the
+  /// app — retry init lazily, and fall back to REST polling if unavailable.
+  Future<SupabaseClient?> _supabaseClient() async {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      try {
+        if (Env.supabaseUrl.isEmpty || Env.supabaseAnonKey.isEmpty) return null;
+        await Supabase.initialize(
+          url: Env.supabaseUrl,
+          publishableKey: Env.supabaseAnonKey,
+        );
+        return Supabase.instance.client;
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  Future<void> _subscribeRealtime() async {
+    final client = await _supabaseClient();
+    if (!mounted) return;
+
+    if (client == null) {
+      // Realtime unavailable — poll the REST endpoint so chat still works
+      setState(() => _realtimeOk = false);
+      _pollTimer ??= Timer.periodic(const Duration(seconds: 5), (_) => _load());
+      return;
+    }
+
+    try {
+      _channel = client
+          .channel('chat_${widget.bookingId}')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: 'chat_messages',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'booking_id',
+              value: widget.bookingId,
+            ),
+            callback: (payload) {
+              if (!mounted) return;
+              final msg = _normalise(payload.newRecord);
+              if (_messages.any((m) => m['id'] == msg['id'])) return;
+              setState(() => _messages.add(msg));
+              _scrollToBottom();
+            },
+          )
+          .subscribe();
+      setState(() => _realtimeOk = true);
+    } catch (_) {
+      setState(() => _realtimeOk = false);
+      _pollTimer ??= Timer.periodic(const Duration(seconds: 5), (_) => _load());
+    }
   }
 
   Map<String, dynamic> _normalise(Map<String, dynamic> row) => {
@@ -79,6 +119,7 @@ class _ChatSheetState extends State<ChatSheet> {
   @override
   void dispose() {
     _channel?.unsubscribe();
+    _pollTimer?.cancel();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -106,7 +147,9 @@ class _ChatSheetState extends State<ChatSheet> {
     try {
       await ApiClient.post(
           '/api/bookings/${widget.bookingId}/chat', {'message': text});
-      // Realtime subscription will deliver the message automatically
+      // Realtime subscription delivers the message automatically; without
+      // realtime, refresh immediately so the sender sees their own message
+      if (!_realtimeOk) await _load();
     } catch (_) {}
     if (mounted) setState(() => _sending = false);
   }
@@ -171,25 +214,25 @@ class _ChatSheetState extends State<ChatSheet> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withAlpha(20),
+                        color: (_realtimeOk ? AppColors.success : AppColors.muted).withAlpha(20),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: AppColors.success.withAlpha(60)),
+                            color: (_realtimeOk ? AppColors.success : AppColors.muted).withAlpha(60)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 6, height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.success,
+                            decoration: BoxDecoration(
+                              color: _realtimeOk ? AppColors.success : AppColors.muted,
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 5),
-                          Text('Live',
+                          Text(_realtimeOk ? 'Live' : 'Connected',
                               style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.success)),
+                                  color: _realtimeOk ? AppColors.success : AppColors.muted)),
                         ],
                       ),
                     ),
