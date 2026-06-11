@@ -29,8 +29,6 @@ class BinLinkApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCollector = FlavorConfig.isCollector;
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
