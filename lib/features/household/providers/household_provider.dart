@@ -244,27 +244,35 @@ class HouseholdProvider extends ChangeNotifier {
   }
 
   void _onZoneOnline(dynamic data) {
-    final d  = data as Map<String, dynamic>;
-    final id = d['collectorId'] as String;
-    if (!_onlineCollectors.any((c) => c['id'] == id)) {
-      _onlineCollectors.add({
-        'id':      id,
-        'lastLat': d['lat'],
-        'lastLng': d['lng'],
-        if (d['bearing'] != null) 'bearing': (d['bearing'] as num).toDouble(),
-      });
-      notifyListeners();
-    }
-    if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOnline});
+    try {
+      final d   = data as Map<String, dynamic>;
+      final id  = d['collectorId'] as String;
+      final lat = (d['lat'] as num?)?.toDouble();
+      final lng = (d['lng'] as num?)?.toDouble();
+      // Without coordinates the marker would render at (0,0) in the ocean
+      if (lat == null || lng == null) return;
+      if (!_onlineCollectors.any((c) => c['id'] == id)) {
+        _onlineCollectors.add({
+          'id':      id,
+          'lastLat': lat,
+          'lastLng': lng,
+          'bearing': (d['bearing'] as num?)?.toDouble() ?? 0.0,
+        });
+        notifyListeners();
+      }
+      if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOnline});
+    } catch (_) {}
   }
 
   void _onZoneOffline(dynamic data) {
-    final d    = data as Map<String, dynamic>;
-    final id   = d['collectorId'] as String;
-    final prev = _onlineCollectors.length;
-    _onlineCollectors.removeWhere((c) => c['id'] == id);
-    if (_onlineCollectors.length != prev) notifyListeners();
-    if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOffline});
+    try {
+      final d    = data as Map<String, dynamic>;
+      final id   = d['collectorId'] as String;
+      final prev = _onlineCollectors.length;
+      _onlineCollectors.removeWhere((c) => c['id'] == id);
+      if (_onlineCollectors.length != prev) notifyListeners();
+      if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOffline});
+    } catch (_) {}
   }
 
   // ── Saved Addresses ────────────────────────────────────────────────────────

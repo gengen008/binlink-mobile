@@ -1,11 +1,57 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import '../../core/config/env.dart';
 import '../../core/theme/app_colors.dart';
+
+/// Resolves the vector style URL once per app run.
+///
+/// SmartMaps is the premium style, but a revoked/expired API key must never
+/// leave users with a black map — we probe it once and fall back to
+/// OpenFreeMap (keyless, production-grade) if it does not answer 200.
+class MapStyleResolver {
+  MapStyleResolver._();
+
+  static const fallbackStyleUrl = 'https://tiles.openfreemap.org/styles/dark';
+  static String? _resolved;
+  static Future<String>? _inFlight;
+
+  static Future<String> resolve() {
+    if (_resolved != null) return Future.value(_resolved);
+    return _inFlight ??= _probe();
+  }
+
+  static Future<String> _probe() async {
+    final key = Env.smartmapsApiKey;
+    if (key.isNotEmpty) {
+      final url =
+          'https://tiles.smartmaps.cloud/styles/v1/smartmaps/dark/style.json?apiKey=${Uri.encodeComponent(key)}';
+      try {
+        final res = await Dio().get<void>(
+          url,
+          options: Options(
+            receiveTimeout: const Duration(seconds: 6),
+            sendTimeout: const Duration(seconds: 6),
+            validateStatus: (s) => true,
+          ),
+        );
+        if (res.statusCode == 200) {
+          _resolved = url;
+          return url;
+        }
+        debugPrint('[Map] SmartMaps style returned ${res.statusCode} — using fallback style');
+      } catch (e) {
+        debugPrint('[Map] SmartMaps style probe failed: $e — using fallback style');
+      }
+    }
+    _resolved = fallbackStyleUrl;
+    return fallbackStyleUrl;
+  }
+}
 
 /// BinLink Map V4 — Maplibre GL + SmartMaps Vector Tiles.
 ///
@@ -51,6 +97,15 @@ class BinLinkMap extends StatefulWidget {
 class BinLinkMapState extends State<BinLinkMap> {
   MapLibreMapController? _controller;
   bool _styleLoaded = false;
+  String? _styleUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    MapStyleResolver.resolve().then((url) {
+      if (mounted) setState(() => _styleUrl = url);
+    });
+  }
 
   @override
   void didUpdateWidget(covariant BinLinkMap oldWidget) {
@@ -253,12 +308,13 @@ class BinLinkMapState extends State<BinLinkMap> {
     if (widget.collectors.isEmpty) return;
 
     try {
-      final features = widget.collectors.map((c) {
-        final lat = (c['lastLat'] as num?)?.toDouble() ?? 0.0;
-        final lng = (c['lastLng'] as num?)?.toDouble() ?? 0.0;
-        final bearing = (c['bearing'] as num?)?.toDouble() ?? 0.0;
-
-        return {
+      final features = <Map<String, dynamic>>[];
+      for (final c in widget.collectors) {
+        final lat = (c['lastLat'] as num?)?.toDouble();
+        final lng = (c['lastLng'] as num?)?.toDouble();
+        // Skip collectors without a GPS fix — (0,0) is in the Gulf of Guinea
+        if (lat == null || lng == null) continue;
+        features.add({
           'type': 'Feature',
           'geometry': {
             'type': 'Point',
@@ -266,10 +322,10 @@ class BinLinkMapState extends State<BinLinkMap> {
           },
           'properties': {
             'id': c['id'],
-            'bearing': bearing,
+            'bearing': (c['bearing'] as num?)?.toDouble() ?? 0.0,
           },
-        };
-      }).toList();
+        });
+      }
 
       await _controller?.addSource(sourceId, GeojsonSourceProperties(
         data: {
@@ -336,8 +392,11 @@ class BinLinkMapState extends State<BinLinkMap> {
 
   @override
   Widget build(BuildContext context) {
-    final encodedKey = Uri.encodeComponent(Env.smartmapsApiKey);
-    final styleUrl = 'https://tiles.smartmaps.cloud/styles/v1/smartmaps/dark/style.json?apiKey=$encodedKey';
+    final styleUrl = _styleUrl;
+    if (styleUrl == null) {
+      // Style still resolving (sub-second) — placeholder matching map bg
+      return Container(color: const Color(0xFF1A1A2E));
+    }
 
     return MapLibreMap(
       onMapCreated: _onMapCreated,

@@ -53,6 +53,9 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
 
     _posSub = LocationService.getPositionStream().listen((p) {
       if (mounted) setState(() => _pos = LatLng(p.latitude, p.longitude));
+    }, onError: (e) {
+      // GPS toggled off / permission revoked — keep last known position
+      debugPrint('[CollectorMap] Position stream error: $e');
     });
   }
 

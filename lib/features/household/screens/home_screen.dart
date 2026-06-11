@@ -80,6 +80,10 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
           _hp!.loadOnlineCollectors(lat: newPos.latitude, lng: newPos.longitude);
         }
       }
+    }, onError: (e) {
+      // GPS toggled off / permission revoked mid-session — keep last known
+      // position; the 30s poll keeps data fresh once GPS returns.
+      debugPrint('[Home] Position stream error: $e');
     });
 
     if (!mounted) return;
@@ -92,6 +96,7 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
       _hp!.loadBookings(),
       _hp!.loadOnlineCollectors(lat: lat, lng: lng),
       _hp!.loadSubscriptions(),
+      _hp!.loadSavedAddresses(),
     ]);
 
     // Subscribe to real-time zone events so collector markers animate live

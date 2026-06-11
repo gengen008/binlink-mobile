@@ -13,6 +13,15 @@ class SocketService {
   static sio.Socket? _socket;
   static Timer? _heartbeatTimer;
 
+  // ── Re-join state ──────────────────────────────────────────────────────────
+  // Server-side rooms die with the connection. Remember what we joined so a
+  // reconnect transparently restores the zone feed, booking rooms and
+  // collector online status.
+  static double? _zoneLat;
+  static double? _zoneLng;
+  static final Set<String> _bookingRooms = {};
+  static bool _collectorOnline = false;
+
   // ── Health stream ─────────────────────────────────────────────────────────
   static final _healthController =
       StreamController<SocketHealth>.broadcast();
@@ -40,7 +49,8 @@ class SocketService {
             .setTransports(['websocket', 'polling']) // polling fallback for firewalled networks
             .enableAutoConnect()
             .enableReconnection()
-            .setReconnectionAttempts(10)
+            // No attempt cap — a backend restart must never permanently kill
+            // the live feed; delay backs off to 30s max.
             .setReconnectionDelay(2000)
             .setReconnectionDelayMax(30000) // cap at 30s
             .setAuth({'token': token})
@@ -50,6 +60,7 @@ class SocketService {
       _socket!.onConnect((_) {
         _emitHealth(SocketHealth.connected);
         debugPrint('[Socket] Connected');
+        _restoreRooms();
       });
 
       _socket!.on('reconnecting', (_) {
@@ -79,6 +90,10 @@ class SocketService {
   // ── Disconnect ────────────────────────────────────────────────────────────
   static void disconnect() {
     _stopHeartbeat();
+    _zoneLat = null;
+    _zoneLng = null;
+    _bookingRooms.clear();
+    _collectorOnline = false;
     try {
       _socket?.disconnect();
     } catch (_) {}
@@ -119,27 +134,51 @@ class SocketService {
 
   // ── Booking room ──────────────────────────────────────────────────────────
   static void joinBookingRoom(String bookingId, [Function(dynamic)? ack]) {
+    _bookingRooms.add(bookingId);
     emit('booking:join', {'bookingId': bookingId}, ack);
+  }
+
+  static void leaveBookingRoom(String bookingId) {
+    _bookingRooms.remove(bookingId);
   }
 
   // ── Zone subscription — household subscribes to nearby collector feed ──────
   static void joinZone(double lat, double lng) {
+    _zoneLat = lat;
+    _zoneLng = lng;
     emit('zone:join', {'lat': lat, 'lng': lng});
   }
 
   static void leaveZone() {
+    _zoneLat = null;
+    _zoneLng = null;
     emit('zone:leave', null);
   }
 
   // ── Collector controls ────────────────────────────────────────────────────
   static void goOnline([Function(dynamic)? ack]) {
+    _collectorOnline = true;
     emit('collector:go-online', null, ack);
     _startHeartbeat();
   }
 
   static void goOffline([Function(dynamic)? ack]) {
+    _collectorOnline = false;
     _stopHeartbeat();
     emit('collector:go-offline', null, ack);
+  }
+
+  /// Re-establish server-side rooms after a (re)connect.
+  static void _restoreRooms() {
+    if (_zoneLat != null && _zoneLng != null) {
+      emit('zone:join', {'lat': _zoneLat, 'lng': _zoneLng});
+    }
+    for (final id in _bookingRooms) {
+      emit('booking:join', {'bookingId': id});
+    }
+    if (_collectorOnline) {
+      emit('collector:go-online');
+    }
   }
 
   /// Broadcast collector GPS position. Debounced on server side (10m min move).
