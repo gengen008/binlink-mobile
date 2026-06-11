@@ -270,13 +270,23 @@ class BinLinkMapState extends State<BinLinkMap> {
           .map((p) => [p.longitude, p.latitude])
           .toList();
 
+      // CRITICAL: must be a FeatureCollection. The Android plugin parses any
+      // geojson map with FeatureCollection.fromJson(); a bare Feature yields
+      // features == null and maplibre-native aborts the process (SIGABRT,
+      // "JNI DETECTED ERROR: obj == null") on a worker thread.
       await _controller?.addSource(sourceId, GeojsonSourceProperties(
         data: {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': coordinates,
-          },
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'properties': <String, dynamic>{},
+              'geometry': {
+                'type': 'LineString',
+                'coordinates': coordinates,
+              },
+            },
+          ],
         },
       ));
 
@@ -366,13 +376,21 @@ class BinLinkMapState extends State<BinLinkMap> {
     if (pos == null) return;
 
     try {
+      // CRITICAL: must be a FeatureCollection — see _drawRoute for why a
+      // bare Feature kills the process natively on Android.
       await _controller?.addSource(sourceId, GeojsonSourceProperties(
         data: {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [pos.longitude, pos.latitude],
-          },
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'properties': <String, dynamic>{},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [pos.longitude, pos.latitude],
+              },
+            },
+          ],
         },
       ));
 

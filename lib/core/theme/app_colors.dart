@@ -6,6 +6,12 @@ import '../config/app_flavor.dart';
 class AppColors {
   AppColors._();
 
+  // ── Brand Colors ───────────────────────────────────────────────────────────
+  static const Color ecoGreen      = Color(0xFF00D166); // Bolt/Spotify tier Green
+  static const Color deepCarbon    = Color(0xFF0F172A); // Premium Navy/Black
+  static const Color recyclingBlue = Color(0xFF3B82F6); // Trust/Logistics Blue
+  static const Color rewardGold    = Color(0xFFF59E0B); // Action/Value Gold
+
   // ── Mandatory Primary Palette (Household / Core) ───────────────────────────
   // Updated to High-Energy Bolt Green
   static const Color primary900 = Color(0xFF022C22); // Darker Green

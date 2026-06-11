@@ -44,10 +44,8 @@ class BinLinkApp extends StatelessWidget {
           sp.load();
           return sp;
         }),
-        if (!isCollector)
-          ChangeNotifierProvider(create: (_) => HouseholdProvider()),
-        if (isCollector)
-          ChangeNotifierProvider(create: (_) => CollectorProvider()),
+        ChangeNotifierProvider(create: (_) => HouseholdProvider()),
+        ChangeNotifierProvider(create: (_) => CollectorProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProv, __) {
@@ -84,6 +82,8 @@ class BinLinkApp extends StatelessWidget {
 // ── Context Extensions for easier BDOS access ────────────────────────────────
 
 extension BinLinkThemeX on BuildContext {
-  BinLinkColors get binlinkColors => Theme.of(this).extension<BinLinkColors>()!;
-  BinLinkTypography get binlinkTypography => Theme.of(this).extension<BinLinkTypography>()!;
+  BinLinkColors get binlinkColors => Theme.of(this).extension<BinLinkColors>() ?? 
+      (Theme.of(this).brightness == Brightness.light ? AppTheme.light.extension<BinLinkColors>()! : AppTheme.dark.extension<BinLinkColors>()!);
+  BinLinkTypography get binlinkTypography => Theme.of(this).extension<BinLinkTypography>() ?? 
+      (Theme.of(this).brightness == Brightness.light ? AppTheme.light.extension<BinLinkTypography>()! : AppTheme.dark.extension<BinLinkTypography>()!);
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/app_colors.dart';
+import '../theme/app_colors.dart';
 import '../design_system/app_typography.dart';
 import '../design_system/binlink_colors.dart';
 import '../design_system/binlink_typography.dart';
