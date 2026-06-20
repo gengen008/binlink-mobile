@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/design_system/household_design_system.dart';
 import '../../../shared/components/binlink_map.dart';
+import '../../../shared/screens/chat_screen.dart';
 import '../providers/household_provider.dart';
 
 class TrackingScreen extends StatefulWidget {
@@ -131,6 +132,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
               status: _status,
               collector: collector,
               onCall: () => _launchCall(collector?['phone'] as String?),
+              onMessage: () => _openChat(collector),
               onCancel: () => _confirmCancel(context, prov),
             ),
           ),
@@ -143,6 +145,17 @@ class _TrackingScreenState extends State<TrackingScreen> {
     if (phone == null || phone.isEmpty) return;
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  void _openChat(Map<String, dynamic>? collector) {
+    final bookingId = _booking['id'] as String?;
+    if (bookingId == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        bookingId: bookingId,
+        peerName: collector?['fullName'] as String? ?? 'Your collector',
+      ),
+    ));
   }
 
   void _confirmCancel(BuildContext ctx, HouseholdProvider prov) {
@@ -277,12 +290,14 @@ class _BottomCard extends StatelessWidget {
     required this.status,
     required this.collector,
     required this.onCall,
+    required this.onMessage,
     required this.onCancel,
   });
   final Map<String, dynamic> booking;
   final String status;
   final Map<String, dynamic>? collector;
   final VoidCallback onCall;
+  final VoidCallback onMessage;
   final VoidCallback onCancel;
 
   bool get _canCancel => ['SEARCHING', 'ASSIGNED', 'ACCEPTED'].contains(status);
@@ -311,7 +326,7 @@ class _BottomCard extends StatelessWidget {
 
             // Collector row
             if (collector != null) ...[
-              _CollectorRow(collector: collector!, onCall: onCall),
+              _CollectorRow(collector: collector!, onCall: onCall, onMessage: onMessage),
               const SizedBox(height: 14),
               const Divider(height: 1, color: Color(0xFFEEEAE2)),
               const SizedBox(height: 14),
@@ -394,9 +409,10 @@ class _StatusLabel extends StatelessWidget {
 }
 
 class _CollectorRow extends StatelessWidget {
-  const _CollectorRow({required this.collector, required this.onCall});
+  const _CollectorRow({required this.collector, required this.onCall, required this.onMessage});
   final Map<String, dynamic> collector;
   final VoidCallback onCall;
+  final VoidCallback onMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -420,6 +436,8 @@ class _CollectorRow extends StatelessWidget {
             ]),
         ]),
       ),
+      _PillBtn(icon: PhosphorIcons.chatCircleDots(), onTap: onMessage, color: HouseholdColors.primary),
+      if (hasPhone) const SizedBox(width: 8),
       if (hasPhone)
         _PillBtn(icon: PhosphorIcons.phone(), onTap: onCall, color: HouseholdColors.ecoGreen),
     ]);

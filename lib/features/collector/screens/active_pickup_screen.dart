@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/design_system/collector_design_system.dart';
 import '../../../shared/components/binlink_map.dart';
+import '../../../shared/screens/chat_screen.dart';
 import '../providers/collector_provider.dart';
 
 class ActivePickupScreen extends StatefulWidget {
@@ -24,6 +26,18 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
   String? _photoError;
   bool _photoLoading = false;
   bool _reportingException = false;
+
+  void _openChat() {
+    final bookingId = widget.booking['id'] as String?;
+    if (bookingId == null) return;
+    final household = widget.booking['household'] as Map<String, dynamic>?;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        bookingId: bookingId,
+        peerName: household?['fullName'] as String? ?? 'Customer',
+      ),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +73,10 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
               Text(_status.replaceAll('_', ' '), style: CollectorType.title),
               Text(widget.booking['pickupAddress'] as String? ?? 'Active pickup route', maxLines: 1, overflow: TextOverflow.ellipsis, style: CollectorType.caption),
             ])),
+            IconButton(
+              onPressed: _openChat,
+              icon: Icon(PhosphorIcons.chatCircleDots(), color: CollectorColors.white),
+            ),
           ])),
         ),
         Positioned(
