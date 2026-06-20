@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/socket_service.dart';
 import '../../../core/gps/kalman_filter.dart';
+import '../../../shared/models/app_notification.dart';
+import '../../../shared/models/reward_models.dart';
 
 // Zone event type constants
 const _kZoneMove    = 'move';
@@ -36,6 +38,43 @@ class HouseholdProvider extends ChangeNotifier {
   // All bookings (for history + subscriptions display)
   List<Map<String, dynamic>> get allBookings => List.unmodifiable(_bookings);
 
+  List<AppNotification> _notifications = [];
+  int _unreadNotifications = 0;
+  bool _loadingNotifications = false;
+  String? _notificationError;
+
+  List<AppNotification> get notifications => _notifications;
+  int get unreadNotifications => _unreadNotifications;
+  bool get loadingNotifications => _loadingNotifications;
+  String? get notificationError => _notificationError;
+
+  Map<String, dynamic>? _walletSummary;
+  bool _loadingWallet = false;
+  String? _walletError;
+
+  bool get loadingWallet => _loadingWallet;
+  String? get walletError => _walletError;
+  double get walletBalance => ((_walletSummary?['balance'] as num?) ?? 0).toDouble();
+  List<Map<String, dynamic>> get walletCredits => List<Map<String, dynamic>>.from(_walletSummary?['credits'] as List? ?? []);
+  List<Map<String, dynamic>> get walletDebits => List<Map<String, dynamic>>.from(_walletSummary?['debits'] as List? ?? []);
+  List<Map<String, dynamic>> get pendingTransactions => List<Map<String, dynamic>>.from(_walletSummary?['pendingTransactions'] as List? ?? []);
+  List<Map<String, dynamic>> get refundTransactions => List<Map<String, dynamic>>.from(_walletSummary?['refunds'] as List? ?? []);
+  List<Map<String, dynamic>> get walletTransactions => List<Map<String, dynamic>>.from(_walletSummary?['transactions'] as List? ?? []);
+  int get ecoPoints => ((_walletSummary?['rewards']?['ecoPoints'] as num?) ?? 0).toInt();
+  double get carbonSavedKg => ((_walletSummary?['rewards']?['carbonSavedKg'] as num?) ?? 0).toDouble();
+  List<RewardLedger> get rewardLedger => (List<Map<String, dynamic>>.from(_walletSummary?['rewards']?['rewardLedger'] as List? ?? []))
+      .map(RewardLedger.fromJson)
+      .toList();
+  List<RewardTransaction> get rewardTransactions => (List<Map<String, dynamic>>.from(_walletSummary?['rewards']?['rewardTransactions'] as List? ?? []))
+      .map(RewardTransaction.fromJson)
+      .toList();
+  List<Coupon> get coupons => (List<Map<String, dynamic>>.from(_walletSummary?['rewards']?['coupons'] as List? ?? []))
+      .map(Coupon.fromJson)
+      .toList();
+  List<Coupon> get availableRewards => (List<Map<String, dynamic>>.from(_walletSummary?['rewards']?['availableRewards'] as List? ?? []))
+      .map(Coupon.fromJson)
+      .toList();
+
   Future<void> loadBookings() async {
     _setLoading(true);
     try {
@@ -64,9 +103,119 @@ class HouseholdProvider extends ChangeNotifier {
         if (lat != null) 'radiusKm': '15',
       };
       final res = await ApiClient.get('/api/collectors/online', params: params.isNotEmpty ? params : null);
-      _onlineCollectors = List<Map<String, dynamic>>.from(res.data['data'] as List);
+      _onlineCollectors = (res.data['data'] as List? ?? [])
+          .whereType<Map>()
+          .map((c) => _normalizeCollector(c.cast<String, dynamic>()))
+          .where((c) => c != null)
+          .cast<Map<String, dynamic>>()
+          .toList();
       notifyListeners();
     } catch (_) {}
+  }
+
+  Future<void> loadNotifications({int page = 1}) async {
+    _loadingNotifications = true;
+    notifyListeners();
+    try {
+      final res = await ApiClient.get('/api/notifications', params: {'page': page, 'limit': 30});
+      final data = Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+      _notifications = List<Map<String, dynamic>>.from(data['notifications'] as List? ?? [])
+          .map(AppNotification.fromJson)
+          .toList();
+      _unreadNotifications = (data['unreadCount'] as num?)?.toInt() ?? 0;
+      _notificationError = null;
+    } on DioException catch (e) {
+      _notificationError = e.response?.data?['error'] ?? 'Could not load notifications';
+    } finally {
+      _loadingNotifications = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> markNotificationRead(String id) async {
+    try {
+      final res = await ApiClient.patch('/api/notifications/$id/read', {});
+      final unread = (res.data['data']?['unreadCount'] as num?)?.toInt();
+      final idx = _notifications.indexWhere((n) => n.id == id);
+      if (idx >= 0) {
+        final item = _notifications[idx];
+        _notifications[idx] = AppNotification(
+          id: item.id,
+          type: item.type,
+          title: item.title,
+          body: item.body,
+          bookingId: item.bookingId,
+          isRead: true,
+          createdAt: item.createdAt,
+        );
+      }
+      if (unread != null) _unreadNotifications = unread;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> markAllNotificationsRead() async {
+    try {
+      await ApiClient.patch('/api/notifications/read-all', {});
+      _notifications = _notifications
+          .map((item) => AppNotification(
+                id: item.id,
+                type: item.type,
+                title: item.title,
+                body: item.body,
+                bookingId: item.bookingId,
+                isRead: true,
+                createdAt: item.createdAt,
+              ))
+          .toList();
+      _unreadNotifications = 0;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> loadWalletSummary() async {
+    _loadingWallet = true;
+    notifyListeners();
+    try {
+      final res = await ApiClient.get('/api/profile/wallet');
+      _walletSummary = Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+      _walletError = null;
+    } on DioException catch (e) {
+      _walletError = e.response?.data?['error'] ?? 'Could not load wallet';
+    } finally {
+      _loadingWallet = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>?> initializeWalletTopUp(double amount) async {
+    try {
+      final res = await ApiClient.post('/api/payments/wallet/top-up/initialize', {'amount': amount});
+      return Map<String, dynamic>.from(res.data['data'] as Map);
+    } on DioException catch (e) {
+      _walletError = e.response?.data?['error'] ?? 'Could not initialize wallet top-up';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> verifyWalletTopUp(String reference) async {
+    try {
+      await ApiClient.post('/api/payments/wallet/top-up/verify', {'reference': reference});
+      await loadWalletSummary();
+      await loadNotifications();
+      return true;
+    } on DioException catch (e) {
+      _walletError = e.response?.data?['error'] ?? 'Could not verify wallet top-up';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<Map<String, dynamic>?> createBooking({
@@ -195,6 +344,7 @@ class HouseholdProvider extends ChangeNotifier {
   Stream<Map<String, dynamic>> get zoneEventStream => _zoneEvents.stream;
 
   void subscribeToNearby(double lat, double lng) {
+    unsubscribeFromNearby();
     SocketService.joinZone(lat, lng);
     SocketService.on('zone:collector', _onZoneCollector);
     SocketService.on('zone:online',    _onZoneOnline);
@@ -219,20 +369,24 @@ class HouseholdProvider extends ChangeNotifier {
       final idx = _onlineCollectors.indexWhere((c) => c['id'] == id);
       if (idx >= 0) {
         // Update existing collector's position
-        _onlineCollectors[idx] = {
+        final updated = _normalizeCollector({
           ..._onlineCollectors[idx],
           'lastLat': lat,
           'lastLng': lng,
           if (d['bearing'] != null) 'bearing': (d['bearing'] as num).toDouble(),
-        };
+        });
+        if (updated == null) return;
+        _onlineCollectors[idx] = updated;
       } else {
         // Collector appeared in zone without a zone:online event — add them
-        _onlineCollectors.add({
+        final added = _normalizeCollector({
           'id':      id,
           'lastLat': lat,
           'lastLng': lng,
           'bearing': (d['bearing'] as num?)?.toDouble() ?? 0.0,
         });
+        if (added == null) return;
+        _onlineCollectors.add(added);
       }
       // Notify map to re-render collector layer
       notifyListeners();
@@ -252,12 +406,14 @@ class HouseholdProvider extends ChangeNotifier {
       // Without coordinates the marker would render at (0,0) in the ocean
       if (lat == null || lng == null) return;
       if (!_onlineCollectors.any((c) => c['id'] == id)) {
-        _onlineCollectors.add({
+        final added = _normalizeCollector({
           'id':      id,
           'lastLat': lat,
           'lastLng': lng,
           'bearing': (d['bearing'] as num?)?.toDouble() ?? 0.0,
         });
+        if (added == null) return;
+        _onlineCollectors.add(added);
         notifyListeners();
       }
       if (!_zoneEvents.isClosed) _zoneEvents.add({...d, 'event': _kZoneOnline});
@@ -325,8 +481,20 @@ class HouseholdProvider extends ChangeNotifier {
 
   // ── Subscriptions ──────────────────────────────────────────────────────────
   List<Map<String, dynamic>> _subscriptions = [];
+  Map<String, dynamic>? _adminLiveOps;
+  List<Map<String, dynamic>> _pricingRules = [];
+  List<Map<String, dynamic>> _fleetVehicles = [];
+  Map<String, dynamic>? _adminAnalytics;
+  bool _loadingAdmin = false;
+  String? _adminError;
 
   List<Map<String, dynamic>> get subscriptions => _subscriptions;
+  Map<String, dynamic>? get adminLiveOps => _adminLiveOps;
+  List<Map<String, dynamic>> get pricingRules => _pricingRules;
+  List<Map<String, dynamic>> get fleetVehicles => _fleetVehicles;
+  Map<String, dynamic>? get adminAnalytics => _adminAnalytics;
+  bool get loadingAdmin => _loadingAdmin;
+  String? get adminError => _adminError;
 
   Future<void> loadSubscriptions() async {
     try {
@@ -399,11 +567,150 @@ class HouseholdProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> pauseSubscription(String id) => updateSubscription(id, {'status': 'PAUSED'});
+
+  Future<bool> resumeSubscription(String id) => updateSubscription(id, {'status': 'ACTIVE'});
+
+  Future<bool> skipNextSubscriptionPickup(String id) async {
+    try {
+      final res = await ApiClient.patch('/api/subscriptions/$id/skip-next', {});
+      final updated = Map<String, dynamic>.from(res.data['data'] as Map);
+      final idx = _subscriptions.indexWhere((s) => s['id'] == id);
+      if (idx >= 0) _subscriptions[idx] = updated;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> loadAdminDashboard({String range = 'daily'}) async {
+    _loadingAdmin = true;
+    notifyListeners();
+    try {
+      final results = await Future.wait([
+        ApiClient.get('/api/admin/live-operations'),
+        ApiClient.get('/api/admin/pricing'),
+        ApiClient.get('/api/admin/fleet/vehicles'),
+        ApiClient.get('/api/admin/analytics/timeseries', params: {'range': range}),
+      ]);
+      _adminLiveOps = Map<String, dynamic>.from(results[0].data['data'] as Map? ?? {});
+      _pricingRules = List<Map<String, dynamic>>.from(results[1].data['data'] as List? ?? []);
+      _fleetVehicles = List<Map<String, dynamic>>.from(results[2].data['data'] as List? ?? []);
+      _adminAnalytics = Map<String, dynamic>.from(results[3].data['data'] as Map? ?? {});
+      _adminError = null;
+    } on DioException catch (e) {
+      _adminError = e.response?.data?['error'] ?? 'Could not load admin dashboard';
+    } finally {
+      _loadingAdmin = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> savePricingRule(Map<String, dynamic> payload, {String? id}) async {
+    try {
+      final res = id == null
+          ? await ApiClient.post('/api/admin/pricing', payload)
+          : await ApiClient.patch('/api/admin/pricing/$id', payload);
+      final rule = Map<String, dynamic>.from(res.data['data'] as Map);
+      final idx = _pricingRules.indexWhere((item) => item['id'] == rule['id']);
+      if (idx >= 0) {
+        _pricingRules[idx] = rule;
+      } else {
+        _pricingRules.insert(0, rule);
+      }
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _adminError = e.response?.data?['error'] ?? 'Could not save pricing rule';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deletePricingRule(String id) async {
+    try {
+      await ApiClient.delete('/api/admin/pricing/$id');
+      _pricingRules.removeWhere((item) => item['id'] == id);
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _adminError = e.response?.data?['error'] ?? 'Could not delete pricing rule';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> saveVehicle(Map<String, dynamic> payload, {String? id}) async {
+    try {
+      final res = id == null
+          ? await ApiClient.post('/api/admin/fleet/vehicles', payload)
+          : await ApiClient.patch('/api/admin/fleet/vehicles/$id', payload);
+      final vehicle = Map<String, dynamic>.from(res.data['data'] as Map);
+      final idx = _fleetVehicles.indexWhere((item) => item['id'] == vehicle['id']);
+      if (idx >= 0) {
+        _fleetVehicles[idx] = {
+          ..._fleetVehicles[idx],
+          ...vehicle,
+        };
+      } else {
+        _fleetVehicles.insert(0, vehicle);
+      }
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _adminError = e.response?.data?['error'] ?? 'Could not save vehicle';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> addVehicleMaintenance(String vehicleId, Map<String, dynamic> payload) async {
+    try {
+      final res = await ApiClient.post('/api/admin/fleet/vehicles/$vehicleId/maintenance', payload);
+      final log = Map<String, dynamic>.from(res.data['data'] as Map);
+      final idx = _fleetVehicles.indexWhere((item) => item['id'] == vehicleId);
+      if (idx >= 0) {
+        final current = List<Map<String, dynamic>>.from(_fleetVehicles[idx]['maintenanceLogs'] as List? ?? []);
+        current.insert(0, log);
+        _fleetVehicles[idx] = {
+          ..._fleetVehicles[idx],
+          'maintenanceLogs': current,
+        };
+      }
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _adminError = e.response?.data?['error'] ?? 'Could not add maintenance log';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void _updateBookingStatus(String bookingId, String status) {
     final idx = _bookings.indexWhere((b) => b['id'] == bookingId);
     if (idx >= 0) {
       _bookings[idx] = {..._bookings[idx], 'status': status};
     }
+  }
+
+  Map<String, dynamic>? _normalizeCollector(Map<String, dynamic> raw) {
+    final id = raw['id'] ?? raw['collectorId'];
+    final lat = (raw['lastLat'] ?? raw['lat']) as num?;
+    final lng = (raw['lastLng'] ?? raw['lng']) as num?;
+    final lastLat = lat?.toDouble();
+    final lastLng = lng?.toDouble();
+    if (id == null || lastLat == null || lastLng == null) return null;
+    if (lastLat < -90 || lastLat > 90 || lastLng < -180 || lastLng > 180) {
+      return null;
+    }
+    return {
+      ...raw,
+      'id': id.toString(),
+      'lastLat': lastLat,
+      'lastLng': lastLng,
+      'bearing': (raw['bearing'] as num?)?.toDouble() ?? 0.0,
+    };
   }
 
   void _setLoading(bool v) {

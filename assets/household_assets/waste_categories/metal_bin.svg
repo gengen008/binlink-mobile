@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Gear / cog icon for metal/scrap -->
+  <!-- Outer gear teeth (8 teeth as rectangles rotated around center) -->
+  <g transform="translate(50,24)">
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(45)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(90)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(135)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(180)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(225)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(270)"/>
+    <rect x="-5" y="-20" width="10" height="9" rx="2" fill="#C1E8FF" transform="rotate(315)"/>
+    <!-- Gear body circle -->
+    <circle cx="0" cy="0" r="13" fill="#C1E8FF"/>
+    <!-- Inner hole -->
+    <circle cx="0" cy="0" r="5" fill="#5483B3"/>
+  </g>
+  <!-- Bin lid handle -->
+  <rect x="43" y="50" width="14" height="8" rx="4" fill="#021024"/>
+  <!-- Bin lid -->
+  <rect x="19" y="56" width="62" height="11" rx="5.5" fill="#052659"/>
+  <!-- Bin body -->
+  <rect x="22" y="65" width="56" height="32" rx="8" fill="#5483B3"/>
+  <rect x="22" y="76" width="56" height="2" rx="1" fill="#7DA0CA" opacity="0.4"/>
+  <rect x="22" y="85" width="56" height="2" rx="1" fill="#7DA0CA" opacity="0.4"/>
+</svg>

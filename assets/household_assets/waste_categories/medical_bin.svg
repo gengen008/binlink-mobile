@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Medical cross (red cross) -->
+  <!-- Horizontal bar -->
+  <rect x="22" y="17" width="56" height="18" rx="5" fill="#EF4444"/>
+  <!-- Vertical bar -->
+  <rect x="41" y="6" width="18" height="40" rx="5" fill="#EF4444"/>
+  <!-- Cross centre highlight -->
+  <rect x="41" y="17" width="18" height="18" rx="3" fill="#F87171"/>
+  <!-- Bin lid handle -->
+  <rect x="43" y="50" width="14" height="8" rx="4" fill="#021024"/>
+  <!-- Bin lid - red for medical/biohazard -->
+  <rect x="19" y="56" width="62" height="11" rx="5.5" fill="#991B1B"/>
+  <!-- Bin body - red tinted -->
+  <rect x="22" y="65" width="56" height="32" rx="8" fill="#EF4444"/>
+  <rect x="22" y="76" width="56" height="2" rx="1" fill="#F87171" opacity="0.5"/>
+  <rect x="22" y="85" width="56" height="2" rx="1" fill="#F87171" opacity="0.5"/>
+</svg>

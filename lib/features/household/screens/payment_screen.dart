@@ -1,289 +1,392 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:animate_do/animate_do.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/design_system/household_design_system.dart';
 import '../../../core/network/api_client.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_assets.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../shared/widgets/app_bar.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
+import '../../../core/services/receipt_service.dart';
+import '../providers/household_provider.dart';
+import 'tracking_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key, required this.booking});
+  const PaymentScreen({super.key, this.booking = const {}});
   final Map<String, dynamic> booking;
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
-  bool _confirmed = false;
-  String _selectedMethod = 'CASH';
-  bool _isProcessing = false;
-  final _phoneCtrl = TextEditingController();
+class _PaymentScreenState extends State<PaymentScreen> with WidgetsBindingObserver {
+  String _method = 'mtn_momo';
+  bool _loading = false;
+  bool _verifying = false;
+  String? _error;
+  String? _successRef;
+  String? _reference;
+  bool _awaitingVerification = false;
+  Map<String, dynamic>? _verifiedBooking;
 
-  final _paymentMethods = [
-    {'id': 'CASH',     'label': 'Pay with Cash', 'icon': LucideIcons.banknote, 'color': AppColors.success},
-    {'id': 'MTN',      'label': 'MTN MoMo',       'icon': LucideIcons.smartphone, 'color': Color(0xFFFFCC00)},
-    {'id': 'TELECEL',  'label': 'Telecel Cash',   'icon': LucideIcons.smartphone, 'color': Color(0xFFE60000)},
-    {'id': 'AIRTEL',   'label': 'AirtelTigo',     'icon': LucideIcons.smartphone, 'color': Color(0xFF005A9C)},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    context.read<HouseholdProvider>().loadWalletSummary();
+  }
 
   @override
   void dispose() {
-    _phoneCtrl.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  Future<void> _handlePayment() async {
-    if (_selectedMethod != 'CASH' && _phoneCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your mobile money number'), backgroundColor: AppColors.warning),
-      );
-      return;
-    }
-    setState(() => _isProcessing = true);
-    try {
-      if (_selectedMethod == 'CASH') {
-        await Future.delayed(const Duration(milliseconds: 1200));
-      } else {
-        final res = await ApiClient.post('/api/payments/initialize', {
-          'bookingId': widget.booking['id'],
-          'channel':   'mobile_money',
-        });
-        final data = res.data['data'];
-        final authUrl = data?['authorization_url'] as String?;
-        if (authUrl == null) {
-          throw Exception('Payment initialization failed: Missing authorization URL');
-        }
-        final url = Uri.parse(authUrl);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          throw Exception('Could not launch payment portal. Please check your browser settings.');
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _confirmed = true;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment failed: ${e.toString()}'), 
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _awaitingVerification && _reference != null && widget.booking['id'] is String) {
+      _verifyPayment(widget.booking['id'] as String, _reference!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final amount = widget.booking['totalAmount'];
+    final bookingId = widget.booking['id'] as String?;
+    final walletBalance = context.watch<HouseholdProvider>().walletBalance;
+    final amountValue = (amount as num?)?.toDouble() ?? double.tryParse('$amount') ?? 0;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 600),
-        switchInCurve: Curves.easeInOut,
-        switchOutCurve: Curves.easeInOut,
-        child: _confirmed ? _buildSuccess() : _buildPaymentMethods(),
+      backgroundColor: HouseholdColors.sand,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Row(children: [
+              IconButton(onPressed: () => Navigator.maybePop(context), icon: const HIcon('route', color: HouseholdColors.forest)),
+              const SizedBox(width: 8),
+              Text('Payment', style: HouseholdType.title),
+            ]),
+            const SizedBox(height: 12),
+            HCard(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Image.asset(HouseholdAssets.ecoPoints, height: 100),
+                const SizedBox(height: 12),
+                Text(amount == null ? 'Amount pending' : 'GHS $amount', style: HouseholdType.hero),
+                Text(widget.booking['pickupAddress'] as String? ?? 'Pickup payment', style: HouseholdType.caption),
+              ]),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              HCard(color: const Color(0xFFFFF1F2), child: Text(_error!, style: HouseholdType.body.copyWith(color: HouseholdColors.danger))),
+            ],
+            if (_successRef != null) ...[
+              const SizedBox(height: 12),
+              HCard(color: const Color(0xFFEFFBF4), child: Row(children: [
+                Lottie.asset('assets/household_assets/lottie/success.json', width: 64, height: 64),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Payment initialized: $_successRef', style: HouseholdType.body.copyWith(color: HouseholdColors.ecoGreen))),
+              ])),
+            ],
+            if (_reference != null && !_verifying) ...[
+              const SizedBox(height: 12),
+              HButton(label: 'Verify payment', icon: 'security', onPressed: bookingId == null ? null : () => _verifyPayment(bookingId, _reference!)),
+            ],
+            const SizedBox(height: 18),
+            Text('Payment method', style: HouseholdType.section),
+            const SizedBox(height: 12),
+            for (final method in const [
+              ('mtn_momo', 'MTN MoMo'),
+              ('telecel_cash', 'Telecel Cash'),
+              ('airteltigo_money', 'AirtelTigo Money'),
+              ('cash', 'Cash'),
+              ('wallet', 'Wallet'),
+            ])
+              _PaymentMethod(id: method.$1, label: method.$2, selected: _method == method.$1, onTap: () => setState(() => _method = method.$1)),
+            if (_method == 'wallet') ...[
+              const SizedBox(height: 12),
+              HCard(
+                color: walletBalance < amountValue ? const Color(0xFFFFF1F2) : Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Wallet balance', style: HouseholdType.section),
+                    const SizedBox(height: 6),
+                    Text('GHS ${walletBalance.toStringAsFixed(2)}', style: HouseholdType.body),
+                    if (walletBalance < amountValue) ...[
+                      const SizedBox(height: 8),
+                      Text('Insufficient balance', style: HouseholdType.caption.copyWith(color: HouseholdColors.danger)),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            HButton(
+              label: _method == 'cash' ? 'Confirm cash payment' : 'Initialize secure payment',
+              icon: 'payment',
+              loading: _loading,
+              onPressed: bookingId == null || (_method == 'wallet' && walletBalance < amountValue) ? null : () => _confirmPayment(bookingId),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPaymentMethods() {
-    final amount = Fmt.toDouble(widget.booking['totalAmount']);
-
-    return Column(
-      children: [
-        const AppScaffoldBar(title: 'Payment'),
-        // ── Apple/Uber Style Amount Card ──
-        FadeInDown(
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-            padding: const EdgeInsets.all(32),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(color: AppColors.primary.withAlpha(40), blurRadius: 30, offset: const Offset(0, 15))
-              ],
-            ),
-            child: Column(
-              children: [
-                Text('TOTAL TO PAY', style: AppTextStyles.small.copyWith(color: Colors.white70, letterSpacing: 2, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 16),
-                Text(Fmt.currency(amount), style: AppTextStyles.display.copyWith(color: Colors.white, fontSize: 42)),
-              ],
-            ),
-          ),
-        ),
-
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            children: [
-              Text('PAYMENT METHOD', style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.2)),
-              const SizedBox(height: 16),
-              
-              ..._paymentMethods.map((m) {
-                final isSelected = _selectedMethod == m['id'];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () => setState(() => _selectedMethod = m['id'] as String),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: isSelected ? AppColors.primary : Colors.transparent, 
-                              width: 2
-                            ),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: (m['color'] as Color).withAlpha(isSelected ? 30 : 15), 
-                                  borderRadius: BorderRadius.circular(14)
-                                ),
-                                child: Icon(
-                                  m['id'] == 'CASH' ? LucideIcons.banknote : 
-                                  m['id'] == 'MTN' ? LucideIcons.smartphone :
-                                  m['id'] == 'TELECEL' ? LucideIcons.phoneCall :
-                                  LucideIcons.wallet,
-                                  color: m['color'] as Color, size: 22
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(child: Text(m['label'] as String, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700))),
-                              if (isSelected) 
-                                Icon(LucideIcons.circleCheck, color: AppColors.primary, size: 24),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (isSelected && m['id'] != 'CASH')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 8),
-                          child: AppTextField(
-                            controller: _phoneCtrl,
-                            label: 'Mobile Money Number',
-                            hint: 'e.g. 024XXXXXXX',
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: const Icon(LucideIcons.phone, size: 20, color: AppColors.textMuted),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-
-        // ── Bottom Action ──
-        Padding(
-          padding: const EdgeInsets.fromLTRB(28, 16, 28, 48),
-          child: AppButton(
-            label: 'Pay ${Fmt.currency(amount)}',
-            loading: _isProcessing,
-            onPressed: _handlePayment,
-          ),
-        ),
-      ],
-    );
+  Future<void> _confirmPayment(String bookingId) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _successRef = null;
+    });
+    try {
+      if (_method == 'cash') {
+        setState(() => _successRef = 'Cash payment is recorded on collection.');
+        if (bookingId.isNotEmpty) {
+          await _finishPayment(bookingId);
+        }
+        return;
+      }
+      if (_method == 'wallet') {
+        await _verifyPayment(bookingId, 'wallet:$bookingId', method: 'wallet');
+        return;
+      }
+      final res = await ApiClient.post('/api/payments/initialize', {'bookingId': bookingId});
+      final data = Map<String, dynamic>.from(res.data['data'] as Map);
+      final ref = data['reference'] as String?;
+      final url = data['authorization_url'] as String?;
+      setState(() {
+        _successRef = ref ?? 'Pending';
+        _reference = ref;
+        _awaitingVerification = ref != null;
+      });
+      if (url != null && url.isNotEmpty) {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      setState(() => _error = 'Payment could not be initialized. Please check your connection and try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
-  Widget _buildSuccess() {
-    final txRef = 'BL-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+  Future<void> _verifyPayment(String bookingId, String reference, {String? method}) async {
+    if (_verifying) return;
+    setState(() {
+      _verifying = true;
+      _error = null;
+    });
+    try {
+      final provider = context.read<HouseholdProvider>();
+      await ApiClient.post('/api/payments/verify', {
+        'bookingId': bookingId,
+        if (method != null) 'method': method,
+        if (method != 'wallet') 'reference': reference,
+      });
+      await provider.loadBookings();
+      await provider.loadWalletSummary();
+      final refreshedBooking = provider.bookings.cast<Map<String, dynamic>?>().firstWhere(
+            (booking) => booking?['id'] == bookingId,
+            orElse: () => widget.booking,
+          ) ??
+          widget.booking;
+      _verifiedBooking = Map<String, dynamic>.from(refreshedBooking);
+      await ReceiptService.shareReceipt(_verifiedBooking!);
+      if (!mounted) return;
+      setState(() {
+        _awaitingVerification = false;
+        _successRef = 'Payment verified';
+      });
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PaymentSuccessScreen(
+            booking: _verifiedBooking!,
+            reference: reference,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Payment verification failed. Please retry after the callback returns.');
+      }
+    } finally {
+      if (mounted) setState(() => _verifying = false);
+    }
+  }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Future<void> _finishPayment(String bookingId) async {
+    final provider = context.read<HouseholdProvider>();
+    await provider.loadBookings();
+    final booking = provider.bookings.cast<Map<String, dynamic>?>().firstWhere(
+          (item) => item?['id'] == bookingId,
+          orElse: () => widget.booking,
+        ) ??
+        widget.booking;
+    _verifiedBooking = Map<String, dynamic>.from(booking);
+    await ReceiptService.shareReceipt(_verifiedBooking!);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => PaymentSuccessScreen(
+          booking: _verifiedBooking!,
+          reference: _reference,
+        ),
+      ),
+    );
+  }
+}
+
+class PaymentSuccessScreen extends StatelessWidget {
+  const PaymentSuccessScreen({
+    super.key,
+    required this.booking,
+    this.reference,
+  });
+
+  final Map<String, dynamic> booking;
+  final String? reference;
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = booking['totalAmount'];
+    final status = booking['status'] as String? ?? 'PENDING';
+    return Scaffold(
+      backgroundColor: HouseholdColors.sand,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
           children: [
-            Lottie.asset(
-              AppAssets.lottieSuccess,
-              width: 200,
-              repeat: false,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                LucideIcons.circleCheck,
-                color: AppColors.success,
-                size: 80,
-              ),
-            ),
-            const SizedBox(height: 32),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
+            HCard(
               child: Column(
                 children: [
-                  Text('Payment Confirmed', style: AppTextStyles.display.copyWith(fontSize: 32)),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Your booking has been successfully confirmed. A collector will be assigned shortly.',
-                    style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
+                  Lottie.asset(
+                    'assets/household_assets/lottie/success.json',
+                    width: 160,
+                    height: 160,
+                    repeat: false,
                   ),
-                  const SizedBox(height: 32),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      children: [
-                        Text("TRANSACTION REF", style: AppTextStyles.small.copyWith(fontSize: 10, letterSpacing: 1.5)),
-                        const SizedBox(height: 4),
-                        Text(txRef, style: AppTextStyles.mono.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Text('Payment confirmed', style: HouseholdType.hero, textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your booking is synced with BinLink and ready for live tracking.',
+                    style: HouseholdType.body.copyWith(color: HouseholdColors.gray),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 48),
-            FadeInUp(
-              delay: const Duration(milliseconds: 400),
-              child: AppButton(
-                label: 'Track Pickup',
-                onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
+            const SizedBox(height: 16),
+            HCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SuccessRow(label: 'Booking ID', value: booking['id'] as String? ?? '--'),
+                  const SizedBox(height: 10),
+                  _SuccessRow(label: 'Status', value: status),
+                  const SizedBox(height: 10),
+                  _SuccessRow(label: 'Amount', value: amount == null ? '--' : 'GHS $amount'),
+                  if (reference != null) ...[
+                    const SizedBox(height: 10),
+                    _SuccessRow(label: 'Reference', value: reference!),
+                  ],
+                  if ((booking['pickupAddress'] as String?)?.isNotEmpty == true) ...[
+                    const SizedBox(height: 10),
+                    _SuccessRow(label: 'Pickup address', value: booking['pickupAddress'] as String),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 16),
-            FadeInUp(
-              delay: const Duration(milliseconds: 500),
-              child: TextButton(
-                onPressed: () {
-                  // TODO: Implement PDF receipt download
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading receipt...')));
-                },
-                child: Text('Download Receipt', style: AppTextStyles.button.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+            HButton(
+              label: 'Share receipt',
+              icon: 'payment',
+              onPressed: () => ReceiptService.shareReceipt(booking),
+            ),
+            const SizedBox(height: 12),
+            HButton(
+              label: 'Track booking',
+              icon: 'tracking',
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => TrackingScreen(booking: booking)),
               ),
             ),
+            const SizedBox(height: 12),
+            HButton(
+              label: 'Back to home',
+              icon: 'home',
+              secondary: true,
+              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/household', (_) => false),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SuccessRow extends StatelessWidget {
+  const _SuccessRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 108,
+          child: Text(label, style: HouseholdType.caption),
+        ),
+        Expanded(child: Text(value, style: HouseholdType.section)),
+      ],
+    );
+  }
+}
+
+// PNG for MoMo networks, SVG fallback for generic methods
+class _PaymentLogo extends StatelessWidget {
+  const _PaymentLogo({required this.id});
+  final String id;
+  static const _hasPng = {'mtn_momo', 'telecel_cash', 'airteltigo_money'};
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasPng.contains(id)) {
+      return Image.asset('assets/household_assets/payments/$id.png', width: 82, height: 42, fit: BoxFit.contain);
+    }
+    return SvgPicture.asset('assets/household_assets/payments/$id.svg', width: 82, height: 42);
+  }
+}
+
+class _PaymentMethod extends StatelessWidget {
+  const _PaymentMethod({required this.id, required this.label, required this.selected, required this.onTap});
+  final String id;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: HCard(
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            _PaymentLogo(id: id),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label, style: HouseholdType.section)),
+            if (selected) const HIcon('security', color: HouseholdColors.primary),
+          ]),
         ),
       ),
     );

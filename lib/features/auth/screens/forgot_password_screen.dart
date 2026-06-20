@@ -1,14 +1,12 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../components/auth_header.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+import '../../../core/config/app_flavor.dart';
+import '../../../core/design_system/collector_design_system.dart';
+import '../../../core/design_system/household_design_system.dart';
 import '../../../core/utils/validators.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
+import '../providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,187 +16,137 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _formKey   = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  bool _sent       = false;
+  final _formKey = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  bool _sent = false;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
+    _email.dispose();
     super.dispose();
   }
 
-  Future<void> _sendReset() async {
+  Future<void> _send() async {
     if (!_formKey.currentState!.validate()) return;
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.sendPasswordReset(_emailCtrl.text.trim());
-    if (!mounted) return;
-    if (ok) {
-      setState(() => _sent = true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error ?? 'Error'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-    }
+    final ok = await context.read<AuthProvider>().sendPasswordReset(_email.text.trim());
+    if (mounted) setState(() => _sent = ok);
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-
+    final collector = FlavorConfig.isCollector;
     return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: true,
+      backgroundColor: collector ? CollectorColors.dark : HouseholdColors.sand,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-
-              authHeader(context),
-
-              const SizedBox(height: 36),
-
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Reset Password',
-                        style: AppTextStyles.h2.copyWith(
-                          color: AppColors.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Enter your email address to receive a reset link.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.muted,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      if (!_sent) ...[
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppTextField(
-                                controller: _emailCtrl,
-                                label: 'Email address',
-                                hint: 'you@example.com',
-                                keyboardType: TextInputType.emailAddress,
-                                autofillHints: const [AutofillHints.email],
-                                prefixIcon: const Icon(
-                                    LucideIcons.mail,
-                                    color: AppColors.muted,
-                                    size: 20),
-                                validator: Validators.email,
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => _sendReset(),
-                              ),
-                              const SizedBox(height: 24),
-                              AppButton(
-                                label: 'Send Reset Link',
-                                loading: auth.loading,
-                                onPressed: _sendReset,
-                              ),
-                              const SizedBox(height: 20),
-                              Center(
-                                child: GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Text(
-                                    'Back to Sign In',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else ...[
-                        // Success state
-                        const SizedBox(height: 20),
-                        Center(
-                          child: ZoomIn(
-                            duration: const Duration(milliseconds: 600),
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withAlpha(25),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  LucideIcons.mailOpen,
-                                  color: AppColors.success,
-                                  size: 36,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: FadeInUp(
-                            duration: const Duration(milliseconds: 500),
-                            child: Text(
-                              'Link Sent!',
-                              style: AppTextStyles.h3.copyWith(
-                                color: AppColors.secondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Center(
-                          child: FadeInUp(
-                            duration: const Duration(milliseconds: 500),
-                            delay: const Duration(milliseconds: 80),
-                            child: Text(
-                              'A password reset link has been sent to\n${_emailCtrl.text.trim()}',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.muted,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        FadeInUp(
-                          duration: const Duration(milliseconds: 500),
-                          delay: const Duration(milliseconds: 160),
-                          child: AppButton(
-                            label: 'Back to Sign In',
-                            onPressed: () => Navigator.pushReplacementNamed(
-                                context, '/login'),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              IconButton(onPressed: () => Navigator.maybePop(context), icon: collector ? const CIcon('route', color: CollectorColors.white) : const HIcon('route', color: HouseholdColors.forest)),
+              const SizedBox(height: 18),
+              Builder(builder: (_) {
+                final asset = collector ? CollectorAssets.noJobs : HouseholdAssets.forgotPassword;
+                return asset.endsWith('.svg') ? SvgPicture.asset(asset, height: 220) : Image.asset(asset, height: 220, fit: BoxFit.contain);
+              }),
+              const SizedBox(height: 24),
+              Text(_sent ? 'Check your inbox' : 'Reset password', style: collector ? CollectorType.hero : HouseholdType.hero),
+              const SizedBox(height: 10),
+              Text(
+                _sent ? 'We sent a reset link to ${_email.text.trim()}.' : 'Enter your account email and we will send a secure reset link.',
+                style: collector ? CollectorType.body.copyWith(color: const Color(0xFFC8D0DA)) : HouseholdType.body.copyWith(color: HouseholdColors.gray),
               ),
-            ],
+              const SizedBox(height: 26),
+              if (!_sent) ...[
+                collector
+                    ? CTextField(controller: _email, label: 'Email', hint: 'name@example.com', keyboardType: TextInputType.emailAddress, validator: Validators.email)
+                    : HTextField(controller: _email, label: 'Email', hint: 'name@example.com', keyboardType: TextInputType.emailAddress, validator: Validators.email),
+                const SizedBox(height: 20),
+                collector ? CButton(label: 'SEND RESET LINK', icon: 'security', loading: auth.loading, onPressed: _send) : HButton(label: 'Send reset link', icon: 'security', loading: auth.loading, onPressed: _send),
+              ] else
+                collector ? CButton(label: 'BACK TO SIGN IN', onPressed: () => Navigator.pushReplacementNamed(context, '/login')) : HButton(label: 'Back to sign in', onPressed: () => Navigator.pushReplacementNamed(context, '/login')),
+            ]),
           ),
         ),
       ),
     );
+  }
+}
+
+class OtpScreen extends StatefulWidget {
+  const OtpScreen({super.key});
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  final _code = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final collector = FlavorConfig.isCollector;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final phone = args is Map ? args['phone']?.toString() : null;
+    return Scaffold(
+      backgroundColor: collector ? CollectorColors.dark : HouseholdColors.sand,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Image.asset(collector ? CollectorAssets.welcome : HouseholdAssets.otpVerify, height: 230, fit: BoxFit.contain),
+            const SizedBox(height: 26),
+            Text('Verify phone', style: collector ? CollectorType.hero : HouseholdType.hero),
+            const SizedBox(height: 10),
+            Text(phone == null ? 'No phone verification session is active.' : 'Enter the six digit code sent to $phone.', style: collector ? CollectorType.body.copyWith(color: const Color(0xFFC8D0DA)) : HouseholdType.body.copyWith(color: HouseholdColors.gray)),
+            const SizedBox(height: 30),
+            TextField(
+              controller: _code,
+              maxLength: 6,
+              keyboardType: TextInputType.number,
+              style: collector ? CollectorType.hero : HouseholdType.hero,
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '000000',
+                errorText: _error,
+                filled: true,
+                fillColor: collector ? CollectorColors.charcoal : Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(22)),
+              ),
+            ),
+            const Spacer(),
+            collector
+                ? CButton(label: 'VERIFY', loading: _loading, onPressed: phone == null ? null : _verify)
+                : HButton(label: 'Verify', loading: _loading, onPressed: phone == null ? null : _verify),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _verify() async {
+    if (_code.text.trim().length != 6) {
+      setState(() => _error = 'Enter the 6 digit verification code.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _error = 'Phone OTP verification is not enabled by the current auth provider.';
+    });
   }
 }

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Leaf icon for organic/compost -->
+  <!-- Main leaf body: teardrop rotated 45deg -->
+  <path d="M50 6 Q70 6 70 26 Q70 42 50 46 Q30 42 30 26 Q30 6 50 6 Z" fill="#19B661"/>
+  <!-- Leaf vein (centre) -->
+  <line x1="50" y1="8" x2="50" y2="44" stroke="#0B3B2E" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <!-- Side veins left -->
+  <line x1="50" y1="18" x2="36" y2="26" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="50" y1="28" x2="36" y2="34" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <!-- Side veins right -->
+  <line x1="50" y1="18" x2="64" y2="26" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="50" y1="28" x2="64" y2="34" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <!-- Stem -->
+  <line x1="50" y1="44" x2="50" y2="50" stroke="#0B3B2E" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Bin lid handle -->
+  <rect x="43" y="51" width="14" height="8" rx="4" fill="#021024"/>
+  <!-- Bin lid -->
+  <rect x="19" y="57" width="62" height="11" rx="5.5" fill="#0B3B2E"/>
+  <!-- Bin body - green tinted for organic -->
+  <rect x="22" y="66" width="56" height="31" rx="8" fill="#19B661"/>
+  <rect x="22" y="77" width="56" height="2" rx="1" fill="#0B3B2E" opacity="0.25"/>
+  <rect x="22" y="86" width="56" height="2" rx="1" fill="#0B3B2E" opacity="0.25"/>
+</svg>

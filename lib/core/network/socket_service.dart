@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:socket_io_client/socket_io_client.dart' as sio;
 import '../config/env.dart';
 import '../storage/secure_storage.dart';
@@ -23,8 +24,7 @@ class SocketService {
   static bool _collectorOnline = false;
 
   // ── Health stream ─────────────────────────────────────────────────────────
-  static final _healthController =
-      StreamController<SocketHealth>.broadcast();
+  static final _healthController = StreamController<SocketHealth>.broadcast();
 
   /// Stream of connection health events.
   /// Listen in UI widgets to show "Reconnecting…" banners.
@@ -46,7 +46,10 @@ class SocketService {
       _socket = sio.io(
         Env.socketUrl,
         sio.OptionBuilder()
-            .setTransports(['websocket', 'polling']) // polling fallback for firewalled networks
+            .setTransports([
+              'websocket',
+              'polling'
+            ]) // polling fallback for firewalled networks
             .enableAutoConnect()
             .enableReconnection()
             // No attempt cap — a backend restart must never permanently kill
@@ -75,13 +78,20 @@ class SocketService {
 
       _socket!.onError((err) {
         debugPrint('[Socket] Error: $err');
+        FirebaseCrashlytics.instance
+            .recordError(err, StackTrace.current,
+                reason: 'Socket runtime error')
+            .catchError((_) {});
       });
 
       _socket!.onConnectError((err) {
         _emitHealth(SocketHealth.reconnecting);
         debugPrint('[Socket] Connect error: $err');
+        FirebaseCrashlytics.instance
+            .recordError(err, StackTrace.current,
+                reason: 'Socket connect error')
+            .catchError((_) {});
       });
-
     } catch (e) {
       debugPrint('[Socket] connect() exception: $e');
     }
@@ -182,7 +192,8 @@ class SocketService {
   }
 
   /// Broadcast collector GPS position. Debounced on server side (10m min move).
-  static void broadcastLocation({String? bookingId, required double lat, required double lng}) {
+  static void broadcastLocation(
+      {String? bookingId, required double lat, required double lng}) {
     emit('collector:location', {
       if (bookingId != null) 'bookingId': bookingId,
       'lat': lat,

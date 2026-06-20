@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <rect width="240" height="200" fill="none"/>
+  <!-- Truck body -->
+  <rect x="40" y="100" width="120" height="55" rx="8" fill="#F59E0B"/>
+  <rect x="140" y="108" width="50" height="47" rx="6" fill="#D97706"/>
+  <!-- Cab window -->
+  <rect x="148" y="114" width="34" height="24" rx="4" fill="#1F2937" opacity="0.7"/>
+  <!-- Wheels -->
+  <circle cx="75" cy="158" r="14" fill="#111827"/>
+  <circle cx="75" cy="158" r="7" fill="#374151"/>
+  <circle cx="160" cy="158" r="14" fill="#111827"/>
+  <circle cx="160" cy="158" r="7" fill="#374151"/>
+  <!-- Bin on truck -->
+  <rect x="55" y="75" width="90" height="30" rx="6" fill="#052659"/>
+  <rect x="60" y="80" width="80" height="20" rx="4" fill="#5483B3" opacity="0.5"/>
+  <!-- Checkmark circle -->
+  <circle cx="185" cy="55" r="28" fill="#22C55E"/>
+  <polyline points="172,55 181,64 198,46" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Stars -->
+  <text x="30" y="50" font-size="18" fill="#F59E0B" opacity="0.8">★</text>
+  <text x="55" y="35" font-size="12" fill="#F59E0B" opacity="0.5">★</text>
+  <text x="15" y="75" font-size="10" fill="#F59E0B" opacity="0.4">★</text>
+</svg>

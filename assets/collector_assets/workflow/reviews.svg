@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <rect width="240" height="200" fill="none"/>
+  <!-- Chat bubble 1 -->
+  <rect x="20" y="30" width="130" height="70" rx="16" fill="#1F2937"/>
+  <polygon points="40,100 30,118 55,100" fill="#1F2937"/>
+  <!-- Stars in bubble 1 -->
+  <text x="35" y="72" font-size="22" fill="#F59E0B">★★★★★</text>
+  <rect x="35" y="45" width="80" height="8" rx="4" fill="#374151"/>
+  <!-- Chat bubble 2 -->
+  <rect x="90" y="110" width="130" height="60" rx="16" fill="#052659"/>
+  <polygon points="200,170 215,185 195,170" fill="#052659"/>
+  <rect x="105" y="125" width="90" height="8" rx="4" fill="#5483B3" opacity="0.6"/>
+  <rect x="105" y="140" width="60" height="8" rx="4" fill="#5483B3" opacity="0.4"/>
+  <!-- Avatar circles -->
+  <circle cx="45" cy="170" r="18" fill="#F59E0B"/>
+  <circle cx="45" cy="164" r="8" fill="#D97706"/>
+  <rect x="27" y="178" width="36" height="12" rx="6" fill="#F59E0B"/>
+</svg>

@@ -6,11 +6,9 @@ class Fmt {
   static String currency(num amount) =>
       'GHC ${NumberFormat('#,##0.00').format(amount)}';
 
-  static String date(DateTime dt) =>
-      DateFormat('EEE, d MMM yyyy').format(dt);
+  static String date(DateTime dt) => DateFormat('EEE, d MMM yyyy').format(dt);
 
-  static String time(DateTime dt) =>
-      DateFormat('h:mm a').format(dt);
+  static String time(DateTime dt) => DateFormat('h:mm a').format(dt);
 
   static String dateTime(DateTime dt) =>
       DateFormat('d MMM • h:mm a').format(dt);
@@ -25,7 +23,8 @@ class Fmt {
 
   static String initials(String? name) {
     if (name == null || name.trim().isEmpty) return 'BC';
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
@@ -38,18 +37,32 @@ class Fmt {
 
   static String statusLabel(String status) {
     switch (status.toUpperCase()) {
-      case 'PENDING':    return 'Pending';
-      case 'SEARCHING':  return 'Searching';
-      case 'ASSIGNED':   return 'Assigned';
-      case 'ACCEPTED':   return 'Accepted';
-      case 'EN_ROUTE':   return 'En Route';
-      case 'ON_THE_WAY': return 'On the Way';
-      case 'ARRIVED':    return 'Arrived';
-      case 'COLLECTING': return 'Collecting';
-      case 'COLLECTED':  return 'Collected';
-      case 'COMPLETED':  return 'Completed';
-      case 'CANCELLED':  return 'Cancelled';
-      default:           return status;
+      case 'PENDING':
+        return 'Pending';
+      case 'SEARCHING':
+        return 'Searching';
+      case 'ASSIGNED':
+        return 'Assigned';
+      case 'ACCEPTED':
+        return 'Accepted';
+      case 'EN_ROUTE':
+        return 'En Route';
+      case 'ON_THE_WAY':
+        return 'On the Way';
+      case 'ARRIVED':
+        return 'Arrived';
+      case 'COLLECTING':
+        return 'Collecting';
+      case 'COLLECTED':
+        return 'Collected';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'UNASSIGNED':
+        return 'Unassigned';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return status;
     }
   }
 
@@ -64,42 +77,63 @@ class Fmt {
 
   static String timePrefLabel(String? pref) {
     switch ((pref ?? '').toUpperCase()) {
-      case 'MORNING':   return 'Morning (7–11am)';
-      case 'AFTERNOON': return 'Afternoon (12–4pm)';
-      case 'EVENING':   return 'Evening (4–7pm)';
-      default:          return pref ?? '';
+      case 'MORNING':
+        return 'Morning (7–11am)';
+      case 'AFTERNOON':
+        return 'Afternoon (12–4pm)';
+      case 'EVENING':
+        return 'Evening (4–7pm)';
+      default:
+        return pref ?? '';
     }
   }
 
   static String categoryLabel(String? category) {
     switch ((category ?? '').toUpperCase()) {
-      case 'HOUSEHOLD':    return 'Household';
-      case 'PLASTIC':      return 'Plastic';
-      case 'GLASS':        return 'Glass';
-      case 'METAL':        return 'Metal';
-      case 'ORGANIC':      return 'Organic';
-      case 'CONSTRUCTION': return 'Construction';
-      case 'EWASTE':       return 'E-Waste';
-      default:             return category ?? 'General';
+      case 'HOUSEHOLD':
+        return 'Household';
+      case 'PLASTIC':
+        return 'Plastic';
+      case 'GLASS':
+        return 'Glass';
+      case 'METAL':
+        return 'Metal';
+      case 'ORGANIC':
+        return 'Organic';
+      case 'CONSTRUCTION':
+        return 'Construction';
+      case 'EWASTE':
+        return 'E-Waste';
+      default:
+        return category ?? 'General';
     }
   }
 
   static String binSizeLabel(String size) {
     switch (size.toUpperCase()) {
-      case 'SMALL':  return 'Small (≤120L)';
-      case 'MEDIUM': return 'Medium (180L)';
-      case 'LARGE':  return 'Large (240L)';
-      default:       return size;
+      case 'SMALL':
+        return 'Small (≤120L)';
+      case 'MEDIUM':
+        return 'Medium (180L)';
+      case 'LARGE':
+        return 'Large (240L)';
+      default:
+        return size;
     }
   }
 
   static String paymentMethodLabel(String method) {
     switch (method.toUpperCase()) {
-      case 'MTN_MOMO':       return 'MTN MoMo';
-      case 'VODAFONE_CASH':  return 'Telecel Cash';
-      case 'AIRTELTIGO':     return 'AirtelTigo Money';
-      case 'CASH':           return 'Cash on Pickup';
-      default:               return method;
+      case 'MTN_MOMO':
+        return 'MTN MoMo';
+      case 'VODAFONE_CASH':
+        return 'Telecel Cash';
+      case 'AIRTELTIGO':
+        return 'AirtelTigo Money';
+      case 'CASH':
+        return 'Cash on Pickup';
+      default:
+        return method;
     }
   }
 
@@ -108,8 +142,20 @@ class Fmt {
     if (iso == null) return '';
     final dt = DateTime.tryParse(iso);
     if (dt == null) return '';
-    const months = ['Jan','Feb','Mar','Apr','May','Jun',
-                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }

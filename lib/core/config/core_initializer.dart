@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,7 +10,11 @@ import 'package:maplibre_gl/maplibre_gl.dart' show MapLibreMap;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_flavor.dart';
 import 'env.dart';
+import '../design_system/collector_design_system.dart';
+import '../services/background_location_service.dart';
 import '../services/fcm_service.dart';
+import '../services/offline_action_queue_service.dart';
+import '../network/api_client.dart';
 
 class CoreInitializer {
   static Future<void> init(AppFlavor flavor) async {
@@ -45,12 +50,16 @@ class CoreInitializer {
     // 3. Initialize Firebase & Crashlytics
     try {
       await Firebase.initializeApp();
-      
+
       // Route Flutter framework errors to Crashlytics
       // recordFlutterError (non-fatal) — NOT recordFlutterFatalError which kills the app
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
         FirebaseCrashlytics.instance.recordFlutterError(details);
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
       };
 
       // Enable crash reporting
@@ -58,15 +67,32 @@ class CoreInitializer {
 
       // 4. Notifications & Messaging
       await FirebaseMessaging.instance.requestPermission(
-        alert: true, badge: true, sound: true,
+        alert: true,
+        badge: true,
+        sound: true,
       );
       FcmService.listenForRefresh();
-      
+      FcmService.listenForeground();
     } catch (e) {
       debugPrint('[Core] Firebase init failed: $e');
       // Fallback: Ensure UI errors are still presented if Crashlytics fails
       FlutterError.onError = FlutterError.presentError;
     }
+
+    // Background location service — collector flavor only
+    if (flavor == AppFlavor.collector) {
+      BackgroundLocationService.init();
+    }
+
+    await OfflineActionQueueService.init(
+      dispatcher: (method, path, data, headers) => ApiClient.send(
+        method,
+        path,
+        data: data,
+        headers: headers,
+        extra: const {'skipOfflineQueue': true},
+      ),
+    );
 
     // 5. System Config
     await SystemChrome.setPreferredOrientations([
@@ -78,8 +104,10 @@ class CoreInitializer {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isCollector ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: isCollector ? const Color(0xFF0F172A) : Colors.white,
-      systemNavigationBarIconBrightness: isCollector ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor:
+          isCollector ? CollectorColors.dark : Colors.white,
+      systemNavigationBarIconBrightness:
+          isCollector ? Brightness.light : Brightness.dark,
     ));
   }
 

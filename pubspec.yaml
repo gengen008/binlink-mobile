@@ -28,8 +28,7 @@ dependencies:
   # Location + GPS
   geolocator: ^12.0.0
 
-  # Icons (Lucide is primary icon system, Phosphor for filled states)
-  lucide_icons_flutter: ^3.1.14
+  # Icon font for navigation/action controls
   phosphor_flutter: ^2.1.0
 
   # Fonts
@@ -71,7 +70,6 @@ dependencies:
 
   # Animations
   lottie: ^3.1.2
-  animate_do: ^3.3.2
   flutter_animate: ^4.5.0
   shimmer: ^3.0.0
 
@@ -84,6 +82,9 @@ dependencies:
   # Supabase — Realtime chat + photo storage
   supabase_flutter: ^2.8.4
 
+  # Background foreground service — keeps collector location stream alive when minimized
+  flutter_foreground_task: ^8.14.2
+
   # Internationalization / formatting
   intl: ^0.20.2
 
@@ -91,40 +92,34 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
 
   assets:
     - .env
-    # Images
-    - assets/images/defaultavatar.png
-    - assets/images/onboarding/
-    # Branding (SVGs: google, apple, paystack)
-    - assets/branding/
-    - assets/branding/splash/
-    - assets/branding/app_icon/
-    # Icons (category directories that exist)
-    - assets/icons/navigation/
-    - assets/icons/booking/
-    - assets/icons/waste/
-    - assets/icons/payments/
-    - assets/icons/profile/
-    - assets/icons/tracking/
-    - assets/icons/wallet/
-    - assets/icons/brands/
-    # Lottie animations
-    - assets/lottie/
-    - assets/lottie/booking/
-    - assets/lottie/loading/
-    - assets/lottie/payments/
-    - assets/lottie/empty_states/
-    - assets/lottie/success/
-    - assets/lottie/errors/
-    - assets/lottie/wallet/
-    - assets/lottie/notifications/
-    # Illustrations (SVG)
-    - assets/illustrations/empty_states/
-    - assets/illustrations/onboarding/
-    # 3D assets
-    - assets/v4/3d/
+    - assets/household_assets/branding/
+    - assets/household_assets/onboarding/
+    - assets/household_assets/illustrations/
+    - assets/household_assets/tracking/
+    - assets/household_assets/errors/
+    - assets/household_assets/empty_states/
+    - assets/household_assets/wallet/
+    - assets/household_assets/history/
+    - assets/household_assets/waste_categories/
+    - assets/household_assets/map_markers/
+    - assets/household_assets/payments/
+    - assets/household_assets/avatars/
+    - assets/household_assets/lottie/
+    - assets/collector_assets/branding/
+    - assets/collector_assets/onboarding/
+    - assets/collector_assets/illustrations/
+    - assets/collector_assets/earnings/
+    - assets/collector_assets/empty_states/
+    - assets/collector_assets/errors/
+    - assets/collector_assets/icons/fleet/
+    - assets/collector_assets/map_markers/
+    - assets/collector_assets/avatars/
+    - assets/collector_assets/lottie/
+    - assets/collector_assets/workflow/

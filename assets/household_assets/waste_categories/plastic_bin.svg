@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Plastic bottle -->
+  <rect x="43" y="4" width="14" height="8" rx="4" fill="#5483B3"/>
+  <rect x="44" y="11" width="12" height="7" rx="2" fill="#C1E8FF"/>
+  <path d="M37 22 Q35 24 35 27 L35 44 Q35 48 39 48 L61 48 Q65 48 65 44 L65 27 Q65 24 63 22 L37 22 Z" fill="#C1E8FF"/>
+  <!-- Recycling band on bottle -->
+  <rect x="37" y="32" width="26" height="8" rx="3" fill="#7DA0CA" opacity="0.55"/>
+  <!-- Recycling arrows (simplified triple-arrow) -->
+  <polygon points="43,33 50,36 57,33" fill="#052659" opacity="0.8"/>
+  <!-- Bin lid handle -->
+  <rect x="43" y="50" width="14" height="8" rx="4" fill="#021024"/>
+  <!-- Bin lid -->
+  <rect x="19" y="56" width="62" height="11" rx="5.5" fill="#052659"/>
+  <!-- Bin body -->
+  <rect x="22" y="65" width="56" height="32" rx="8" fill="#5483B3"/>
+  <rect x="22" y="76" width="56" height="2" rx="1" fill="#7DA0CA" opacity="0.4"/>
+  <rect x="22" y="85" width="56" height="2" rx="1" fill="#7DA0CA" opacity="0.4"/>
+</svg>

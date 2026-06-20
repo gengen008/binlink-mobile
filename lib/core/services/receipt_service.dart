@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -9,6 +10,14 @@ class ReceiptService {
   ReceiptService._();
 
   static Future<void> shareReceipt(Map<String, dynamic> booking) async {
+    final file = await createReceiptFile(booking);
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      subject: 'BinLink Pickup Receipt',
+    );
+  }
+
+  static Future<File> createReceiptFile(Map<String, dynamic> booking) async {
     final doc = pw.Document();
 
     final bookingId = booking['id'] as String? ?? 'N/A';
@@ -19,8 +28,16 @@ class ReceiptService {
     final address   = booking['pickupAddress'] as String? ?? '';
     final method    = booking['paymentMethod'] as String? ?? '';
     final category  = booking['wasteCategory'] as String?;
-    final date      = booking['createdAt'] as String?;
-    final collector = (booking['collector'] as Map<String, dynamic>?)?['fullName'] as String?;
+    final date      = booking['completedAt'] as String? ?? booking['updatedAt'] as String? ?? booking['createdAt'] as String?;
+    final payRef    = booking['paystackRef'] as String?;
+    final weight    = Fmt.toDouble(booking['actualWeightKg'] ?? booking['estimatedWeightKg']);
+    final invoice   = 'INV-${bookingId.substring(0, bookingId.length >= 8 ? 8 : bookingId.length).toUpperCase()}';
+    final collectorMap = booking['collector'] as Map<String, dynamic>?;
+    final collector = collectorMap?['fullName'] as String?;
+    final collectorPhone = collectorMap?['phone'] as String?;
+    final collectorVehicle = collectorMap?['vehicleType'] as String?;
+    final beforePhotoUrl = booking['beforePhotoUrl'] as String?;
+    final afterPhotoUrl = booking['afterPhotoUrl'] as String?;
 
     final dateStr = date != null
         ? _formatDate(date)
@@ -28,6 +45,8 @@ class ReceiptService {
 
     final basePrice  = _basePrice(binSize);
     final extraPrice = extra * 6.0;
+    final beforeImage = await _networkImage(beforePhotoUrl);
+    final afterImage = await _networkImage(afterPhotoUrl);
 
     doc.addPage(
       pw.Page(
@@ -72,7 +91,7 @@ class ReceiptService {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                _labelValue('Reference', bookingId.substring(0, 8).toUpperCase()),
+                _labelValue('Invoice', invoice),
                 _labelValue('Date', dateStr, align: pw.TextAlign.right),
               ],
             ),
@@ -87,15 +106,59 @@ class ReceiptService {
                 )),
             pw.SizedBox(height: 10),
 
+            _rowItem('Booking ID', bookingId),
+            if (payRef != null) _rowItem('Payment Reference', payRef),
             _rowItem('Address', address),
             if (category != null)
               _rowItem('Waste Category', category.replaceAll('_', ' ')),
             _rowItem('Bin Size', _binLabel(binSize)),
+            if (weight > 0) _rowItem('Weight Collected', '${weight.toStringAsFixed(1)} kg'),
             if (collector != null)
               _rowItem('Collector', collector),
+            if (collectorPhone != null)
+              _rowItem('Collector Phone', collectorPhone),
+            if (collectorVehicle != null)
+              _rowItem('Collector Vehicle', collectorVehicle),
             _rowItem('Payment Method', _methodLabel(method)),
 
             pw.SizedBox(height: 24),
+            if (beforeImage != null || afterImage != null) ...[
+              pw.Text('PHOTO RECORD',
+                  style: pw.TextStyle(
+                    fontSize: 10, fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.grey600, letterSpacing: 1.5,
+                  )),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  if (beforeImage != null)
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('Before Photo', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                          pw.SizedBox(height: 6),
+                          pw.Image(beforeImage, height: 120, fit: pw.BoxFit.cover),
+                        ],
+                      ),
+                    ),
+                  if (beforeImage != null && afterImage != null) pw.SizedBox(width: 12),
+                  if (afterImage != null)
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('After Photo', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                          pw.SizedBox(height: 6),
+                          pw.Image(afterImage, height: 120, fit: pw.BoxFit.cover),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              pw.SizedBox(height: 24),
+            ],
             pw.Divider(color: PdfColors.grey200),
             pw.SizedBox(height: 16),
 
@@ -150,11 +213,7 @@ class ReceiptService {
     final dir  = await getTemporaryDirectory();
     final file = File('${dir.path}/binlink_receipt_${bookingId.substring(0, 8)}.pdf');
     await file.writeAsBytes(await doc.save());
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: 'BinLink Pickup Receipt',
-    );
+    return file;
   }
 
   // ── helpers ──────────────────────────────────────────────────────────────
@@ -241,5 +300,20 @@ class ReceiptService {
     const m = ['Jan','Feb','Mar','Apr','May','Jun',
                 'Jul','Aug','Sep','Oct','Nov','Dec'];
     return '${dt.day} ${m[dt.month - 1]} ${dt.year}';
+  }
+
+  static Future<pw.MemoryImage?> _networkImage(String? url) async {
+    if (url == null || url.isEmpty) return null;
+    try {
+      final client = HttpClient();
+      final request = await client.getUrl(Uri.parse(url));
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      if (bytes.isEmpty) return null;
+      return pw.MemoryImage(Uint8List.fromList(bytes));
+    } catch (_) {
+      return null;
+    }
   }
 }

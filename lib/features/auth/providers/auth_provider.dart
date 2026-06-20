@@ -8,6 +8,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/network/socket_service.dart';
 import '../../../core/services/fcm_service.dart';
+import '../../../core/services/offline_action_queue_service.dart';
 import '../../../shared/models/user_model.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
@@ -36,6 +37,7 @@ class AuthProvider extends ChangeNotifier {
         _status = AuthStatus.authenticated;
         await SocketService.connect();
         FcmService.registerToken();
+        OfflineActionQueueService.syncNow();
       } else {
         _status = AuthStatus.unauthenticated;
       }
@@ -55,7 +57,8 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final cred = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email, password: password,
+        email: email,
+        password: password,
       );
       final idToken = await cred.user!.getIdToken();
       return await _firebaseExchange(idToken!, role: role);
@@ -80,11 +83,13 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final cred = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email, password: password,
+        email: email,
+        password: password,
       );
       await cred.user!.updateDisplayName(fullName);
       final idToken = await cred.user!.getIdToken();
-      return await _firebaseExchange(idToken!, fullName: fullName, phone: phone, role: role);
+      return await _firebaseExchange(idToken!,
+          fullName: fullName, phone: phone, role: role);
     } on FirebaseAuthException catch (e) {
       _error = _firebaseError(e);
       return false;
@@ -129,9 +134,11 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } on PlatformException catch (e) {
       if (e.code == '10' || e.code == 'developer_error') {
-        _error = 'Google Sign-In configuration error. Please ensure SHA-1 keys are correctly registered in Firebase for both flavors.';
+        _error =
+            'Google Sign-In configuration error. Please ensure SHA-1 keys are correctly registered in Firebase for both flavors.';
       } else if (e.code == 'network_error') {
-        _error = 'Network error during Google Sign-In. Please check your connection.';
+        _error =
+            'Network error during Google Sign-In. Please check your connection.';
       } else {
         _error = 'Google Sign-In failed (${e.code}): ${e.message}';
       }
@@ -167,7 +174,8 @@ class AuthProvider extends ChangeNotifier {
     final refreshToken = await SecureStorage.getRefreshToken();
     if (refreshToken != null) {
       try {
-        await ApiClient.post('/api/auth/logout', {'refreshToken': refreshToken});
+        await ApiClient.post(
+            '/api/auth/logout', {'refreshToken': refreshToken});
       } catch (_) {}
     }
     await _firebaseAuth.signOut();
@@ -211,7 +219,8 @@ class AuthProvider extends ChangeNotifier {
     String? phone,
     String role = 'HOUSEHOLD',
   }) async {
-    final fcmToken = await FirebaseMessaging.instance.getToken().catchError((_) => null);
+    final fcmToken =
+        await FirebaseMessaging.instance.getToken().catchError((_) => null);
     final body = <String, dynamic>{
       'firebaseToken': idToken,
       'role': role,
@@ -231,7 +240,7 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
     await SecureStorage.saveTokens(
-      accessToken:  data['accessToken'],
+      accessToken: data['accessToken'],
       refreshToken: data['refreshToken'],
     );
     final userData = data['user'];
@@ -244,6 +253,7 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     await SocketService.connect();
     FcmService.registerToken();
+    OfflineActionQueueService.syncNow();
     notifyListeners();
   }
 
@@ -254,22 +264,33 @@ class AuthProvider extends ChangeNotifier {
 
   String _firebaseError(FirebaseAuthException e) {
     switch (e.code) {
-      case 'user-not-found':       return 'No account found with this email.';
-      case 'wrong-password':       return 'Incorrect password.';
-      case 'invalid-credential':   return 'Invalid email or password.';
-      case 'email-already-in-use': return 'An account already exists for this email.';
-      case 'invalid-email':        return 'Invalid email address.';
-      case 'weak-password':        return 'Password must be at least 6 characters.';
-      case 'user-disabled':        return 'This account has been disabled.';
-      case 'too-many-requests':    return 'Too many attempts. Please try again later.';
-      case 'network-request-failed': return 'Network error. Check your connection.';
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'invalid-credential':
+        return 'Invalid email or password.';
+      case 'email-already-in-use':
+        return 'An account already exists for this email.';
+      case 'invalid-email':
+        return 'Invalid email address.';
+      case 'weak-password':
+        return 'Password must be at least 6 characters.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection.';
       case 'account-exists-with-different-credential':
         return 'An account already exists with a different sign-in method.';
-      default: return e.message ?? 'Authentication failed.';
+      default:
+        return e.message ?? 'Authentication failed.';
     }
   }
 
   String _extractError(DioException e) {
-    return e.response?.data?['error'] as String? ?? 'Something went wrong. Please try again.';
+    return e.response?.data?['error'] as String? ??
+        'Something went wrong. Please try again.';
   }
 }

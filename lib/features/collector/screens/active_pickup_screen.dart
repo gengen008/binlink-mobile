@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart' as ll;
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:animate_do/animate_do.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart' as ll;
+import 'package:provider/provider.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../core/design_system/collector_design_system.dart';
+import '../../../shared/components/binlink_map.dart';
 import '../providers/collector_provider.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
-import '../../../shared/widgets/binlink_map.dart';
-import '../../../shared/widgets/chat_sheet.dart';
 
 class ActivePickupScreen extends StatefulWidget {
-  const ActivePickupScreen({super.key, required this.booking});
+  const ActivePickupScreen({super.key, this.booking = const {}});
   final Map<String, dynamic> booking;
 
   @override
@@ -24,494 +17,280 @@ class ActivePickupScreen extends StatefulWidget {
 }
 
 class _ActivePickupScreenState extends State<ActivePickupScreen> {
-  String _currentStatus = '';
-  String? _beforePhoto;
-  String? _afterPhoto;
-  bool _uploading = false;
-  final _weightCtrl = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
-
-  @override
-  void initState() {
-    super.initState();
-    _currentStatus = widget.booking['status'] as String? ?? 'ACCEPTED';
-    _beforePhoto = widget.booking['beforePhoto'];
-    _afterPhoto = widget.booking['afterPhoto'];
-  }
-
-  @override
-  void dispose() {
-    _weightCtrl.dispose();
-    super.dispose();
-  }
+  late String _status = widget.booking['status'] as String? ?? 'ACCEPTED';
+  double _weight = 18;
+  final _picker = ImagePicker();
+  final Set<String> _uploadedPhotos = {};
+  String? _photoError;
+  bool _photoLoading = false;
+  bool _reportingException = false;
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<CollectorProvider>();
-    final hhName = widget.booking['household']?['fullName'] as String? ?? 'Household';
-    final lat = (widget.booking['pickupLat'] as num?)?.toDouble() ?? 0.0;
-    final lng = (widget.booking['pickupLng'] as num?)?.toDouble() ?? 0.0;
-
+    final lat = (widget.booking['pickupLat'] as num?)?.toDouble();
+    final lng = (widget.booking['pickupLng'] as num?)?.toDouble();
+    final provider = context.read<CollectorProvider>();
     return Scaffold(
-      backgroundColor: AppColors.premiumBlack,
-      body: Stack(
-        children: [
-          // ── Map ──
+      backgroundColor: CollectorColors.dark,
+      body: Stack(children: [
+        if (lat != null && lng != null)
+          Positioned.fill(child: BinLinkMap(initialPosition: ll.LatLng(lat, lng), pickupPosition: ll.LatLng(lat, lng), isNavigating: true))
+        else
           Positioned.fill(
-            child: BinLinkMap(
-              initialPosition: ll.LatLng(lat, lng),
-              pickupPosition: ll.LatLng(lat, lng),
-              myLocationEnabled: true,
-            ),
-          ),
-
-          // ── Back Button ──
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 20,
-            child: _RoundBackBtn(onTap: () => Navigator.pop(context)),
-          ),
-
-          // ── Operational Console ──
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: FadeInUp(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
-                decoration: const BoxDecoration(
-                  color: AppColors.premiumBlack,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 40, offset: Offset(0, -10))],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── Status Progress Bar ──
-                    _StatusProgressBar(status: _currentStatus),
-                    const SizedBox(height: 24),
-
-                    // Household Info
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(color: AppColors.primary.withAlpha(50), shape: BoxShape.circle),
-                          child: CircleAvatar(
-                            radius: 24,
-                            backgroundColor: AppColors.premiumBlack,
-                            child: Text(Fmt.initials(hhName), style: AppTextStyles.h3.copyWith(color: Colors.white)),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(hhName, style: AppTextStyles.h3.copyWith(color: Colors.white)),
-                              Text(Fmt.categoryLabel(widget.booking['wasteCategory'] as String? ?? ''), style: AppTextStyles.label.copyWith(color: Colors.white54)),
-                            ],
-                          ),
-                        ),
-                        _RoundActionBtn(
-                          icon: LucideIcons.messageCircle,
-                          onTap: () => showChatSheet(context, bookingId: widget.booking['id'], myRole: 'COLLECTOR'),
-                        ),
-                        const SizedBox(width: 12),
-                        _RoundActionBtn(
-                          icon: LucideIcons.phone,
-                          onTap: () => launchUrl(Uri.parse('tel:${widget.booking['household']?['phone'] ?? ''}')),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Divider(color: Colors.white10),
-                    const SizedBox(height: 24),
-
-                    // Action Area
-                    _buildActions(prov),
-
-                    const SizedBox(height: 24),
-                    TextButton(
-                      onPressed: () => _showExceptionSheet(context),
-                      child: Text('REPORT A PROBLEM', style: AppTextStyles.label.copyWith(color: AppColors.danger, letterSpacing: 1.2, fontWeight: FontWeight.w800)),
-                    ),
-                  ],
-                ),
+            child: Center(
+              child: CPanel(
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  SvgPicture.asset('assets/collector_assets/errors/location_permission.svg', height: 180),
+                  const SizedBox(height: 12),
+                  Text('Route unavailable', style: CollectorType.title),
+                  const SizedBox(height: 8),
+                  Text('Pickup coordinates are missing for this job.', textAlign: TextAlign.center, style: CollectorType.caption),
+                ]),
               ),
             ),
           ),
-        ],
-      ),
+        Positioned(
+          top: MediaQuery.paddingOf(context).top + 14,
+          left: 16,
+          right: 16,
+          child: CPanel(child: Row(children: [
+            IconButton(onPressed: () => Navigator.maybePop(context), icon: const CIcon('route', color: CollectorColors.white)),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(_status.replaceAll('_', ' '), style: CollectorType.title),
+              Text(widget.booking['pickupAddress'] as String? ?? 'Active pickup route', maxLines: 1, overflow: TextOverflow.ellipsis, style: CollectorType.caption),
+            ])),
+          ])),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 24,
+          child: CPanel(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              SvgPicture.asset(_assetForStatus(_status), height: 120),
+              const SizedBox(height: 10),
+              Text(_etaText, style: CollectorType.hero),
+              Text('Navigation, proof capture, weight and completion', style: CollectorType.caption),
+              if (_photoError != null) ...[
+                const SizedBox(height: 10),
+                Text(_photoError!, style: CollectorType.caption.copyWith(color: CollectorColors.red)),
+              ],
+              const SizedBox(height: 16),
+              if (_status == 'ARRIVED' || _status == 'COLLECTING') ...[
+                Slider(value: _weight, min: 1, max: 120, activeColor: CollectorColors.green, onChanged: (v) => setState(() => _weight = v)),
+                Text('Weight capture: ${_weight.round()} kg', style: CollectorType.caption),
+                const SizedBox(height: 10),
+              ],
+              CButton(label: _nextLabel(_status), icon: 'navigation', onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                final action = _nextAction(_status);
+                final bookingId = widget.booking['id'] as String?;
+                if (bookingId == null) return;
+                await provider.updateStatus(bookingId, action, actualWeightKg: _weight);
+                if (!mounted) return;
+                if (provider.error != null) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(provider.error!)),
+                  );
+                  return;
+                }
+                final nextStatus = _nextStatus(_status);
+                setState(() => _status = nextStatus);
+                if (nextStatus == 'COMPLETED') {
+                  navigator.maybePop();
+                }
+              }),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(child: CButton(label: _uploadedPhotos.contains('BEFORE') ? 'BEFORE SAVED' : 'BEFORE PHOTO', icon: 'before_photo', secondary: true, loading: _photoLoading, onPressed: () => _capturePhoto(provider, 'BEFORE'))),
+                const SizedBox(width: 10),
+                Expanded(child: CButton(label: _uploadedPhotos.contains('AFTER') ? 'AFTER SAVED' : 'AFTER PHOTO', icon: 'after_photo', secondary: true, loading: _photoLoading, onPressed: () => _capturePhoto(provider, 'AFTER'))),
+              ]),
+              const SizedBox(height: 10),
+              CButton(label: 'REPORT ISSUE', icon: 'help', secondary: true, loading: _reportingException, onPressed: () => _reportException(provider)),
+            ]),
+          ),
+        ),
+      ]),
     );
   }
 
-  Widget _buildActions(CollectorProvider prov) {
-    switch (_currentStatus) {
-      case 'ACCEPTED':
-        return AppButton(
-          label: 'START NAVIGATION',
-          icon: const Icon(LucideIcons.navigation, color: Colors.white),
-          onPressed: () => launchUrl(Uri.parse('google.navigation:q=${widget.booking['pickupLat']},${widget.booking['pickupLng']}')),
-        );
-      case 'EN_ROUTE':
-      case 'ON_THE_WAY':
-        return AppButton(
-          label: 'I HAVE ARRIVED',
-          onPressed: () async {
-            await prov.updateStatus(widget.booking['id'], 'arrived');
-            setState(() => _currentStatus = 'ARRIVED');
-          },
-        );
-      case 'ARRIVED':
-      case 'COLLECTING':
-        final step = _afterPhoto != null ? 4 : (_currentStatus == 'COLLECTING' ? 3 : (_beforePhoto != null ? 2 : 1));
-        return Column(
-          children: [
-            _CollectionStepper(currentStep: step),
-            const SizedBox(height: 32),
-            if (_beforePhoto == null)
-              AppButton(
-                label: _uploading ? 'UPLOADING...' : 'TAKE BEFORE PHOTO',
-                icon: const Icon(LucideIcons.camera, color: Colors.white),
-                onPressed: _uploading ? null : () => _takePhoto('before'),
-              )
-            else ...[
-              _PhotoThumbnail(url: _beforePhoto!, label: 'BEFORE PICKUP'),
-              const SizedBox(height: 16),
-              if (_currentStatus == 'ARRIVED')
-                AppButton(
-                  label: 'START COLLECTING',
-                  onPressed: () async {
-                    await prov.updateStatus(widget.booking['id'], 'collecting');
-                    setState(() => _currentStatus = 'COLLECTING');
-                  },
-                )
-              else if (_afterPhoto == null)
-                AppButton(
-                  label: _uploading ? 'UPLOADING...' : 'TAKE AFTER PHOTO',
-                  icon: const Icon(LucideIcons.camera, color: Colors.white),
-                  onPressed: _uploading ? null : () => _takePhoto('after'),
-                )
-              else ...[
-                _PhotoThumbnail(url: _afterPhoto!, label: 'AFTER PICKUP'),
-                const SizedBox(height: 24),
-                AppTextField(
-                  controller: _weightCtrl,
-                  label: 'Actual Weight',
-                  hint: 'Enter weight in kg',
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  prefixIcon: const Icon(LucideIcons.scale, color: Colors.white70),
-                  suffix: Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Text('kg', style: AppTextStyles.h4.copyWith(color: AppColors.primary)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                AppButton(
-                  label: 'COMPLETE PICKUP',
-                  onPressed: () async {
-                    final w = double.tryParse(_weightCtrl.text) ?? 0;
-                    if (w <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a valid weight')),
-                      );
-                      return;
-                    }
-                    await prov.updateStatus(widget.booking['id'], 'complete', actualWeightKg: w);
-                    if (mounted) Navigator.pop(context);
-                  },
+  String get _etaText {
+    final raw = widget.booking['etaMinutes'] ?? widget.booking['eta'] ?? widget.booking['estimatedMinutes'];
+    final minutes = raw is num ? raw.round() : int.tryParse(raw?.toString() ?? '');
+    if (minutes == null || minutes <= 0) return 'ETA pending';
+    return '$minutes min';
+  }
+
+  Future<void> _capturePhoto(CollectorProvider provider, String type) async {
+    final bookingId = widget.booking['id'] as String?;
+    if (bookingId == null) {
+      setState(() => _photoError = 'Cannot upload photo without a booking id.');
+      return;
+    }
+    setState(() {
+      _photoLoading = true;
+      _photoError = null;
+    });
+    try {
+      final image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 82, maxWidth: 1600);
+      if (image == null) return;
+      final url = await provider.uploadPhoto(bookingId, type, image.path);
+      if (url == null) {
+        setState(() => _photoError = 'Photo upload failed. Try again with a stronger connection.');
+      } else {
+        setState(() => _uploadedPhotos.add(type));
+      }
+    } catch (_) {
+      setState(() => _photoError = 'Camera or upload failed. Check permissions and retry.');
+    } finally {
+      if (mounted) setState(() => _photoLoading = false);
+    }
+  }
+
+  String _assetForStatus(String s) {
+    if (s == 'ARRIVED') return 'assets/collector_assets/workflow/arrived.svg';
+    if (s == 'COLLECTING') return 'assets/collector_assets/workflow/weight_capture.svg';
+    if (s == 'COLLECTED') return 'assets/collector_assets/workflow/complete_job.svg';
+    return 'assets/collector_assets/workflow/navigation.svg';
+  }
+
+  String _nextLabel(String s) {
+    if (s == 'ACCEPTED' || s == 'ASSIGNED') return 'START NAVIGATION';
+    if (s == 'ON_THE_WAY' || s == 'EN_ROUTE') return 'MARK ARRIVED';
+    if (s == 'ARRIVED') return 'START COLLECTING';
+    if (s == 'COLLECTING') return 'COMPLETE WITH WEIGHT';
+    return 'CLOSE JOB';
+  }
+
+  String _nextAction(String s) {
+    if (s == 'ACCEPTED' || s == 'ASSIGNED') return 'on-the-way';
+    if (s == 'ON_THE_WAY' || s == 'EN_ROUTE') return 'arrived';
+    if (s == 'ARRIVED') return 'collecting';
+    return 'complete';
+  }
+
+  String _nextStatus(String s) {
+    if (s == 'ACCEPTED' || s == 'ASSIGNED') return 'ON_THE_WAY';
+    if (s == 'ON_THE_WAY' || s == 'EN_ROUTE') return 'ARRIVED';
+    if (s == 'ARRIVED') return 'COLLECTING';
+    return 'COMPLETED';
+  }
+
+  Future<void> _reportException(CollectorProvider provider) async {
+    final bookingId = widget.booking['id'] as String?;
+    if (bookingId == null) {
+      setState(() => _photoError = 'Cannot report an exception without a booking id.');
+      return;
+    }
+
+    final note = TextEditingController();
+    String reason = 'GATE_LOCKED';
+    String? photoUrl;
+    String? validationError;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) => AlertDialog(
+          backgroundColor: CollectorColors.charcoal,
+          title: Text('Report exception', style: CollectorType.title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: reason,
+                dropdownColor: CollectorColors.charcoal,
+                items: const [
+                  DropdownMenuItem(value: 'GATE_LOCKED', child: Text('Gate Locked')),
+                  DropdownMenuItem(value: 'HAZARDOUS_WASTE', child: Text('Hazardous Waste')),
+                  DropdownMenuItem(value: 'CUSTOMER_NOT_HOME', child: Text('Customer Not Home')),
+                  DropdownMenuItem(value: 'OVERFILLED_LOAD', child: Text('Overfilled Load')),
+                ],
+                onChanged: (value) {
+                  if (value != null) setDialogState(() => reason = value);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: note,
+                minLines: 3,
+                maxLines: 5,
+                onChanged: (_) {
+                  if (validationError != null && note.text.trim().isNotEmpty) {
+                    setDialogState(() => validationError = null);
+                  }
+                },
+                decoration: const InputDecoration(labelText: 'Note'),
+              ),
+              const SizedBox(height: 12),
+              CButton(
+                label: photoUrl == null ? 'CAPTURE EXCEPTION PHOTO' : 'PHOTO CAPTURED',
+                icon: 'camera',
+                secondary: true,
+                onPressed: () async {
+                  final image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 82, maxWidth: 1600);
+                  if (image == null) return;
+                  final uploaded = await provider.uploadPhoto(bookingId, 'EXCEPTION', image.path);
+                  if (uploaded != null) {
+                    setDialogState(() {
+                      photoUrl = uploaded;
+                      validationError = null;
+                    });
+                  }
+                },
+              ),
+              if (validationError != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  validationError!,
+                  style: CollectorType.caption.copyWith(color: CollectorColors.red),
                 ),
               ],
             ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () {
+                if (note.text.trim().isEmpty) {
+                  setDialogState(() => validationError = 'Please enter a note.');
+                  return;
+                }
+                if (photoUrl == null) {
+                  setDialogState(() => validationError = 'Please attach a photo.');
+                  return;
+                }
+                setDialogState(() => validationError = null);
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Submit'),
+            ),
           ],
-        );
-      default:
-        return const SizedBox();
-    }
-  }
+        ),
+      ),
+    );
 
-  Future<void> _takePhoto(String type) async {
-    final prov = context.read<CollectorProvider>();
-    final file = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    if (file == null) return;
+    if (confirmed != true || photoUrl == null) return;
 
-    setState(() => _uploading = true);
-    final url = await prov.uploadPhoto(widget.booking['id'], type, file.path);
     setState(() {
-      _uploading = false;
-      if (url != null) {
-        if (type == 'before') _beforePhoto = url;
-        if (type == 'after') _afterPhoto = url;
-      }
+      _reportingException = true;
+      _photoError = null;
     });
-  }
-
-  void _showExceptionSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _ExceptionSheet(
-        onReport: (reason, note) async {
-          await context.read<CollectorProvider>().reportException(widget.booking['id'], reason, note);
-          if (context.mounted) {
-            Navigator.pop(context);
-          }
-        },
-      ),
-    );
-  }
-}
-
-class _RoundBackBtn extends StatelessWidget {
-  const _RoundBackBtn({required this.onTap});
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(color: AppColors.premiumBlack, shape: BoxShape.circle),
-        child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 24),
-      ),
-    );
-  }
-}
-
-class _RoundActionBtn extends StatelessWidget {
-  const _RoundActionBtn({required this.icon, required this.onTap});
-  final IconData icon;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.white.withAlpha(10), shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.white, size: 22),
-      ),
-    );
-  }
-}
-
-class _PhotoThumbnail extends StatelessWidget {
-  const _PhotoThumbnail({required this.url, required this.label});
-  final String url;
-  final String label;
-  
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(16),
-        image: DecorationImage(
-          image: NetworkImage(url),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.bottomRight,
-        child: Container(
-          margin: const EdgeInsets.all(12),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-          child: Text(label, style: AppTextStyles.small.copyWith(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-      ),
-    );
-  }
-}
-
-class _ExceptionSheet extends StatefulWidget {
-  const _ExceptionSheet({required this.onReport});
-  final Function(String, String?) onReport;
-
-  @override
-  State<_ExceptionSheet> createState() => _ExceptionSheetState();
-}
-
-class _ExceptionSheetState extends State<_ExceptionSheet> {
-  String? _reason;
-  final _noteCtrl = TextEditingController();
-
-  final _reasons = [
-    {'label': 'Gate Locked', 'value': 'GATE_LOCKED'},
-    {'label': 'Bin Not Ready', 'value': 'BIN_NOT_READY'},
-    {'label': 'Overfilled Load', 'value': 'OVERFILLED'},
-    {'label': 'Hazardous Material', 'value': 'HAZARDOUS'},
-    {'label': 'No Access', 'value': 'NO_ACCESS'},
-    {'label': 'Other', 'value': 'OTHER'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: AppColors.premiumBlack, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 40),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Report Problem', style: AppTextStyles.h2.copyWith(color: Colors.white)),
-          const SizedBox(height: 8),
-          Text('Select a reason for cancellation', style: AppTextStyles.label.copyWith(color: Colors.white54)),
-          const SizedBox(height: 32),
-          ..._reasons.map((r) {
-            final selected = _reason == r['value'];
-            return GestureDetector(
-              onTap: () => setState(() => _reason = r['value']),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.danger.withAlpha(20) : Colors.white.withAlpha(5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: selected ? AppColors.danger : Colors.white10),
-                ),
-                child: Row(
-                  children: [
-                    Text(r['label']!, style: AppTextStyles.h4.copyWith(color: selected ? AppColors.danger : Colors.white)),
-                    const Spacer(),
-                    if (selected) const Icon(LucideIcons.circleCheck, color: AppColors.danger, size: 20),
-                  ],
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 24),
-          AppTextField(
-            controller: _noteCtrl,
-            label: 'Additional details',
-            hint: 'Describe the situation...',
-          ),
-          const SizedBox(height: 32),
-          AppButton(
-            label: 'CANCEL PICKUP',
-            variant: AppButtonVariant.danger,
-            onPressed: _reason == null ? null : () => widget.onReport(_reason!, _noteCtrl.text),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusProgressBar extends StatelessWidget {
-  const _StatusProgressBar({required this.status});
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final stages = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'COLLECTING'];
-    int currentIndex = stages.indexOf(status);
-    if (currentIndex == -1) {
-      if (status == 'COMPLETED' || status == 'COLLECTED') currentIndex = stages.length;
-      else currentIndex = 0;
+    try {
+      final ok = await provider.reportException(bookingId, reason, note.text.trim(), photoUrl: photoUrl);
+      if (ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exception reported to the household.')),
+        );
+      } else if (!ok && mounted) {
+        setState(() => _photoError = 'Exception report failed. Please retry.');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _photoError = 'Exception report failed. Please retry.');
+    } finally {
+      if (mounted) setState(() => _reportingException = false);
     }
-
-    return Column(
-      children: [
-        Row(
-          children: List.generate(stages.length, (i) {
-            final isActive = i <= currentIndex;
-            final isLast = i == stages.length - 1;
-            return Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.primary : Colors.white10,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  if (!isLast) const SizedBox(width: 4),
-                ],
-              ),
-            );
-          }),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Accepted', style: AppTextStyles.label.copyWith(color: currentIndex >= 0 ? Colors.white : Colors.white38, fontSize: 10)),
-            Text('On Way', style: AppTextStyles.label.copyWith(color: currentIndex >= 1 ? Colors.white : Colors.white38, fontSize: 10)),
-            Text('Arrived', style: AppTextStyles.label.copyWith(color: currentIndex >= 2 ? Colors.white : Colors.white38, fontSize: 10)),
-            Text('Collecting', style: AppTextStyles.label.copyWith(color: currentIndex >= 3 ? Colors.white : Colors.white38, fontSize: 10)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _CollectionStepper extends StatelessWidget {
-  const _CollectionStepper({required this.currentStep});
-  final int currentStep;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _Step(label: 'PHOTO 1', isDone: currentStep > 1, isCurrent: currentStep == 1),
-        _StepConnector(isDone: currentStep > 1),
-        _Step(label: 'COLLECT', isDone: currentStep > 2, isCurrent: currentStep == 2),
-        _StepConnector(isDone: currentStep > 2),
-        _Step(label: 'PHOTO 2', isDone: currentStep > 3, isCurrent: currentStep == 3),
-        _StepConnector(isDone: currentStep > 3),
-        _Step(label: 'WEIGHT',  isDone: currentStep > 4, isCurrent: currentStep == 4),
-      ],
-    );
-  }
-}
-
-class _Step extends StatelessWidget {
-  const _Step({required this.label, required this.isDone, required this.isCurrent});
-  final String label;
-  final bool isDone;
-  final bool isCurrent;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isDone ? AppColors.success : (isCurrent ? AppColors.primary : Colors.white12);
-    return Column(
-      children: [
-        Container(
-          width: 24, height: 24,
-          decoration: BoxDecoration(
-            color: isDone ? color : Colors.transparent,
-            shape: BoxShape.circle,
-            border: Border.all(color: color, width: 2),
-          ),
-          child: isDone ? const Icon(LucideIcons.check, size: 14, color: Colors.white) : null,
-        ),
-        const SizedBox(height: 6),
-        Text(label, style: AppTextStyles.small.copyWith(fontSize: 8, color: isCurrent || isDone ? Colors.white : Colors.white38, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-}
-
-class _StepConnector extends StatelessWidget {
-  const _StepConnector({required this.isDone});
-  final bool isDone;
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 14),
-        color: isDone ? AppColors.success : Colors.white12,
-      ),
-    );
   }
 }

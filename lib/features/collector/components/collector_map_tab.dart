@@ -1,394 +1,236 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as ll;
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:animate_do/animate_do.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_assets.dart';
 
-import '../../../core/services/location_service.dart';
+import '../../../core/design_system/collector_design_system.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/components/binlink_map.dart';
+import '../../../shared/components/searching_radar_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/collector_provider.dart';
-import '../../../shared/widgets/binlink_map.dart';
-import '../../../shared/widgets/skeleton.dart';
 
-class CollectorMapTab extends StatefulWidget {
+class CollectorMapTab extends StatelessWidget {
   const CollectorMapTab({super.key, required this.pos});
   final ll.LatLng? pos;
 
   @override
-  State<CollectorMapTab> createState() => _CollectorMapTabState();
-}
-
-class _CollectorMapTabState extends State<CollectorMapTab> {
-  @override
   Widget build(BuildContext context) {
-    if (widget.pos == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.premiumBlack,
-        body: Center(child: Skeleton(height: double.infinity, width: double.infinity, radius: 0)),
-      );
-    }
-
-    final prov = context.watch<CollectorProvider>();
+    final p = pos;
+    final provider = context.watch<CollectorProvider>();
     final user = context.watch<AuthProvider>().user;
-    final requests = prov.pendingRequests;
-
-    return Scaffold(
-      backgroundColor: AppColors.premiumBlack,
-      body: Stack(
-        children: [
-          // ── Map ──
-          Positioned.fill(
-            child: BinLinkMap(
-              initialPosition: widget.pos!,
-              myLocationEnabled: prov.isOnline,
-            ),
-          ),
-
-          // ── Top Earnings Bar ──
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 20,
-            right: 20,
-            child: FadeInDown(
-              child: _EarningsPill(earnings: prov.todayEarnings, pickups: prov.todayPickups),
-            ),
-          ),
-
-          // ── Online/Offline Toggle & Capacity ──
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (prov.isOnline)
-                  FadeInUp(
-                    child: _CapacityBar(
-                      current: user?.currentLoadKg ?? 0,
-                      max: user?.maxCapacityKg ?? 500,
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: _OnlineToggleBtn(
-                    isOnline: prov.isOnline,
-                    onTap: () => prov.toggleOnline(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Request Overlay ──
-          if (prov.isOnline && requests.isNotEmpty)
-            _IncomingRequestOverlay(
-              request: requests.first,
-              collectorPos: widget.pos!,
-              onAccept: () => prov.acceptRequest(requests.first['id']),
-              onDecline: () => prov.declineRequest(requests.first['id']),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CapacityBar extends StatelessWidget {
-  const _CapacityBar({required this.current, required this.max});
-  final double current;
-  final double max;
-
-  @override
-  Widget build(BuildContext context) {
-    final percent = (current / max).clamp(0.0, 1.0);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.premiumBlack,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(50),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("VEHICLE LOAD", style: AppTextStyles.small.copyWith(color: Colors.white60, letterSpacing: 1.2)),
-              Text("${(percent * 100).toInt()}%", style: AppTextStyles.small.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: percent,
-            backgroundColor: Colors.white10,
-            color: percent > 0.8 ? AppColors.error : AppColors.success,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          const SizedBox(height: 8),
-          Text("${current.toInt()}kg / ${max.toInt()}kg capacity", style: AppTextStyles.small.copyWith(color: Colors.white38, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EarningsPill extends StatelessWidget {
-  const _EarningsPill({required this.earnings, required this.pickups});
-  final double earnings;
-  final int pickups;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.premiumBlack,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(50),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-            child: const Icon(LucideIcons.banknote, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            Fmt.currency(earnings),
-            style: AppTextStyles.h3.copyWith(color: Colors.white, fontSize: 18),
-          ),
-          const SizedBox(width: 12),
-          Container(width: 1, height: 16, color: Colors.white24),
-          const SizedBox(width: 12),
-          Text(
-            "$pickups jobs today",
-            style: AppTextStyles.small.copyWith(color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OnlineToggleBtn extends StatelessWidget {
-  const _OnlineToggleBtn({required this.isOnline, required this.onTap});
-  final bool isOnline;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isOnline ? AppColors.error : AppColors.success;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    if (p == null) {
+      return const Center(child: SearchingRadarWidget(color: CollectorColors.warning));
+    }
+    final capacity = ((user?.currentLoadKg ?? 0) / (user?.maxCapacityKg ?? 500) * 100).clamp(0, 100).round();
+    final etaText = _etaText(provider.currentActivePickup);
+    return Stack(
       children: [
-        if (isOnline)
-          FadeInDown(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+        Positioned.fill(child: BinLinkMap(initialPosition: p, myLocationEnabled: provider.isOnline)),
+        Positioned(
+          top: MediaQuery.paddingOf(context).top + 14,
+          left: 16,
+          right: 16,
+          child: CPanel(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(children: [
+              const CIcon('map', color: CollectorColors.green),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(Fmt.currency(provider.todayEarnings), style: CollectorType.title),
+                Text(provider.isOnline ? 'Online and receiving jobs' : 'Offline. Tap GO to start', style: CollectorType.caption.copyWith(color: provider.isOnline ? CollectorColors.green : const Color(0xFFB6C0CC))),
+              ])),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(color: CollectorColors.dark, borderRadius: BorderRadius.circular(20)),
+                child: Text('$capacity%', style: CollectorType.caption.copyWith(color: CollectorColors.green, fontWeight: FontWeight.w900)),
               ),
-              child: Text(
-                "You're Online",
-                style: AppTextStyles.small.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-            ),
+            ]),
           ),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 88, height: 88,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: color.withAlpha(100), blurRadius: 30, spreadRadius: 5),
-                const BoxShadow(color: Colors.white12, blurRadius: 0, spreadRadius: 4),
-              ],
-              border: Border.all(color: Colors.white24, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                isOnline ? "STOP" : "GO",
-                style: AppTextStyles.h2.copyWith(color: Colors.white, fontSize: 18, letterSpacing: 1.0, fontWeight: FontWeight.w900),
+        ),
+        Positioned(
+          top: MediaQuery.paddingOf(context).top + 104,
+          left: 22,
+          child: _Metric(label: 'ETA', value: etaText),
+        ),
+        Positioned(
+          top: MediaQuery.paddingOf(context).top + 104,
+          right: 22,
+          child: _Metric(label: 'Speed', value: '${provider.currentSpeedKph.round()} km/h'),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 104),
+            child: GestureDetector(
+              onTap: provider.toggleOnline,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                width: 112,
+                height: 112,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: provider.isOnline ? CollectorColors.red : CollectorColors.green,
+                  border: Border.all(color: CollectorColors.white, width: 5),
+                  boxShadow: [BoxShadow(color: (provider.isOnline ? CollectorColors.red : CollectorColors.green).withAlpha(90), blurRadius: 34, spreadRadius: 8)],
+                ),
+                child: Center(child: Text(provider.isOnline ? 'STOP' : 'GO', style: CollectorType.title.copyWith(color: provider.isOnline ? Colors.white : CollectorColors.dark))),
               ),
             ),
           ),
         ),
+        if (provider.isOnline && provider.pendingRequests.isNotEmpty) _IncomingRequest(request: provider.pendingRequests.first),
       ],
     );
   }
+
+  String _etaText(Map<String, dynamic>? booking) {
+    final raw = booking?['etaMinutes'] ?? booking?['eta'] ?? booking?['estimatedMinutes'];
+    final minutes = raw is num ? raw.round() : int.tryParse(raw?.toString() ?? '');
+    if (minutes == null || minutes <= 0) return '--';
+    return '$minutes min';
+  }
 }
 
-class _IncomingRequestOverlay extends StatefulWidget {
-  const _IncomingRequestOverlay({
-    required this.request, 
-    required this.collectorPos,
-    required this.onAccept,
-    required this.onDecline,
-  });
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value});
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => CPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: CollectorType.caption),
+          Text(value, style: CollectorType.section),
+        ]),
+      );
+}
+
+class _IncomingRequest extends StatefulWidget {
+  const _IncomingRequest({required this.request});
   final Map<String, dynamic> request;
-  final ll.LatLng collectorPos;
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
 
   @override
-  State<_IncomingRequestOverlay> createState() => _IncomingRequestOverlayState();
+  State<_IncomingRequest> createState() => _IncomingRequestState();
 }
 
-class _IncomingRequestOverlayState extends State<_IncomingRequestOverlay> with SingleTickerProviderStateMixin {
-  late AnimationController _anim;
-  int _seconds = 30;
+class _IncomingRequestState extends State<_IncomingRequest> with SingleTickerProviderStateMixin {
+  static const _seconds = 30;
+  late final AnimationController _ring = AnimationController(vsync: this, duration: const Duration(seconds: _seconds))..forward();
   late Timer _timer;
+  int _remaining = _seconds;
+  bool _handled = false;
 
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 30))..forward();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_seconds <= 0) {
-        timer.cancel();
-        widget.onDecline();
-      } else {
-        if (mounted) setState(() => _seconds--);
+    SystemSound.play(SystemSoundType.alert);
+    HapticFeedback.mediumImpact();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _handled) return;
+      if (_remaining <= 1) {
+        _handled = true;
+        _timer.cancel();
+        context.read<CollectorProvider>().declineRequest(widget.request['id'] as String);
+        return;
       }
+      setState(() => _remaining -= 1);
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant _IncomingRequest oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.request['id'] != widget.request['id']) {
+      _remaining = _seconds;
+      _handled = false;
+      _ring.forward(from: 0);
+    }
   }
 
   @override
   void dispose() {
     _timer.cancel();
-    _anim.dispose();
+    _ring.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final distMeters = LocationService.distanceMeters(
-      widget.collectorPos.latitude, widget.collectorPos.longitude,
-      (widget.request['pickupLat'] as num?)?.toDouble() ?? 0.0,
-      (widget.request['pickupLng'] as num?)?.toDouble() ?? 0.0,
-    );
-    final payout = Fmt.toDouble(widget.request['totalAmount']) * 0.9;
-
-    return ZoomIn(
-      duration: const Duration(milliseconds: 400),
-      child: Container(
-        color: Colors.black87,
-        child: Center(
-          child: Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppColors.premiumBlack,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.white10),
-              boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(30), blurRadius: 50)],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.primary.withAlpha(50), borderRadius: BorderRadius.circular(20)),
-                  child: Text("NEW PICKUP", style: AppTextStyles.label.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(height: 32),
-                Image.asset(AppAssets.truck3d, width: 80, height: 80),
-                const SizedBox(height: 24),
-                Text(Fmt.currency(payout), style: AppTextStyles.h1.copyWith(color: Colors.white, fontSize: 44)),
-                const SizedBox(height: 8),
-                Text("Your Earnings", style: AppTextStyles.label.copyWith(color: Colors.white54)),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(LucideIcons.mapPin, color: Colors.white70, size: 20),
-                    const SizedBox(width: 8),
-                    Text(LocationService.formatDistance(distMeters), style: AppTextStyles.h3.copyWith(color: Colors.white)),
-                    const SizedBox(width: 16),
-                    const Icon(LucideIcons.clock, color: Colors.white70, size: 20),
-                    const SizedBox(width: 8),
-                    Text("${(distMeters / 400).ceil()} min", style: AppTextStyles.h3.copyWith(color: Colors.white)),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                
-                // ── Accept Circle ──
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 140, height: 140,
-                      child: CircularProgressIndicator(
-                        value: 1 - _anim.value,
-                        strokeWidth: 10,
-                        color: AppColors.primary,
-                        backgroundColor: Colors.white10,
-                      ),
+    final provider = context.read<CollectorProvider>();
+    return Container(
+      color: Colors.black.withAlpha(218),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(children: [
+            const Spacer(),
+            SizedBox(
+              height: 210,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _ring,
+                    builder: (_, __) => CustomPaint(
+                      size: const Size(210, 210),
+                      painter: _CountdownRingPainter(progress: _ring.value, color: CollectorColors.warning),
                     ),
-                    GestureDetector(
-                      onTap: widget.onAccept,
-                      child: Container(
-                        width: 120, height: 120,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: AppColors.primary.withAlpha(100), blurRadius: 20)],
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text("ACCEPT", style: AppTextStyles.h3.copyWith(color: Colors.white)),
-                              const SizedBox(height: 4),
-                              Text("$_seconds s", style: AppTextStyles.label.copyWith(color: Colors.white70)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 40),
-                GestureDetector(
-                  onTap: widget.onDecline,
-                  child: Text("DECLINE", style: AppTextStyles.label.copyWith(color: Colors.white38, letterSpacing: 2)),
-                ),
-              ],
+                  ),
+                  SvgPicture.asset('assets/collector_assets/workflow/accept_request.svg', height: 150),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 18),
+            Text('Incoming request', style: CollectorType.hero, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Text(widget.request['pickupAddress'] as String? ?? 'Pickup location nearby', textAlign: TextAlign.center, style: CollectorType.body.copyWith(color: const Color(0xFFC8D0DA))),
+            const SizedBox(height: 6),
+            Text('Auto reject in $_remaining s', style: CollectorType.caption.copyWith(color: CollectorColors.warning)),
+            const Spacer(),
+            CButton(label: 'TAP TO ACCEPT', icon: 'jobs', onPressed: () async {
+              _handled = true;
+              _timer.cancel();
+              await provider.acceptRequest(widget.request['id'] as String);
+            }),
+            const SizedBox(height: 12),
+            CButton(label: 'DECLINE', danger: true, secondary: true, onPressed: () async {
+              _handled = true;
+              _timer.cancel();
+              await provider.declineRequest(widget.request['id'] as String);
+            }),
+          ]),
         ),
       ),
     );
   }
 }
 
+class _CountdownRingPainter extends CustomPainter {
+  const _CountdownRingPainter({required this.progress, required this.color});
+  final double progress;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2 - 10;
+    final bg = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..color = Colors.white.withAlpha(30);
+    final fg = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    canvas.drawCircle(center, radius, bg);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), -1.57, 6.28318 * progress, false, fg);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CountdownRingPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
+}

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 280">
+  <!-- Background -->
+  <rect width="360" height="280" fill="#F0FDF4"/>
+
+  <!-- Background glow circles -->
+  <circle cx="180" cy="130" r="120" fill="#DCF8E8" opacity="0.6"/>
+  <circle cx="180" cy="130" r="80" fill="#BBF7D0" opacity="0.5"/>
+
+  <!-- Stars / sparkles -->
+  <!-- Star top-left -->
+  <g transform="translate(52,54)" opacity="0.75">
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-12" y1="0" x2="12" y2="0" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-8" y1="-8" x2="8" y2="8" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="8" y1="-8" x2="-8" y2="8" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- Star top-right -->
+  <g transform="translate(308,72)" opacity="0.65">
+    <line x1="0" y1="-10" x2="0" y2="10" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-10" y1="0" x2="10" y2="0" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-7" y1="-7" x2="7" y2="7" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="7" y1="-7" x2="-7" y2="7" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- Smaller stars -->
+  <g transform="translate(88,168)" opacity="0.6">
+    <line x1="0" y1="-7" x2="0" y2="7" stroke="#19B661" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-7" y1="0" x2="7" y2="0" stroke="#19B661" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(272,168)" opacity="0.6">
+    <line x1="0" y1="-7" x2="0" y2="7" stroke="#19B661" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-7" y1="0" x2="7" y2="0" stroke="#19B661" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(290,110)" opacity="0.5">
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(70,110)" opacity="0.5">
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Floating leaves (small) -->
+  <ellipse cx="42" cy="130" rx="12" ry="7" fill="#19B661" opacity="0.7" transform="rotate(-30 42 130)"/>
+  <line x1="42" y1="124" x2="42" y2="137" stroke="#0B3B2E" stroke-width="1.5" opacity="0.5"/>
+  <ellipse cx="318" cy="130" rx="12" ry="7" fill="#19B661" opacity="0.7" transform="rotate(30 318 130)"/>
+  <line x1="318" y1="124" x2="318" y2="137" stroke="#0B3B2E" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Coin / medal (main element) -->
+  <!-- Outer ring shadow -->
+  <circle cx="180" cy="122" r="72" fill="#D97706" opacity="0.3"/>
+  <!-- Outer ring -->
+  <circle cx="180" cy="118" r="72" fill="#D97706"/>
+  <!-- Medal body -->
+  <circle cx="180" cy="118" r="64" fill="#F59E0B"/>
+  <!-- Inner ring highlight -->
+  <circle cx="180" cy="118" r="54" fill="none" stroke="#FCD34D" stroke-width="4" opacity="0.8"/>
+  <!-- Medal inner circle -->
+  <circle cx="180" cy="118" r="46" fill="#FDE68A"/>
+
+  <!-- Large leaf icon in medal centre -->
+  <path d="M180 82 Q204 82 204 106 Q204 126 180 130 Q156 126 156 106 Q156 82 180 82 Z" fill="#19B661"/>
+  <!-- Leaf vein -->
+  <line x1="180" y1="84" x2="180" y2="128" stroke="#0B3B2E" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="180" y1="98" x2="167" y2="108" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="180" y1="108" x2="167" y2="116" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="180" y1="98" x2="193" y2="108" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="180" y1="108" x2="193" y2="116" stroke="#0B3B2E" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- Ribbon below medal -->
+  <path d="M158 186 L168 210 L180 200 L192 210 L202 186 Z" fill="#EF4444"/>
+  <rect x="162" y="183" width="36" height="10" rx="3" fill="#EF4444"/>
+
+  <!-- Points pill card -->
+  <rect x="100" y="216" width="160" height="46" rx="23" fill="white"/>
+  <rect x="100" y="216" width="160" height="46" rx="23" fill="none" stroke="#C1E8FF" stroke-width="2"/>
+  <!-- Eco points icon -->
+  <circle cx="127" cy="239" r="12" fill="#19B661"/>
+  <path d="M127 230 Q135 230 135 238 Q135 244 127 246 Q119 244 119 238 Q119 230 127 230 Z" fill="#15803D" opacity="0.6"/>
+  <line x1="127" y1="231" x2="127" y2="245" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Points text bars -->
+  <rect x="146" y="231" width="56" height="8" rx="4" fill="#052659" opacity="0.8"/>
+  <rect x="146" y="244" width="40" height="6" rx="3" fill="#7DA0CA" opacity="0.6"/>
+  <!-- GHS discount indicator -->
+  <rect x="210" y="228" width="38" height="22" rx="8" fill="#F0FDF4"/>
+  <rect x="216" y="233" width="26" height="6" rx="3" fill="#19B661" opacity="0.8"/>
+  <rect x="218" y="243" width="22" height="4" rx="2" fill="#19B661" opacity="0.5"/>
+
+  <!-- Small floating coins -->
+  <circle cx="48" cy="196" r="14" fill="#F59E0B" opacity="0.8"/>
+  <circle cx="48" cy="196" r="9" fill="#FCD34D" opacity="0.9"/>
+  <rect x="45" y="192" width="6" height="8" rx="2" fill="#D97706" opacity="0.7"/>
+
+  <circle cx="312" cy="196" r="14" fill="#F59E0B" opacity="0.8"/>
+  <circle cx="312" cy="196" r="9" fill="#FCD34D" opacity="0.9"/>
+  <rect x="309" y="192" width="6" height="8" rx="2" fill="#D97706" opacity="0.7"/>
+</svg>

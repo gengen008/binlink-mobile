@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/socket_service.dart';
+import '../../../core/services/background_location_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/models/app_notification.dart';
 
 class CollectorProvider extends ChangeNotifier {
   final List<Map<String, dynamic>> _pendingRequests = [];
@@ -148,9 +150,11 @@ class CollectorProvider extends ChangeNotifier {
       if (newState) {
         SocketService.goOnline();
         _startLocationBroadcast();
+        BackgroundLocationService.start();
       } else {
         SocketService.goOffline();
         _stopLocationBroadcast();
+        BackgroundLocationService.stop();
         _pendingRequests.clear();
         notifyListeners();
       }
@@ -251,7 +255,13 @@ class CollectorProvider extends ChangeNotifier {
         }
         notifyListeners();
       }
-    } catch (_) {}
+    } on DioException catch (e) {
+      _error = e.response?.data?['error'] ?? 'Failed to update job status';
+      notifyListeners();
+    } catch (e) {
+      _error = 'Network error — status not saved';
+      notifyListeners();
+    }
   }
 
   // ── Jobs for PickupsScreen ──────────────────────────────────────────────────
@@ -290,14 +300,20 @@ class CollectorProvider extends ChangeNotifier {
       }
       _allJobs = merged.values.toList()
         ..sort((a, b) => (b['createdAt'] as String? ?? '').compareTo(a['createdAt'] as String? ?? ''));
-    } catch (_) {}
-    _loadingJobs = false;
-    notifyListeners();
+    } catch (_) {
+    } finally {
+      _loadingJobs = false;
+      notifyListeners();
+    }
   }
 
   // ── Wallet / Payout ────────────────────────────────────────────────────────
   Map<String, dynamic>? _wallet;
   bool _loadingWallet = false;
+  List<AppNotification> _notifications = [];
+  int _unreadNotifications = 0;
+  bool _loadingNotifications = false;
+  String? _notificationError;
 
   double get walletAvailable  => Fmt.toDouble(_wallet?['available']);
   double get walletPending    => Fmt.toDouble(_wallet?['pending']);
@@ -305,6 +321,10 @@ class CollectorProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get walletTransactions =>
       List<Map<String, dynamic>>.from(_wallet?['transactions'] as List? ?? []);
   bool get loadingWallet => _loadingWallet;
+  List<AppNotification> get notifications => _notifications;
+  int get unreadNotifications => _unreadNotifications;
+  bool get loadingNotifications => _loadingNotifications;
+  String? get notificationError => _notificationError;
 
   Future<void> loadWallet() async {
     _loadingWallet = true;
@@ -315,6 +335,72 @@ class CollectorProvider extends ChangeNotifier {
     } catch (_) {}
     _loadingWallet = false;
     notifyListeners();
+  }
+
+  Future<void> loadNotifications({int page = 1}) async {
+    _loadingNotifications = true;
+    notifyListeners();
+    try {
+      final res = await ApiClient.get('/api/notifications', params: {'page': page, 'limit': 30});
+      final data = Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+      _notifications = List<Map<String, dynamic>>.from(data['notifications'] as List? ?? [])
+          .map(AppNotification.fromJson)
+          .toList();
+      _unreadNotifications = (data['unreadCount'] as num?)?.toInt() ?? 0;
+      _notificationError = null;
+    } on DioException catch (e) {
+      _notificationError = e.response?.data?['error'] ?? 'Could not load notifications';
+    } finally {
+      _loadingNotifications = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> markNotificationRead(String id) async {
+    try {
+      final res = await ApiClient.patch('/api/notifications/$id/read', {});
+      final unread = (res.data['data']?['unreadCount'] as num?)?.toInt();
+      final idx = _notifications.indexWhere((n) => n.id == id);
+      if (idx >= 0) {
+        final item = _notifications[idx];
+        _notifications[idx] = AppNotification(
+          id: item.id,
+          type: item.type,
+          title: item.title,
+          body: item.body,
+          bookingId: item.bookingId,
+          isRead: true,
+          createdAt: item.createdAt,
+        );
+      }
+      if (unread != null) _unreadNotifications = unread;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> markAllNotificationsRead() async {
+    try {
+      await ApiClient.patch('/api/notifications/read-all', {});
+      _notifications = _notifications
+          .map((item) => AppNotification(
+                id: item.id,
+                type: item.type,
+                title: item.title,
+                body: item.body,
+                bookingId: item.bookingId,
+                isRead: true,
+                createdAt: item.createdAt,
+              ))
+          .toList();
+      _unreadNotifications = 0;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> requestPayout(String momoNumber, double amount, String network) async {
@@ -349,14 +435,18 @@ class CollectorProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> reportException(
-      String bookingId, String reason, String? note) async {
+  Future<bool> reportException(
+      String bookingId, String reason, String? note, {String? photoUrl}) async {
     try {
       await ApiClient.patch('/api/bookings/$bookingId/exception', {
         'reason': reason,
         if (note != null && note.isNotEmpty) 'note': note,
+        if (photoUrl != null && photoUrl.isNotEmpty) 'photoUrl': photoUrl,
       });
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   void _setLoading(bool v) {

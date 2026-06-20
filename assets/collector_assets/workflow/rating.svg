@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <rect width="240" height="200" fill="none"/>
+  <!-- Large star -->
+  <polygon points="120,20 132,65 180,65 142,92 155,138 120,112 85,138 98,92 60,65 108,65" fill="#F59E0B"/>
+  <!-- Inner star highlight -->
+  <polygon points="120,38 128,60 152,60 133,74 140,96 120,82 100,96 107,74 88,60 112,60" fill="#FCD34D" opacity="0.5"/>
+  <!-- Rating number -->
+  <rect x="80" y="150" width="80" height="34" rx="17" fill="#1F2937"/>
+  <text x="120" y="173" font-family="monospace" font-size="16" fill="#F59E0B" text-anchor="middle" font-weight="bold">4.9</text>
+  <!-- Small stars row -->
+  <text x="52" y="198" font-size="16" fill="#F59E0B">★★★★★</text>
+</svg>

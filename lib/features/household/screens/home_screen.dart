@@ -1,16 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:provider/provider.dart';
 
-import '../../../core/l10n/strings.dart';
+import '../../../core/design_system/household_design_system.dart';
 import '../../../core/services/location_service.dart';
-import '../providers/household_provider.dart';
-import '../components/home_tab.dart';
+import '../../../shared/components/skeleton.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../components/history_tab.dart';
+import '../components/home_tab.dart';
 import '../components/profile_tab.dart';
+import '../providers/household_provider.dart';
+import 'wallet_screen.dart';
 
 class HouseholdHomeScreen extends StatefulWidget {
   const HouseholdHomeScreen({super.key});
@@ -20,17 +24,12 @@ class HouseholdHomeScreen extends StatefulWidget {
 }
 
 class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
-  int _currentIndex = 0;
-  // Null until the device provides a real GPS fix — never hardcoded.
+  int _index = 0;
   ll.LatLng? _myPos;
-  // Last position used for zone subscription — used to detect significant moves
   ll.LatLng? _subscribedPos;
   StreamSubscription<Position>? _posSub;
   Timer? _collectorPollTimer;
   HouseholdProvider? _hp;
-
-  // Minimum distance (meters) before re-subscribing to a new zone
-  static const double _zoneResubscribeThresholdMeters = 800;
 
   @override
   void initState() {
@@ -47,110 +46,153 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
   }
 
   Future<void> _init() async {
-    // Phase 1: last-known — fast, may be slightly stale
     final lastKnown = await LocationService.getLastKnownPosition();
-    if (lastKnown != null && mounted) {
-      setState(() => _myPos = ll.LatLng(lastKnown.latitude, lastKnown.longitude));
-    }
-
-    // Phase 2: fresh GPS fix — accurate
+    if (lastKnown != null && mounted) setState(() => _myPos = ll.LatLng(lastKnown.latitude, lastKnown.longitude));
     final pos = await LocationService.getCurrentPosition();
-    if (pos != null && mounted) {
-      setState(() => _myPos = ll.LatLng(pos.latitude, pos.longitude));
-    }
+    if (pos != null && mounted) setState(() => _myPos = ll.LatLng(pos.latitude, pos.longitude));
 
-    // Phase 3: live stream — updates whenever user moves ≥10 m
-    // Also triggers zone re-subscription if user moves significantly
     _posSub = LocationService.getPositionStream().listen((p) {
       if (!mounted) return;
       final newPos = ll.LatLng(p.latitude, p.longitude);
       setState(() => _myPos = newPos);
-
-      // Re-subscribe to zone if user has moved more than threshold
       if (_hp != null && _subscribedPos != null) {
-        final dist = Geolocator.distanceBetween(
-          _subscribedPos!.latitude, _subscribedPos!.longitude,
-          newPos.latitude, newPos.longitude,
-        );
-        if (dist > _zoneResubscribeThresholdMeters) {
+        final dist = Geolocator.distanceBetween(_subscribedPos!.latitude, _subscribedPos!.longitude, newPos.latitude, newPos.longitude);
+        if (dist > 800) {
           _hp!.unsubscribeFromNearby();
           _hp!.subscribeToNearby(newPos.latitude, newPos.longitude);
           _subscribedPos = newPos;
-          // Also refresh REST collector list for new zone
           _hp!.loadOnlineCollectors(lat: newPos.latitude, lng: newPos.longitude);
         }
       }
-    }, onError: (e) {
-      // GPS toggled off / permission revoked mid-session — keep last known
-      // position; the 30s poll keeps data fresh once GPS returns.
-      debugPrint('[Home] Position stream error: $e');
     });
 
     if (!mounted) return;
     _hp = context.read<HouseholdProvider>();
-
-    // Load data in parallel — pass GPS coords for proximity filtering
-    final lat = _myPos?.latitude;
-    final lng = _myPos?.longitude;
     await Future.wait([
       _hp!.loadBookings(),
-      _hp!.loadOnlineCollectors(lat: lat, lng: lng),
+      _hp!.loadOnlineCollectors(lat: _myPos?.latitude, lng: _myPos?.longitude),
       _hp!.loadSubscriptions(),
       _hp!.loadSavedAddresses(),
     ]);
-
-    // Subscribe to real-time zone events so collector markers animate live
     if (_myPos != null && mounted) {
       _hp!.subscribeToNearby(_myPos!.latitude, _myPos!.longitude);
       _subscribedPos = _myPos;
     }
-
-    // Periodic poll every 30s — catches collectors that joined between socket events
     _collectorPollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted || _hp == null) return;
       final pos = _myPos;
-      _hp!.loadOnlineCollectors(lat: pos?.latitude, lng: pos?.longitude);
+      _hp?.loadOnlineCollectors(lat: pos?.latitude, lng: pos?.longitude);
     });
-  }
-
-  void _onTabChanged(int index) {
-    setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
-
+    final auth = context.watch<AuthProvider>();
+    if (auth.user?.isAdmin == true) {
+      return const AdminDashboardScreen();
+    }
     return Scaffold(
+      backgroundColor: HouseholdColors.sand,
+      extendBody: true,
       body: IndexedStack(
-        index: _currentIndex,
+        index: _index,
         children: [
-          HomeTab(myPos: _myPos, onTabSwitch: _onTabChanged),
+          HomeTab(myPos: _myPos, onTabSwitch: (i) => setState(() => _index = i)),
+          const _PickupsTab(),
+          const WalletScreen(),
           const HistoryTab(),
           const ProfileTab(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: _onTabChanged,
-        destinations: [
-          NavigationDestination(
-            icon: Icon(PhosphorIcons.house(PhosphorIconsStyle.regular)), 
-            selectedIcon: Icon(PhosphorIcons.house(PhosphorIconsStyle.fill)),
-            label: s.home,
-          ),
-          NavigationDestination(
-            icon: Icon(PhosphorIcons.clockCounterClockwise(PhosphorIconsStyle.regular)), 
-            selectedIcon: Icon(PhosphorIcons.clockCounterClockwise(PhosphorIconsStyle.fill)),
-            label: s.history,
-          ),
-          NavigationDestination(
-            icon: Icon(PhosphorIcons.user(PhosphorIconsStyle.regular)), 
-            selectedIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.fill)),
-            label: s.profile,
-          ),
+      bottomNavigationBar: HBottomNav(
+        index: _index,
+        onChanged: (i) => setState(() => _index = i),
+        items: const [
+          (label: 'Home', icon: 'home'),
+          (label: 'Pickups', icon: 'pickups'),
+          (label: 'Wallet', icon: 'wallet'),
+          (label: 'History', icon: 'history'),
+          (label: 'Profile', icon: 'profile'),
         ],
       ),
+    );
+  }
+}
+
+class _PickupsTab extends StatelessWidget {
+  const _PickupsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<HouseholdProvider>();
+    final bookings = provider.allBookings
+        .where((b) => ['PENDING', 'SEARCHING', 'ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED', 'COLLECTING', 'COLLECTED'].contains(b['status']))
+        .toList();
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 116),
+        children: [
+          Text('Pickups', style: HouseholdType.hero),
+          const SizedBox(height: 8),
+          Text('Upcoming, searching, and active collection requests.', style: HouseholdType.body.copyWith(color: HouseholdColors.gray)),
+          const SizedBox(height: 22),
+          if (provider.loading)
+            const SkeletonList(count: 4)
+          else if (provider.error != null)
+            const _HouseholdEmpty(asset: HouseholdAssets.networkError, title: 'Could not load pickups', copy: 'Unable to load pickups right now.')
+          else if (bookings.isEmpty)
+            const _HouseholdEmpty(asset: 'assets/household_assets/empty_states/no_history.svg', title: 'No pickups yet', copy: 'Book your first pickup from the map and track the collector live.')
+          else
+            ...bookings.map((b) => _PickupCard(booking: b)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickupCard extends StatelessWidget {
+  const _PickupCard({required this.booking});
+  final Map<String, dynamic> booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = booking['status'] as String? ?? 'PENDING';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: HCard(
+        child: Row(
+          children: [
+            Container(width: 48, height: 48, decoration: BoxDecoration(color: HouseholdColors.primary.withAlpha(24), borderRadius: BorderRadius.circular(18)), child: const Center(child: HIcon('pickup', color: HouseholdColors.primary))),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(booking['pickupAddress'] as String? ?? 'Pickup address', maxLines: 1, overflow: TextOverflow.ellipsis, style: HouseholdType.section),
+                const SizedBox(height: 4),
+                Text(status.replaceAll('_', ' '), style: HouseholdType.caption.copyWith(color: HouseholdColors.primary, fontWeight: FontWeight.w700)),
+              ]),
+            ),
+            const HIcon('route', color: HouseholdColors.gray),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HouseholdEmpty extends StatelessWidget {
+  const _HouseholdEmpty({required this.asset, required this.title, required this.copy});
+  final String asset;
+  final String title;
+  final String copy;
+
+  @override
+  Widget build(BuildContext context) {
+    return HCard(
+      child: Column(children: [
+        SizedBox(height: 190, child: SvgPicture.asset(asset)),
+        Text(title, style: HouseholdType.title, textAlign: TextAlign.center),
+        const SizedBox(height: 8),
+        Text(copy, style: HouseholdType.body.copyWith(color: HouseholdColors.gray), textAlign: TextAlign.center),
+      ]),
     );
   }
 }

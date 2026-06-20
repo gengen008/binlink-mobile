@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart';
 
 class LocationService {
   LocationService._();
@@ -35,17 +36,39 @@ class LocationService {
   }
 
   static Stream<Position> getPositionStream() {
+    final settings = switch (defaultTargetPlatform) {
+      TargetPlatform.android => AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+          intervalDuration: const Duration(seconds: 30),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationTitle: 'BinLink Collector tracking active',
+            notificationText:
+                'Live route tracking is running in the background.',
+            enableWakeLock: true,
+          ),
+        ),
+      TargetPlatform.iOS || TargetPlatform.macOS => AppleSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+          pauseLocationUpdatesAutomatically: false,
+          showBackgroundLocationIndicator: true,
+        ),
+      _ => const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+        ),
+    };
     return Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // only emit if moved 10m
-      ),
+      locationSettings: settings,
     );
   }
 
   static double distanceMeters(
-    double startLat, double startLng,
-    double endLat, double endLng,
+    double startLat,
+    double startLng,
+    double endLat,
+    double endLng,
   ) {
     return Geolocator.distanceBetween(startLat, startLng, endLat, endLng);
   }

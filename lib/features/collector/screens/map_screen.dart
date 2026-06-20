@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:provider/provider.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
-import '../../../core/l10n/strings.dart';
+import '../../../core/design_system/collector_design_system.dart';
 import '../../../core/services/location_service.dart';
-import '../providers/collector_provider.dart';
 import '../components/collector_map_tab.dart';
-import 'pickups_screen.dart';
-import 'earnings_screen.dart';
 import '../components/collector_profile_tab.dart';
+import '../providers/collector_provider.dart';
+import 'collector_notifications_screen.dart';
+import 'earnings_screen.dart';
+import 'pickups_screen.dart';
 
 class CollectorMapScreen extends StatefulWidget {
   const CollectorMapScreen({super.key});
@@ -22,9 +21,9 @@ class CollectorMapScreen extends StatefulWidget {
 }
 
 class _CollectorMapScreenState extends State<CollectorMapScreen> {
-  int _currentIndex = 0;
+  int _index = 0;
   LatLng? _pos;
-  StreamSubscription<Position>? _posSub;
+  StreamSubscription<Position>? _sub;
 
   @override
   void initState() {
@@ -34,69 +33,45 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
 
   @override
   void dispose() {
-    _posSub?.cancel();
+    _sub?.cancel();
     super.dispose();
   }
 
   Future<void> _init() async {
     final last = await LocationService.getLastKnownPosition();
-    if (last != null && mounted) {
-      setState(() => _pos = LatLng(last.latitude, last.longitude));
-    }
-    
+    if (last != null && mounted) setState(() => _pos = LatLng(last.latitude, last.longitude));
     final pos = await LocationService.getCurrentPosition();
-    if (pos != null && mounted) {
-      setState(() => _pos = LatLng(pos.latitude, pos.longitude));
-    }
-
+    if (pos != null && mounted) setState(() => _pos = LatLng(pos.latitude, pos.longitude));
     if (mounted) await context.read<CollectorProvider>().loadDashboard();
-
-    _posSub = LocationService.getPositionStream().listen((p) {
+    _sub = LocationService.getPositionStream().listen((p) {
       if (mounted) setState(() => _pos = LatLng(p.latitude, p.longitude));
-    }, onError: (e) {
-      // GPS toggled off / permission revoked — keep last known position
-      debugPrint('[CollectorMap] Position stream error: $e');
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
-
     return Scaffold(
+      backgroundColor: CollectorColors.dark,
+      extendBody: true,
       body: IndexedStack(
-        index: _currentIndex,
+        index: _index,
         children: [
           CollectorMapTab(pos: _pos),
           const PickupsScreen(),
           const EarningsScreen(),
+          const CollectorNotificationsScreen(),
           const CollectorProfileTab(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(LucideIcons.map), 
-            selectedIcon: Icon(PhosphorIcons.mapTrifold(PhosphorIconsStyle.fill)),
-            label: s.map,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.clipboardList), 
-            selectedIcon: Icon(PhosphorIcons.clipboardText(PhosphorIconsStyle.fill)),
-            label: s.pickups,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.coins), 
-            selectedIcon: Icon(PhosphorIcons.coins(PhosphorIconsStyle.fill)),
-            label: s.earnings,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.user), 
-            selectedIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.fill)),
-            label: s.profile,
-          ),
+      bottomNavigationBar: CBottomNav(
+        index: _index,
+        onChanged: (i) => setState(() => _index = i),
+        items: const [
+          (label: 'Map', icon: 'map'),
+          (label: 'Jobs', icon: 'jobs'),
+          (label: 'Wallet', icon: 'wallet'),
+          (label: 'Alerts', icon: 'notifications'),
+          (label: 'Profile', icon: 'profile'),
         ],
       ),
     );
