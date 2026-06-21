@@ -138,6 +138,41 @@ class CollectorProvider extends ChangeNotifier {
         }
       } catch (_) {}
     });
+
+    // Truck-full warning — backend emits at ≥90% load with the nearest dumpsite.
+    SocketService.on('capacity:warning', (data) {
+      try {
+        _capacity = Map<String, dynamic>.from(data as Map);
+        notifyListeners();
+      } catch (_) {}
+    });
+  }
+
+  // ── Capacity / dumpsite routing ─────────────────────────────────────────────
+  Map<String, dynamic>? _capacity;
+  bool get isCapacityWarning => _capacity != null;
+  int get loadPercent => ((_capacity?['percentFull'] as num?) ?? 0).round();
+  Map<String, dynamic>? get nearestDumpsite =>
+      _capacity?['nearestDumpsite'] as Map<String, dynamic>?;
+
+  /// Collector confirms they have offloaded at a facility. Resets the truck load
+  /// on the backend and clears the local capacity warning.
+  Future<bool> dumpLoad({String? facilityId}) async {
+    try {
+      await ApiClient.post('/api/collectors/dump-load', {
+        if (facilityId != null) 'facilityId': facilityId,
+      });
+      _capacity = null;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void dismissCapacityWarning() {
+    _capacity = null;
+    notifyListeners();
   }
 
   Future<void> toggleOnline() async {

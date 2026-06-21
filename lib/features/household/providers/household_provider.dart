@@ -267,6 +267,93 @@ class HouseholdProvider extends ChangeNotifier {
     }
   }
 
+  // ── Surge pricing ─────────────────────────────────────────────────────────
+  Map<String, dynamic>? _surge;
+  double get surgeMultiplier => ((_surge?['multiplier'] as num?) ?? 1.0).toDouble();
+  String get surgeLevel => (_surge?['level'] as String?) ?? 'NORMAL';
+  String get surgeLabel => (_surge?['label'] as String?) ?? 'Normal demand';
+  bool get isSurging => surgeMultiplier > 1.0;
+
+  Future<void> loadSurge(double lat, double lng) async {
+    try {
+      final res = await ApiClient.get('/api/bookings/surge', params: {'lat': lat, 'lng': lng});
+      _surge = Map<String, dynamic>.from(res.data['data'] as Map);
+      notifyListeners();
+    } catch (_) {
+      // Non-fatal — UI falls back to normal demand.
+    }
+  }
+
+  // ── Tipping ───────────────────────────────────────────────────────────────
+  /// Tips the collector for a completed booking. Returns null on success, or a
+  /// user-facing error string. When the wallet is short, sets [tipShortfall].
+  double? tipShortfall;
+  Future<String?> tipCollector(String bookingId, double amount) async {
+    tipShortfall = null;
+    try {
+      await ApiClient.post('/api/bookings/$bookingId/tip', {'amount': amount});
+      await loadBookings();
+      await loadWalletSummary();
+      return null;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map && data['requiresTopUp'] == true) {
+        tipShortfall = ((data['shortfall'] as num?) ?? 0).toDouble();
+      }
+      return (data is Map ? data['error'] as String? : null) ?? 'Could not send tip';
+    } catch (_) {
+      return 'Something went wrong. Please try again.';
+    }
+  }
+
+  // ── Favorite collectors ───────────────────────────────────────────────────
+  List<Map<String, dynamic>> _favorites = [];
+  List<Map<String, dynamic>> get favorites => List.unmodifiable(_favorites);
+  bool isFavorite(String collectorId) =>
+      _favorites.any((c) => c['id'] == collectorId);
+
+  Future<void> loadFavorites() async {
+    try {
+      final res = await ApiClient.get('/api/profile/favorites');
+      _favorites = List<Map<String, dynamic>>.from(res.data['data'] as List? ?? []);
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> toggleFavorite(Map<String, dynamic> collector) async {
+    final id = collector['id'] as String?;
+    if (id == null) return false;
+    final wasFav = isFavorite(id);
+    try {
+      if (wasFav) {
+        await ApiClient.delete('/api/profile/favorites/$id');
+        _favorites.removeWhere((c) => c['id'] == id);
+      } else {
+        await ApiClient.post('/api/profile/favorites', {'collectorId': id});
+        _favorites.insert(0, collector);
+      }
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── SOS safety alert ──────────────────────────────────────────────────────
+  Future<bool> raiseSos({required double lat, required double lng, String? bookingId, String? note}) async {
+    try {
+      await ApiClient.post('/api/sos', {
+        'lat': lat,
+        'lng': lng,
+        if (bookingId != null) 'bookingId': bookingId,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> cancelBooking(String bookingId, {String? reason}) async {
     try {
       await ApiClient.put('/api/bookings/$bookingId/cancel', {'reason': reason});

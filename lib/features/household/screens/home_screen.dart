@@ -77,10 +77,12 @@ class _HouseholdHomeScreenState extends State<HouseholdHomeScreen> {
     if (_myPos != null && mounted) {
       _hp!.subscribeToNearby(_myPos!.latitude, _myPos!.longitude);
       _subscribedPos = _myPos;
+      _hp!.loadSurge(_myPos!.latitude, _myPos!.longitude);
     }
     _collectorPollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       final pos = _myPos;
       _hp?.loadOnlineCollectors(lat: pos?.latitude, lng: pos?.longitude);
+      if (pos != null) _hp?.loadSurge(pos.latitude, pos.longitude);
     });
   }
 

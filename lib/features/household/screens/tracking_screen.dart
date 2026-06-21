@@ -33,7 +33,9 @@ class _TrackingScreenState extends State<TrackingScreen> {
     _status = (_booking['status'] as String? ?? 'SEARCHING').toUpperCase();
     final bookingId = _booking['id'] as String?;
     if (bookingId != null) {
-      context.read<HouseholdProvider>().listenToBooking(bookingId);
+      final prov = context.read<HouseholdProvider>();
+      prov.listenToBooking(bookingId);
+      prov.loadFavorites();
       _subscribeRealtime(bookingId);
     }
   }
@@ -98,6 +100,18 @@ class _TrackingScreenState extends State<TrackingScreen> {
           }
         : null;
 
+    // Live ETA — straight-line distance ÷ avg urban speed (Ghana ~22 km/h).
+    int? etaMinutes;
+    if (collectorLat != null && collectorLng != null && pickupPos != null &&
+        const ['ASSIGNED', 'ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE'].contains(_status)) {
+      final meters = const ll.Distance().as(
+        ll.LengthUnit.Meter, ll.LatLng(collectorLat, collectorLng), pickupPos);
+      etaMinutes = (meters / 1000 / 22 * 60).round().clamp(1, 120);
+    }
+
+    final sosVisible = const ['ASSIGNED', 'ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE', 'ARRIVED', 'COLLECTING']
+        .contains(_status);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0D1821),
       body: Stack(
@@ -122,6 +136,14 @@ class _TrackingScreenState extends State<TrackingScreen> {
             child: _TopBar(status: _status, onBack: () => Navigator.maybePop(context)),
           ),
 
+          // ── SOS safety button ────────────────────────────────────────────────
+          if (sosVisible)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 72,
+              right: 14,
+              child: _SosButton(onTap: () => _confirmSos(context, prov)),
+            ),
+
           // ── Bottom card ──────────────────────────────────────────────────────
           Positioned(
             left: 0,
@@ -131,8 +153,12 @@ class _TrackingScreenState extends State<TrackingScreen> {
               booking: _booking,
               status: _status,
               collector: collector,
+              etaMinutes: etaMinutes,
               onCall: () => _launchCall(collector?['phone'] as String?),
               onMessage: () => _openChat(collector),
+              onFavorite: collector != null ? () => _toggleFavorite(prov, collector) : null,
+              isFavorite: collector != null && prov.isFavorite(collector['id'] as String? ?? ''),
+              onTip: () => _showTipSheet(context, prov),
               onCancel: () => _confirmCancel(context, prov),
             ),
           ),
@@ -156,6 +182,67 @@ class _TrackingScreenState extends State<TrackingScreen> {
         peerName: collector?['fullName'] as String? ?? 'Your collector',
       ),
     ));
+  }
+
+  Future<void> _toggleFavorite(HouseholdProvider prov, Map<String, dynamic> collector) async {
+    HapticFeedback.lightImpact();
+    final added = !prov.isFavorite(collector['id'] as String? ?? '');
+    final ok = await prov.toggleFavorite(collector);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(!ok
+          ? 'Could not update favorites'
+          : added
+              ? 'Added to favorite collectors'
+              : 'Removed from favorites'),
+    ));
+  }
+
+  Future<void> _confirmSos(BuildContext ctx, HouseholdProvider prov) async {
+    final confirmed = await showDialog<bool>(
+      context: ctx,
+      builder: (d) => AlertDialog(
+        title: const Text('Send SOS alert?'),
+        content: const Text(
+            'This immediately alerts BinLink support with your live location and pickup details. Use only in an emergency.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: HouseholdColors.danger),
+            onPressed: () => Navigator.pop(d, true),
+            child: const Text('Send SOS'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final collectorLat = prov.collectorLat;
+    final collectorLng = prov.collectorLng;
+    final lat = collectorLat ?? (_booking['pickupLat'] as num?)?.toDouble();
+    final lng = collectorLng ?? (_booking['pickupLng'] as num?)?.toDouble();
+    if (lat == null || lng == null) return;
+
+    final ok = await prov.raiseSos(lat: lat, lng: lng, bookingId: _booking['id'] as String?);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: ok ? HouseholdColors.ecoGreen : HouseholdColors.danger,
+      content: Text(ok ? 'SOS sent — support has been alerted.' : 'Could not send SOS. Call support directly.'),
+    ));
+  }
+
+  Future<void> _showTipSheet(BuildContext ctx, HouseholdProvider prov) async {
+    final bookingId = _booking['id'] as String?;
+    if (bookingId == null) return;
+    await showModalBottomSheet<void>(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _TipSheet(bookingId: bookingId, prov: prov),
+    );
   }
 
   void _confirmCancel(BuildContext ctx, HouseholdProvider prov) {
@@ -289,19 +376,29 @@ class _BottomCard extends StatelessWidget {
     required this.booking,
     required this.status,
     required this.collector,
+    required this.etaMinutes,
     required this.onCall,
     required this.onMessage,
+    required this.onFavorite,
+    required this.isFavorite,
+    required this.onTip,
     required this.onCancel,
   });
   final Map<String, dynamic> booking;
   final String status;
   final Map<String, dynamic>? collector;
+  final int? etaMinutes;
   final VoidCallback onCall;
   final VoidCallback onMessage;
+  final VoidCallback? onFavorite;
+  final bool isFavorite;
+  final VoidCallback onTip;
   final VoidCallback onCancel;
 
   bool get _canCancel => ['SEARCHING', 'ASSIGNED', 'ACCEPTED'].contains(status);
   bool get _isDone    => ['COMPLETED', 'COLLECTED', 'CANCELLED'].contains(status);
+  bool get _canTip    => ['COMPLETED', 'COLLECTED'].contains(status) &&
+      collector != null && booking['tipPaidAt'] == null;
 
   @override
   Widget build(BuildContext context) {
@@ -320,13 +417,22 @@ class _BottomCard extends StatelessWidget {
         Padding(
           padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.paddingOf(context).bottom + 20),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Status label
-            _StatusLabel(status: status),
+            // Status label + live ETA
+            Row(children: [
+              Expanded(child: _StatusLabel(status: status)),
+              if (etaMinutes != null) _EtaPill(minutes: etaMinutes!),
+            ]),
             const SizedBox(height: 16),
 
             // Collector row
             if (collector != null) ...[
-              _CollectorRow(collector: collector!, onCall: onCall, onMessage: onMessage),
+              _CollectorRow(
+                collector: collector!,
+                onCall: onCall,
+                onMessage: onMessage,
+                onFavorite: onFavorite,
+                isFavorite: isFavorite,
+              ),
               const SizedBox(height: 14),
               const Divider(height: 1, color: Color(0xFFEEEAE2)),
               const SizedBox(height: 14),
@@ -352,6 +458,12 @@ class _BottomCard extends StatelessWidget {
               ]),
             ],
             const SizedBox(height: 16),
+
+            // Tip CTA — after a completed pickup
+            if (_canTip) ...[
+              HButton(label: 'Tip your collector', icon: 'rewards', onPressed: onTip),
+              const SizedBox(height: 10),
+            ],
 
             // Actions
             if (_isDone)
@@ -409,10 +521,18 @@ class _StatusLabel extends StatelessWidget {
 }
 
 class _CollectorRow extends StatelessWidget {
-  const _CollectorRow({required this.collector, required this.onCall, required this.onMessage});
+  const _CollectorRow({
+    required this.collector,
+    required this.onCall,
+    required this.onMessage,
+    required this.onFavorite,
+    required this.isFavorite,
+  });
   final Map<String, dynamic> collector;
   final VoidCallback onCall;
   final VoidCallback onMessage;
+  final VoidCallback? onFavorite;
+  final bool isFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -436,11 +556,156 @@ class _CollectorRow extends StatelessWidget {
             ]),
         ]),
       ),
+      if (onFavorite != null) ...[
+        _PillBtn(
+          icon: isFavorite
+              ? PhosphorIcons.heart(PhosphorIconsStyle.fill)
+              : PhosphorIcons.heart(),
+          onTap: onFavorite!,
+          color: HouseholdColors.danger,
+        ),
+        const SizedBox(width: 8),
+      ],
       _PillBtn(icon: PhosphorIcons.chatCircleDots(), onTap: onMessage, color: HouseholdColors.primary),
       if (hasPhone) const SizedBox(width: 8),
       if (hasPhone)
         _PillBtn(icon: PhosphorIcons.phone(), onTap: onCall, color: HouseholdColors.ecoGreen),
     ]);
+  }
+}
+
+// ── Live ETA pill ────────────────────────────────────────────────────────────
+class _EtaPill extends StatelessWidget {
+  const _EtaPill({required this.minutes});
+  final int minutes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: HouseholdColors.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: HouseholdColors.primary.withAlpha(60)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(PhosphorIcons.timer(PhosphorIconsStyle.fill), size: 14, color: HouseholdColors.primary),
+        const SizedBox(width: 6),
+        Text('~$minutes min', style: HouseholdType.caption.copyWith(
+          color: HouseholdColors.primary, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
+}
+
+// ── SOS safety button ────────────────────────────────────────────────────────
+class _SosButton extends StatelessWidget {
+  const _SosButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () { HapticFeedback.heavyImpact(); onTap(); },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: HouseholdColors.danger,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: HouseholdColors.danger.withAlpha(90), blurRadius: 16, offset: const Offset(0, 4))],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(PhosphorIcons.warning(PhosphorIconsStyle.fill), size: 16, color: Colors.white),
+          const SizedBox(width: 6),
+          Text('SOS', style: HouseholdType.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1)),
+        ]),
+      ),
+    );
+  }
+}
+
+// ── Tip sheet ────────────────────────────────────────────────────────────────
+class _TipSheet extends StatefulWidget {
+  const _TipSheet({required this.bookingId, required this.prov});
+  final String bookingId;
+  final HouseholdProvider prov;
+
+  @override
+  State<_TipSheet> createState() => _TipSheetState();
+}
+
+class _TipSheetState extends State<_TipSheet> {
+  static const _presets = [5.0, 10.0, 20.0, 50.0];
+  double? _selected = 10.0;
+  bool _sending = false;
+  bool _done = false;
+
+  Future<void> _submit() async {
+    final amount = _selected;
+    if (amount == null || _sending) return;
+    setState(() => _sending = true);
+    final err = await widget.prov.tipCollector(widget.bookingId, amount);
+    if (!mounted) return;
+    if (err == null) {
+      setState(() { _sending = false; _done = true; });
+      return;
+    }
+    setState(() => _sending = false);
+    final shortfall = widget.prov.tipShortfall;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(shortfall != null && shortfall > 0
+          ? '$err — top up GHS ${shortfall.toStringAsFixed(2)} in your wallet.'
+          : err),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)))),
+        const SizedBox(height: 18),
+        if (_done) ...[
+          Center(child: Icon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), size: 56, color: HouseholdColors.ecoGreen)),
+          const SizedBox(height: 12),
+          Center(child: Text('Tip sent — thank you!', style: HouseholdType.section)),
+          const SizedBox(height: 4),
+          Center(child: Text('Your collector receives 100% of the tip.', style: HouseholdType.caption.copyWith(color: HouseholdColors.gray))),
+          const SizedBox(height: 20),
+          HButton(label: 'Done', icon: 'home', onPressed: () => Navigator.pop(context)),
+        ] else ...[
+          Text('Tip your collector', style: HouseholdType.section),
+          const SizedBox(height: 4),
+          Text('Paid from your wallet. Collectors keep 100% of tips.', style: HouseholdType.caption.copyWith(color: HouseholdColors.gray)),
+          const SizedBox(height: 18),
+          Wrap(spacing: 10, runSpacing: 10, children: _presets.map((p) {
+            final sel = _selected == p;
+            return GestureDetector(
+              onTap: () => setState(() => _selected = p),
+              child: Container(
+                width: 72,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: sel ? HouseholdColors.primary.withAlpha(22) : const Color(0xFFF5F1EA),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: sel ? HouseholdColors.primary : Colors.transparent, width: 1.5),
+                ),
+                child: Text('GHS ${p.toStringAsFixed(0)}', style: HouseholdType.number.copyWith(
+                  color: sel ? HouseholdColors.primary : HouseholdColors.charcoal, fontWeight: FontWeight.w700)),
+              ),
+            );
+          }).toList()),
+          const SizedBox(height: 22),
+          HButton(
+            label: _sending ? 'Sending…' : 'Send GHS ${_selected?.toStringAsFixed(0) ?? '0'} tip',
+            icon: 'rewards',
+            onPressed: _sending ? null : _submit,
+          ),
+        ],
+      ]),
+    );
   }
 }
 

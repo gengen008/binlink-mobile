@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:provider/provider.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/design_system/collector_design_system.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/components/binlink_map.dart';
@@ -50,6 +52,19 @@ class CollectorMapTab extends StatelessWidget {
             ]),
           ),
         ),
+        // Truck-full dumpsite routing banner — above the GO button
+        if (provider.isCapacityWarning)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 180,
+            child: _DumpsiteBanner(
+              loadPercent: provider.loadPercent,
+              dumpsite: provider.nearestDumpsite,
+              onNavigate: () => _navigateToDumpsite(provider.nearestDumpsite),
+              onOffloaded: () => _confirmOffload(context, provider),
+            ),
+          ),
         Positioned(
           top: MediaQuery.paddingOf(context).top + 104,
           left: 22,
@@ -233,4 +248,112 @@ class _CountdownRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CountdownRingPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
+}
+
+// ── Truck-full dumpsite routing ───────────────────────────────────────────────
+Future<void> _navigateToDumpsite(Map<String, dynamic>? dumpsite) async {
+  if (dumpsite == null) return;
+  final lat = (dumpsite['lat'] as num?)?.toDouble();
+  final lng = (dumpsite['lng'] as num?)?.toDouble();
+  if (lat == null || lng == null) return;
+  final uri = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
+  final fallback = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri);
+  } else {
+    await launchUrl(fallback, mode: LaunchMode.externalApplication);
+  }
+}
+
+Future<void> _confirmOffload(BuildContext context, CollectorProvider provider) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (d) => AlertDialog(
+      backgroundColor: CollectorColors.charcoal,
+      title: Text('Confirm offload', style: CollectorType.title),
+      content: Text('Mark your truck as emptied at the dumpsite? This resets your load and resumes job matching.',
+          style: CollectorType.caption),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: CollectorColors.green),
+          onPressed: () => Navigator.pop(d, true),
+          child: const Text('Confirm'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  final dumpsite = provider.nearestDumpsite;
+  final ok = await provider.dumpLoad(facilityId: dumpsite?['id'] as String?);
+  messenger.showSnackBar(SnackBar(
+    backgroundColor: ok ? CollectorColors.green : CollectorColors.red,
+    content: Text(ok ? 'Load cleared — back to receiving jobs.' : 'Could not update. Try again.'),
+  ));
+}
+
+class _DumpsiteBanner extends StatelessWidget {
+  const _DumpsiteBanner({
+    required this.loadPercent,
+    required this.dumpsite,
+    required this.onNavigate,
+    required this.onOffloaded,
+  });
+  final int loadPercent;
+  final Map<String, dynamic>? dumpsite;
+  final VoidCallback onNavigate;
+  final VoidCallback onOffloaded;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = dumpsite?['name'] as String? ?? 'Nearest dumpsite';
+    final distance = (dumpsite?['distanceKm'] as num?)?.toDouble();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CollectorColors.charcoal,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: CollectorColors.payout.withAlpha(160), width: 1.5),
+        boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 20, offset: Offset(0, 6))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: CollectorColors.payout.withAlpha(40), shape: BoxShape.circle),
+            child: const CIcon('truck', color: CollectorColors.payout),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Truck $loadPercent% full', style: CollectorType.title),
+            Text(distance != null ? '$name · ${distance.toStringAsFixed(1)} km away' : name,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: CollectorType.caption),
+          ])),
+        ]),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: dumpsite == null ? null : onNavigate,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: CollectorColors.white,
+              side: const BorderSide(color: CollectorColors.line),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            icon: const CIcon('navigation', color: CollectorColors.white),
+            label: Text('Navigate', style: CollectorType.caption.copyWith(color: CollectorColors.white)),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: FilledButton(
+            onPressed: onOffloaded,
+            style: FilledButton.styleFrom(
+              backgroundColor: CollectorColors.green,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: Text("I've offloaded", style: CollectorType.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+          )),
+        ]),
+      ]),
+    );
+  }
 }

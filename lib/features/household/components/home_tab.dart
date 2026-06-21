@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/design_system/household_design_system.dart';
@@ -60,6 +61,13 @@ class _HomeTabState extends State<HomeTab> {
             ]),
           ),
         ),
+        if (provider.isSurging)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 80,
+            left: 18,
+            right: 18,
+            child: _SurgeBanner(label: provider.surgeLabel, multiplier: provider.surgeMultiplier),
+          ),
         Positioned(
           left: 16,
           right: 16,
@@ -228,3 +236,43 @@ class _CtaCard extends StatelessWidget {
 }
 
 // _CategoryChip and _Selector removed — booking is now handled by BookScreen wizard
+
+// ── Surge demand banner ───────────────────────────────────────────────────────
+class _SurgeBanner extends StatelessWidget {
+  const _SurgeBanner({required this.label, required this.multiplier});
+  final String label;
+  final double multiplier;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: HouseholdColors.warning.withAlpha(28),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: HouseholdColors.warning.withAlpha(110)),
+      ),
+      child: Row(children: [
+        Icon(PhosphorIcons.lightning(PhosphorIconsStyle.fill), size: 18, color: HouseholdColors.warning),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: HouseholdType.caption.copyWith(
+                color: HouseholdColors.charcoal, fontWeight: FontWeight.w700)),
+            Text('Prices are higher right now', style: HouseholdType.caption.copyWith(
+                color: HouseholdColors.gray, fontSize: 11)),
+          ]),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: HouseholdColors.warning,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text('${multiplier.toStringAsFixed(1)}×', style: HouseholdType.number.copyWith(
+              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+        ),
+      ]),
+    );
+  }
+}
