@@ -114,6 +114,7 @@ jobs:
             --target lib/main_household.dart \
             --release \
             --no-pub \
+            --split-per-abi \
             --build-number ${{ github.run_number }} \
             --suppress-analytics
         env:
@@ -123,9 +124,10 @@ jobs:
 
       - name: Verify Household APK
         run: |
-          APK=build/app/outputs/flutter-apk/app-household-release.apk
+          APK=build/app/outputs/flutter-apk/app-arm64-v8a-household-release.apk
           BYTES=$(du -sb "$APK" | cut -f1)
-          echo "[CI] Household APK: $(du -sh "$APK" | cut -f1)"
+          echo "[CI] Household arm64 APK: $(du -sh "$APK" | cut -f1)"
+          ls -lh build/app/outputs/flutter-apk/app-*-household-release.apk
           [ "$BYTES" -gt 5000000 ] || { echo "ERROR: APK is suspiciously small (<5MB) — build probably failed silently"; exit 1; }
 
       # ── 8. Build Collector APK ────────────────────────────────────────
@@ -136,6 +138,7 @@ jobs:
             --target lib/main_collector.dart \
             --release \
             --no-pub \
+            --split-per-abi \
             --build-number ${{ github.run_number }} \
             --suppress-analytics
         env:
@@ -145,16 +148,22 @@ jobs:
 
       - name: Verify Collector APK
         run: |
-          APK=build/app/outputs/flutter-apk/app-collector-release.apk
+          APK=build/app/outputs/flutter-apk/app-arm64-v8a-collector-release.apk
           BYTES=$(du -sb "$APK" | cut -f1)
-          echo "[CI] Collector APK: $(du -sh "$APK" | cut -f1)"
+          echo "[CI] Collector arm64 APK: $(du -sh "$APK" | cut -f1)"
+          ls -lh build/app/outputs/flutter-apk/app-*-collector-release.apk
           [ "$BYTES" -gt 5000000 ] || { echo "ERROR: APK is suspiciously small (<5MB) — build probably failed silently"; exit 1; }
 
       # ── 9. Rename APKs ────────────────────────────────────────────────
       - name: Rename APKs
         run: |
-          cp build/app/outputs/flutter-apk/app-household-release.apk BinLink-Eco-v2.apk
-          cp build/app/outputs/flutter-apk/app-collector-release.apk BinLink-Collector-v2.apk
+          OUT=build/app/outputs/flutter-apk
+          # Primary download = arm64-v8a (covers ~95%+ of phones). Keep filenames stable.
+          cp "$OUT/app-arm64-v8a-household-release.apk"  BinLink-Eco-v2.apk
+          cp "$OUT/app-arm64-v8a-collector-release.apk"  BinLink-Collector-v2.apk
+          # Fallback for older 32-bit phones.
+          cp "$OUT/app-armeabi-v7a-household-release.apk" BinLink-Eco-v2-older-phones.apk
+          cp "$OUT/app-armeabi-v7a-collector-release.apk" BinLink-Collector-v2-older-phones.apk
           ls -lh BinLink-*.apk
 
       # ── 10. Publish GitHub Release ─────────────────────────────────────
@@ -176,6 +185,9 @@ jobs:
           | **BinLink Eco** | \`BinLink-Eco-v2.apk\` | Households booking waste pickups |
           | **BinLink Collector** | \`BinLink-Collector-v2.apk\` | Collectors accepting & completing jobs |
 
+          These are **arm64** builds (~⅓ the size) — they work on essentially all modern phones.
+          On a very old 32-bit phone, use the **\`-older-phones\`** variant instead.
+
           ## How to install
           > ⚠️ **If you installed BinLink before June 11 2026: UNINSTALL the old app first.**
           > The app signing key changed — Android will refuse to update over the old version.
@@ -190,7 +202,9 @@ jobs:
           )" \
             --latest \
             "BinLink-Eco-v2.apk#BinLink-Eco-v2.apk" \
-            "BinLink-Collector-v2.apk#BinLink-Collector-v2.apk"
+            "BinLink-Collector-v2.apk#BinLink-Collector-v2.apk" \
+            "BinLink-Eco-v2-older-phones.apk#BinLink-Eco-v2-older-phones.apk" \
+            "BinLink-Collector-v2-older-phones.apk#BinLink-Collector-v2-older-phones.apk"
 
           echo "[CI] Release published → https://github.com/${{ github.repository }}/releases/latest"
 
