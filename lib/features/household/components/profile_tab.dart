@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/design_system/household_design_system.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/components/binlink_avatar.dart';
+import '../screens/favorites_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -36,6 +37,11 @@ class ProfileTab extends StatelessWidget {
           const SizedBox(height: 18),
           const _ProfileAction(icon: 'profile', label: 'Edit profile', route: '/edit-profile'),
           const _ProfileAction(icon: 'location', label: 'Saved addresses', route: '/saved-addresses'),
+          _ProfileAction(
+            icon: 'star',
+            label: 'Favorite collectors',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesScreen())),
+          ),
           const _ProfileAction(icon: 'calendar', label: 'Subscriptions', route: '/subscriptions'),
           const _ProfileAction(icon: 'notifications', label: 'Notifications', route: '/notifications'),
           const _ProfileAction(icon: 'support', label: 'Help and FAQ', route: '/help'),

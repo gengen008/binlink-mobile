@@ -231,6 +231,7 @@ class HouseholdProvider extends ChangeNotifier {
     String? addressNotes,
     DateTime? scheduledDate,
     String? frequency,
+    String? preferredCollectorId,
   }) async {
     _setLoading(true);
     try {
@@ -247,6 +248,7 @@ class HouseholdProvider extends ChangeNotifier {
         if (addressNotes != null && addressNotes.isNotEmpty) 'addressNotes': addressNotes,
         if (scheduledDate != null) 'scheduledDate': scheduledDate.toIso8601String(),
         if (frequency != null) 'frequency': frequency,
+        if (preferredCollectorId != null) 'preferredCollectorId': preferredCollectorId,
       });
       final booking = Map<String, dynamic>.from(res.data['data'] as Map);
       _bookings.insert(0, booking);

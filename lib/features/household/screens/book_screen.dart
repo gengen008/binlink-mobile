@@ -19,9 +19,17 @@ const _kBagPrice = 6.0;
 const _kServiceFee = 2.0;
 
 class BookScreen extends StatefulWidget {
-  const BookScreen({super.key, this.mode = 'immediate', this.myPos});
+  const BookScreen({
+    super.key,
+    this.mode = 'immediate',
+    this.myPos,
+    this.preferredCollectorId,
+    this.preferredCollectorName,
+  });
   final String mode;
   final ll.LatLng? myPos;
+  final String? preferredCollectorId;
+  final String? preferredCollectorName;
 
   @override
   State<BookScreen> createState() => _BookScreenState();
@@ -158,6 +166,7 @@ class _BookScreenState extends State<BookScreen> {
       addressNotes: _notesCtrl.text.trim().isNotEmpty ? _notesCtrl.text.trim() : null,
       scheduledDate: _isImmediate ? null : _scheduledDate,
       frequency: _frequency != 'ONE_TIME' ? _frequency : null,
+      preferredCollectorId: widget.preferredCollectorId,
     );
     if (!mounted) return;
     setState(() => _loading = false);
@@ -185,6 +194,29 @@ class _BookScreenState extends State<BookScreen> {
         child: Column(children: [
           _BookHeader(step: _step, onClose: _goBack),
           const SizedBox(height: 12),
+          if (widget.preferredCollectorName != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: HouseholdColors.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: HouseholdColors.primary.withAlpha(60)),
+                ),
+                child: Row(children: [
+                  const HIcon('star', color: HouseholdColors.primary, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text('Requesting ${widget.preferredCollectorName} first',
+                        style: HouseholdType.caption.copyWith(
+                            color: HouseholdColors.charcoal, fontWeight: FontWeight.w700)),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           _StepBar(step: _step),
           const SizedBox(height: 12),
           Expanded(
