@@ -574,6 +574,7 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _pricingRules = [];
   List<Map<String, dynamic>> _fleetVehicles = [];
   Map<String, dynamic>? _adminAnalytics;
+  List<Map<String, dynamic>> _pendingCollectors = [];
   bool _loadingAdmin = false;
   String? _adminError;
 
@@ -582,6 +583,7 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get pricingRules => _pricingRules;
   List<Map<String, dynamic>> get fleetVehicles => _fleetVehicles;
   Map<String, dynamic>? get adminAnalytics => _adminAnalytics;
+  List<Map<String, dynamic>> get pendingCollectors => _pendingCollectors;
   bool get loadingAdmin => _loadingAdmin;
   String? get adminError => _adminError;
 
@@ -682,17 +684,34 @@ class HouseholdProvider extends ChangeNotifier {
         ApiClient.get('/api/admin/pricing'),
         ApiClient.get('/api/admin/fleet/vehicles'),
         ApiClient.get('/api/admin/analytics/timeseries', params: {'range': range}),
+        ApiClient.get('/api/admin/collectors/pending'),
       ]);
       _adminLiveOps = Map<String, dynamic>.from(results[0].data['data'] as Map? ?? {});
       _pricingRules = List<Map<String, dynamic>>.from(results[1].data['data'] as List? ?? []);
       _fleetVehicles = List<Map<String, dynamic>>.from(results[2].data['data'] as List? ?? []);
       _adminAnalytics = Map<String, dynamic>.from(results[3].data['data'] as Map? ?? {});
+      _pendingCollectors = List<Map<String, dynamic>>.from(results[4].data['data'] as List? ?? []);
       _adminError = null;
     } on DioException catch (e) {
       _adminError = e.response?.data?['error'] ?? 'Could not load admin dashboard';
     } finally {
       _loadingAdmin = false;
       notifyListeners();
+    }
+  }
+
+  /// Admin approves or rejects a pending collector's verification.
+  Future<bool> reviewCollector(String collectorId, String action, {String? reason}) async {
+    try {
+      await ApiClient.patch('/api/admin/collectors/$collectorId/verify', {
+        'action': action,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      });
+      _pendingCollectors.removeWhere((c) => c['id'] == collectorId);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

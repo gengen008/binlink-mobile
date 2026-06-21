@@ -90,6 +90,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 18),
                 _SectionHeader(
+                  title: 'Collector Approvals',
+                  action: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: provider.pendingCollectors.isEmpty
+                          ? HouseholdColors.gray.withAlpha(40)
+                          : HouseholdColors.warning,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('${provider.pendingCollectors.length} pending',
+                        style: HouseholdType.caption.copyWith(
+                            color: provider.pendingCollectors.isEmpty
+                                ? HouseholdColors.gray
+                                : Colors.white,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...(provider.pendingCollectors.isEmpty
+                    ? [const HCard(child: Text('No collectors awaiting verification.'))]
+                    : provider.pendingCollectors
+                        .map((c) => _CollectorApprovalTile(collector: c))),
+                const SizedBox(height: 18),
+                _SectionHeader(
                   title: 'Pricing Engine',
                   action: FilledButton.icon(
                     onPressed: () => _openPricingDialog(context),
@@ -717,5 +741,133 @@ class _RevenueChart extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Collector verification approval tile ──────────────────────────────────────
+class _CollectorApprovalTile extends StatelessWidget {
+  const _CollectorApprovalTile({required this.collector});
+  final Map<String, dynamic> collector;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = collector['fullName'] as String? ?? 'Collector';
+    final contact = (collector['email'] as String?) ?? (collector['phone'] as String?) ?? '';
+    final kyc = collector['kyc'] as Map<String, dynamic>?;
+    final docs = <String, String?>{
+      'Ghana Card': kyc?['ghanaCardUrl'] as String?,
+      'License': kyc?['licenseUrl'] as String?,
+      'Vehicle': kyc?['vehiclePhotoUrl'] as String?,
+    };
+    final hasDocs = docs.values.any((v) => v != null && v.isNotEmpty);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: HCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const HIcon('profile', color: HouseholdColors.primary),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name, style: HouseholdType.section),
+              if (contact.isNotEmpty) Text(contact, style: HouseholdType.caption),
+              if (kyc?['ghanaCardNumber'] != null)
+                Text('Ghana Card: ${kyc!['ghanaCardNumber']}', style: HouseholdType.caption),
+              if (kyc?['licenseNumber'] != null)
+                Text('License: ${kyc!['licenseNumber']}', style: HouseholdType.caption),
+            ])),
+          ]),
+          if (hasDocs) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 78,
+              child: ListView(scrollDirection: Axis.horizontal, children: [
+                for (final entry in docs.entries)
+                  if (entry.value != null && entry.value!.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => _viewDoc(context, entry.key, entry.value!),
+                      child: Container(
+                        width: 78,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE5E0D8)),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.network(entry.value!, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Center(child: HIcon('security', size: 18))),
+                      ),
+                    ),
+              ]),
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text('No documents uploaded yet.', style: HouseholdType.caption.copyWith(color: HouseholdColors.warning)),
+          ],
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(child: OutlinedButton(
+              onPressed: () => _reject(context, collector['id'] as String),
+              style: OutlinedButton.styleFrom(foregroundColor: HouseholdColors.danger,
+                  side: const BorderSide(color: HouseholdColors.danger)),
+              child: const Text('Reject'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: FilledButton(
+              onPressed: () => _approve(context, collector['id'] as String),
+              style: FilledButton.styleFrom(backgroundColor: HouseholdColors.ecoGreen),
+              child: const Text('Approve'),
+            )),
+          ]),
+        ]),
+      ),
+    );
+  }
+
+  void _viewDoc(BuildContext context, String label, String url) {
+    showDialog<void>(context: context, builder: (_) => Dialog(
+      backgroundColor: Colors.black,
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Padding(padding: const EdgeInsets.all(12), child: Text(label,
+            style: HouseholdType.section.copyWith(color: Colors.white))),
+        Flexible(child: InteractiveViewer(child: Image.network(url,
+            errorBuilder: (_, __, ___) => const Padding(
+                padding: EdgeInsets.all(40), child: Text('Could not load image',
+                    style: TextStyle(color: Colors.white)))))),
+        TextButton(onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: Colors.white))),
+      ]),
+    ));
+  }
+
+  Future<void> _approve(BuildContext context, String id) async {
+    final ok = await context.read<HouseholdProvider>().reviewCollector(id, 'approve');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(ok ? 'Collector approved' : 'Could not approve')));
+    }
+  }
+
+  Future<void> _reject(BuildContext context, String id) async {
+    final ctrl = TextEditingController();
+    final reason = await showDialog<String>(context: context, builder: (d) => AlertDialog(
+      title: Text('Reject collector', style: HouseholdType.title),
+      content: TextField(controller: ctrl, decoration: const InputDecoration(
+          hintText: 'Reason (shown to the collector)'), maxLines: 2),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(d), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: HouseholdColors.danger),
+          onPressed: () => Navigator.pop(d, ctrl.text.trim()),
+          child: const Text('Reject'),
+        ),
+      ],
+    ));
+    if (reason == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await context.read<HouseholdProvider>().reviewCollector(id, 'reject', reason: reason);
+    messenger.showSnackBar(SnackBar(
+        content: Text(ok ? 'Collector rejected' : 'Could not reject')));
   }
 }

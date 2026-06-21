@@ -470,6 +470,58 @@ class CollectorProvider extends ChangeNotifier {
     }
   }
 
+  // ── KYC / verification ──────────────────────────────────────────────────────
+  Map<String, dynamic>? _kyc;
+  String _accountStatus = 'PENDING';
+  Map<String, dynamic>? get kyc => _kyc;
+  String get accountStatus => _accountStatus;
+  bool get isVerified => _accountStatus == 'ACTIVE';
+  String get kycStatus => (_kyc?['status'] as String?) ?? 'NONE'; // NONE | PENDING | APPROVED | REJECTED
+  String? get kycRejectionReason => _kyc?['rejectionReason'] as String?;
+
+  Future<void> loadKyc() async {
+    try {
+      final res = await ApiClient.get('/api/collector/kyc');
+      final data = res.data['data'] as Map<String, dynamic>?;
+      _accountStatus = (data?['accountStatus'] as String?) ?? _accountStatus;
+      _kyc = data?['kyc'] as Map<String, dynamic>?;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Submits KYC documents. [files] maps field → local file path for any of
+  /// 'ghanaCard', 'license', 'vehiclePhoto'. Returns null on success or an error.
+  Future<String?> submitKyc({
+    required Map<String, String> files,
+    String? ghanaCardNumber,
+    String? licenseNumber,
+  }) async {
+    try {
+      final form = FormData();
+      for (final entry in files.entries) {
+        form.files.add(MapEntry(
+          entry.key,
+          await MultipartFile.fromFile(entry.value, filename: entry.value.split('/').last),
+        ));
+      }
+      if (ghanaCardNumber != null && ghanaCardNumber.isNotEmpty) {
+        form.fields.add(MapEntry('ghanaCardNumber', ghanaCardNumber));
+      }
+      if (licenseNumber != null && licenseNumber.isNotEmpty) {
+        form.fields.add(MapEntry('licenseNumber', licenseNumber));
+      }
+      final res = await ApiClient.upload('/api/collector/kyc', form);
+      _kyc = res.data['data'] as Map<String, dynamic>?;
+      _accountStatus = 'PENDING';
+      notifyListeners();
+      return null;
+    } on DioException catch (e) {
+      return (e.response?.data is Map ? e.response?.data['error'] as String? : null) ?? 'Upload failed';
+    } catch (_) {
+      return 'Something went wrong. Please try again.';
+    }
+  }
+
   Future<bool> reportException(
       String bookingId, String reason, String? note, {String? photoUrl}) async {
     try {

@@ -13,6 +13,7 @@ import '../../../shared/components/binlink_map.dart';
 import '../../../shared/components/searching_radar_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/collector_provider.dart';
+import '../screens/verification_screen.dart';
 
 class CollectorMapTab extends StatelessWidget {
   const CollectorMapTab({super.key, required this.pos});
@@ -28,6 +29,7 @@ class CollectorMapTab extends StatelessWidget {
     }
     final capacity = ((user?.currentLoadKg ?? 0) / (user?.maxCapacityKg ?? 500) * 100).clamp(0, 100).round();
     final etaText = _etaText(provider.currentActivePickup);
+    final verified = user?.status == 'ACTIVE';
     return Stack(
       children: [
         Positioned.fill(child: BinLinkMap(initialPosition: p, myLocationEnabled: provider.isOnline)),
@@ -80,7 +82,13 @@ class CollectorMapTab extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 104),
             child: GestureDetector(
-              onTap: provider.toggleOnline,
+              onTap: () {
+                if (!verified) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationScreen()));
+                  return;
+                }
+                provider.toggleOnline();
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
@@ -88,11 +96,20 @@ class CollectorMapTab extends StatelessWidget {
                 height: 112,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: provider.isOnline ? CollectorColors.red : CollectorColors.green,
+                  color: !verified
+                      ? CollectorColors.warning
+                      : (provider.isOnline ? CollectorColors.red : CollectorColors.green),
                   border: Border.all(color: CollectorColors.white, width: 5),
-                  boxShadow: [BoxShadow(color: (provider.isOnline ? CollectorColors.red : CollectorColors.green).withAlpha(90), blurRadius: 34, spreadRadius: 8)],
+                  boxShadow: [BoxShadow(
+                    color: (!verified ? CollectorColors.warning : (provider.isOnline ? CollectorColors.red : CollectorColors.green)).withAlpha(90),
+                    blurRadius: 34, spreadRadius: 8)],
                 ),
-                child: Center(child: Text(provider.isOnline ? 'STOP' : 'GO', style: CollectorType.title.copyWith(color: provider.isOnline ? Colors.white : CollectorColors.dark))),
+                child: Center(child: Text(
+                  !verified ? 'VERIFY' : (provider.isOnline ? 'STOP' : 'GO'),
+                  style: CollectorType.title.copyWith(
+                    color: !verified ? CollectorColors.dark : (provider.isOnline ? Colors.white : CollectorColors.dark),
+                    fontSize: !verified ? 22 : null,
+                  ))),
               ),
             ),
           ),
