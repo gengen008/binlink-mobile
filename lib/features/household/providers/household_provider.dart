@@ -635,6 +635,7 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _fleetVehicles = [];
   Map<String, dynamic>? _adminAnalytics;
   List<Map<String, dynamic>> _pendingCollectors = [];
+  List<Map<String, dynamic>> _promos = [];
   bool _loadingAdmin = false;
   String? _adminError;
 
@@ -644,6 +645,7 @@ class HouseholdProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get fleetVehicles => _fleetVehicles;
   Map<String, dynamic>? get adminAnalytics => _adminAnalytics;
   List<Map<String, dynamic>> get pendingCollectors => _pendingCollectors;
+  List<Map<String, dynamic>> get promos => _promos;
   bool get loadingAdmin => _loadingAdmin;
   String? get adminError => _adminError;
 
@@ -745,12 +747,14 @@ class HouseholdProvider extends ChangeNotifier {
         ApiClient.get('/api/admin/fleet/vehicles'),
         ApiClient.get('/api/admin/analytics/timeseries', params: {'range': range}),
         ApiClient.get('/api/admin/collectors/pending'),
+        ApiClient.get('/api/admin/promos'),
       ]);
       _adminLiveOps = Map<String, dynamic>.from(results[0].data['data'] as Map? ?? {});
       _pricingRules = List<Map<String, dynamic>>.from(results[1].data['data'] as List? ?? []);
       _fleetVehicles = List<Map<String, dynamic>>.from(results[2].data['data'] as List? ?? []);
       _adminAnalytics = Map<String, dynamic>.from(results[3].data['data'] as Map? ?? {});
       _pendingCollectors = List<Map<String, dynamic>>.from(results[4].data['data'] as List? ?? []);
+      _promos = List<Map<String, dynamic>>.from(results[5].data['data'] as List? ?? []);
       _adminError = null;
     } on DioException catch (e) {
       _adminError = e.response?.data?['error'] ?? 'Could not load admin dashboard';
@@ -768,6 +772,18 @@ class HouseholdProvider extends ChangeNotifier {
         if (reason != null && reason.isNotEmpty) 'reason': reason,
       });
       _pendingCollectors.removeWhere((c) => c['id'] == collectorId);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Admin creates a promo code.
+  Future<bool> createPromoCode(Map<String, dynamic> payload) async {
+    try {
+      final res = await ApiClient.post('/api/admin/promos', payload);
+      _promos.insert(0, Map<String, dynamic>.from(res.data['data'] as Map));
       notifyListeners();
       return true;
     } catch (_) {

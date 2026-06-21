@@ -142,6 +142,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         .map((vehicle) => _VehicleTile(vehicle: vehicle))),
                 const SizedBox(height: 18),
                 _SectionHeader(
+                  title: 'Promo Codes',
+                  action: FilledButton.icon(
+                    onPressed: () => _openPromoDialog(context),
+                    icon: const Icon(Icons.local_offer_outlined, size: 18, color: Colors.white),
+                    label: const Text('Add code'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...(provider.promos.isEmpty
+                    ? [const HCard(child: Text('No promo codes yet.'))]
+                    : provider.promos.map((p) => _PromoTile(promo: p))),
+                const SizedBox(height: 18),
+                _SectionHeader(
                   title: 'Analytics',
                   action: SegmentedButton<String>(
                     segments: const [
@@ -200,6 +213,56 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openPromoDialog(BuildContext context) async {
+    final codeCtrl = TextEditingController();
+    final valueCtrl = TextEditingController();
+    final minCtrl = TextEditingController();
+    String type = 'PERCENT';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => StatefulBuilder(builder: (d2, setLocal) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text('New promo code', style: HouseholdType.title),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: codeCtrl, textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(labelText: 'Code (e.g. WELCOME10)')),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'PERCENT', label: Text('%')),
+                ButtonSegment(value: 'FIXED', label: Text('GHS')),
+              ],
+              selected: {type},
+              onSelectionChanged: (v) => setLocal(() => type = v.first),
+            )),
+          ]),
+          const SizedBox(height: 10),
+          TextField(controller: valueCtrl, keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: type == 'PERCENT' ? 'Percent off' : 'Amount off (GHS)')),
+          const SizedBox(height: 10),
+          TextField(controller: minCtrl, keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Minimum order (GHS, optional)')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d2, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(d2, true), child: const Text('Create')),
+        ],
+      )),
+    );
+    if (ok != true || !context.mounted) return;
+    final created = await context.read<HouseholdProvider>().createPromoCode({
+      'code': codeCtrl.text.trim(),
+      'discountType': type,
+      'discountValue': double.tryParse(valueCtrl.text.trim()) ?? 0,
+      'minAmount': double.tryParse(minCtrl.text.trim()) ?? 0,
+    });
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(created ? 'Promo code created' : 'Could not create code')));
+    }
   }
 
   Future<void> _openPricingDialog(BuildContext context,
@@ -869,5 +932,43 @@ class _CollectorApprovalTile extends StatelessWidget {
     final ok = await context.read<HouseholdProvider>().reviewCollector(id, 'reject', reason: reason);
     messenger.showSnackBar(SnackBar(
         content: Text(ok ? 'Collector rejected' : 'Could not reject')));
+  }
+}
+
+// ── Promo code tile ───────────────────────────────────────────────────────────
+class _PromoTile extends StatelessWidget {
+  const _PromoTile({required this.promo});
+  final Map<String, dynamic> promo;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = promo['discountType'] as String? ?? 'PERCENT';
+    final value = (promo['discountValue'] as num?)?.toDouble() ?? 0;
+    final label = type == 'PERCENT' ? '${value.toStringAsFixed(0)}% off' : 'GHS ${value.toStringAsFixed(2)} off';
+    final used = (promo['_count']?['redemptions'] as num?)?.toInt() ?? 0;
+    final active = promo['isActive'] == true;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: HCard(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(children: [
+          const Icon(Icons.local_offer, color: HouseholdColors.primary),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(promo['code'] as String? ?? '', style: HouseholdType.section.copyWith(letterSpacing: 2)),
+            Text('$label · used $used×', style: HouseholdType.caption),
+          ])),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: (active ? HouseholdColors.ecoGreen : HouseholdColors.gray).withAlpha(40),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(active ? 'Active' : 'Off', style: HouseholdType.caption.copyWith(
+                color: active ? HouseholdColors.ecoGreen : HouseholdColors.gray, fontWeight: FontWeight.w700)),
+          ),
+        ]),
+      ),
+    );
   }
 }
