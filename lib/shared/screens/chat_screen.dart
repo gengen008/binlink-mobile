@@ -155,21 +155,48 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    return parts.take(2).map((p) => p[0].toUpperCase()).join();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: _surface,
         elevation: 0.5,
         foregroundColor: _onSurface,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        titleSpacing: 0,
+        // Explicit, always-visible back button.
+        leading: IconButton(
+          icon: Icon(PhosphorIcons.caretLeft(PhosphorIconsStyle.bold), color: _onSurface),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Row(
           children: [
-            Text(widget.peerName,
-                style: HouseholdType.section.copyWith(color: _onSurface)),
-            Text('Booking chat',
-                style: HouseholdType.caption.copyWith(color: _muted)),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: _accent.withAlpha(40),
+              child: Text(_initials(widget.peerName),
+                  style: HouseholdType.caption.copyWith(color: _accent, fontWeight: FontWeight.w800)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.peerName, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: HouseholdType.section.copyWith(color: _onSurface)),
+                  Text('Pickup chat',
+                      style: HouseholdType.caption.copyWith(color: _muted)),
+                ],
+              ),
+            ),
           ],
         ),
       ),

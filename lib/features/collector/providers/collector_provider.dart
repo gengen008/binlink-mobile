@@ -175,6 +175,27 @@ class CollectorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Re-syncs online state from the server on app start. Online is a deliberate
+  /// state that survives app exits/network drops — so if the server still has
+  /// the collector online, we silently re-establish the socket + location feed
+  /// without re-toggling (they never pressed go-offline).
+  Future<void> syncOnlineFromServer() async {
+    try {
+      final res = await ApiClient.get('/api/profile');
+      final serverOnline = (res.data['data']?['isOnline'] as bool?) ?? false;
+      if (serverOnline && !_isOnline) {
+        _isOnline = true;
+        SocketService.goOnline();
+        _startLocationBroadcast();
+        BackgroundLocationService.start();
+        notifyListeners();
+      } else if (!serverOnline && _isOnline) {
+        _isOnline = false;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
   Future<void> toggleOnline() async {
     final newState = !_isOnline;
     _isOnline = newState;

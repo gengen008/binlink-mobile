@@ -43,7 +43,7 @@ class CollectorMapTab extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(Fmt.currency(provider.todayEarnings), style: CollectorType.title),
-                Text(provider.isOnline ? 'Online and receiving jobs' : 'Offline. Tap GO to start', style: CollectorType.caption.copyWith(color: provider.isOnline ? CollectorColors.green : const Color(0xFFB6C0CC))),
+                Text(provider.isOnline ? 'Online and receiving jobs' : 'Today\'s earnings', style: CollectorType.caption.copyWith(color: provider.isOnline ? CollectorColors.green : const Color(0xFFB6C0CC))),
               ])),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -85,41 +85,19 @@ class CollectorMapTab extends StatelessWidget {
           right: 22,
           child: _Metric(label: 'Speed', value: '${provider.currentSpeedKph.round()} km/h'),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 104),
-            child: GestureDetector(
-              onTap: () {
-                if (!verified) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationScreen()));
-                  return;
-                }
-                provider.toggleOnline();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: !verified
-                      ? CollectorColors.warning
-                      : (provider.isOnline ? CollectorColors.red : CollectorColors.green),
-                  border: Border.all(color: CollectorColors.white, width: 5),
-                  boxShadow: [BoxShadow(
-                    color: (!verified ? CollectorColors.warning : (provider.isOnline ? CollectorColors.red : CollectorColors.green)).withAlpha(90),
-                    blurRadius: 34, spreadRadius: 8)],
-                ),
-                child: Center(child: Text(
-                  !verified ? 'VERIFY' : (provider.isOnline ? 'STOP' : 'GO'),
-                  style: CollectorType.title.copyWith(
-                    color: !verified ? CollectorColors.dark : (provider.isOnline ? Colors.white : CollectorColors.dark),
-                    fontSize: !verified ? 22 : null,
-                  ))),
-              ),
-            ),
+        // Clean status bar pinned to the bottom — no longer floating over the map.
+        Positioned(
+          left: 16, right: 16, bottom: 20,
+          child: _OnlineBar(
+            verified: verified,
+            isOnline: provider.isOnline,
+            onTap: () {
+              if (!verified) {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationScreen()));
+                return;
+              }
+              provider.toggleOnline();
+            },
           ),
         ),
         if (provider.isOnline && provider.pendingRequests.isNotEmpty) _IncomingRequest(request: provider.pendingRequests.first),
@@ -363,6 +341,69 @@ class _DumpsiteBanner extends StatelessWidget {
             child: Text("I've offloaded", style: CollectorType.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
           )),
         ]),
+      ]),
+    );
+  }
+}
+
+// ── Clean online/offline status bar (replaces the old floating GO circle) ─────
+class _OnlineBar extends StatelessWidget {
+  const _OnlineBar({required this.verified, required this.isOnline, required this.onTap});
+  final bool verified;
+  final bool isOnline;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = !verified
+        ? CollectorColors.warning
+        : (isOnline ? CollectorColors.green : CollectorColors.green);
+    final String title = !verified
+        ? 'Get verified to start'
+        : (isOnline ? "You're online" : "You're offline");
+    final String sub = !verified
+        ? 'Upload your documents for review'
+        : (isOnline ? 'Receiving nearby pickups' : 'Go online to start earning');
+    final String action = !verified ? 'VERIFY' : (isOnline ? 'GO OFFLINE' : 'GO ONLINE');
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: CollectorColors.charcoal,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withAlpha(120), width: 1.5),
+        boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 24, offset: Offset(0, 8))],
+      ),
+      child: Row(children: [
+        // Pulsing status dot
+        Container(width: 12, height: 12, decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: accent,
+          boxShadow: [BoxShadow(color: accent.withAlpha(140), blurRadius: 10, spreadRadius: 2)],
+        )),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: CollectorType.title),
+          Text(sub, style: CollectorType.caption),
+        ])),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () { HapticFeedback.mediumImpact(); onTap(); },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: isOnline && verified ? Colors.transparent : accent,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent, width: 1.5),
+            ),
+            child: Text(action, style: CollectorType.caption.copyWith(
+              color: isOnline && verified ? accent : CollectorColors.dark,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            )),
+          ),
+        ),
       ]),
     );
   }

@@ -42,7 +42,12 @@ class _CollectorMapScreenState extends State<CollectorMapScreen> {
     if (last != null && mounted) setState(() => _pos = LatLng(last.latitude, last.longitude));
     final pos = await LocationService.getCurrentPosition();
     if (pos != null && mounted) setState(() => _pos = LatLng(pos.latitude, pos.longitude));
-    if (mounted) await context.read<CollectorProvider>().loadDashboard();
+    if (mounted) {
+      final prov = context.read<CollectorProvider>();
+      await prov.loadDashboard();
+      // Restore online status if the collector never went offline.
+      await prov.syncOnlineFromServer();
+    }
     _sub = LocationService.getPositionStream().listen((p) {
       if (mounted) setState(() => _pos = LatLng(p.latitude, p.longitude));
     });
