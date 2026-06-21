@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/design_system/household_design_system.dart';
+import '../../../core/routing/routing_service.dart';
 import '../../../shared/components/binlink_map.dart';
 import '../../../shared/screens/chat_screen.dart';
 import '../providers/household_provider.dart';
@@ -25,6 +26,9 @@ class _TrackingScreenState extends State<TrackingScreen> {
   late Map<String, dynamic> _booking;
   String _status = 'SEARCHING';
   RealtimeChannel? _supaChannel;
+  bool _ratingShown = false;
+  int? _roadEtaMin;
+  ll.LatLng? _lastEtaFrom;
 
   @override
   void initState() {
@@ -100,13 +104,25 @@ class _TrackingScreenState extends State<TrackingScreen> {
           }
         : null;
 
-    // Live ETA — straight-line distance ÷ avg urban speed (Ghana ~22 km/h).
+    // Live ETA — prefer real road-distance routing; fall back to straight-line.
     int? etaMinutes;
-    if (collectorLat != null && collectorLng != null && pickupPos != null &&
-        const ['ASSIGNED', 'ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE'].contains(_status)) {
-      final meters = const ll.Distance().as(
-        ll.LengthUnit.Meter, ll.LatLng(collectorLat, collectorLng), pickupPos);
-      etaMinutes = (meters / 1000 / 22 * 60).round().clamp(1, 120);
+    final etaActive = const ['ASSIGNED', 'ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE'].contains(_status);
+    if (collectorLat != null && collectorLng != null && pickupPos != null && etaActive) {
+      final from = ll.LatLng(collectorLat, collectorLng);
+      _maybeRefreshRoadEta(from, pickupPos);
+      final meters = const ll.Distance().as(ll.LengthUnit.Meter, from, pickupPos);
+      etaMinutes = _roadEtaMin ?? (meters / 1000 / 22 * 60).round().clamp(1, 120);
+    } else {
+      _roadEtaMin = null;
+    }
+
+    // Auto-prompt a rating the moment the pickup completes.
+    if (const ['COMPLETED', 'COLLECTED'].contains(_status) &&
+        !_ratingShown && collector != null && _booking['review'] == null) {
+      _ratingShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showRatingSheet(collector);
+      });
     }
 
     final sosVisible = const ['ASSIGNED', 'ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE', 'ARRIVED', 'COLLECTING']
@@ -184,6 +200,38 @@ class _TrackingScreenState extends State<TrackingScreen> {
     ));
   }
 
+  // Real road-distance ETA — refetched only when the collector moves >150m.
+  Future<void> _maybeRefreshRoadEta(ll.LatLng from, ll.LatLng to) async {
+    if (_lastEtaFrom != null &&
+        const ll.Distance().as(ll.LengthUnit.Meter, _lastEtaFrom!, from) < 150) {
+      return;
+    }
+    _lastEtaFrom = from;
+    try {
+      final route = await RoutingService.getRoute(from, to);
+      if (mounted && route.travelTimeSec > 0) {
+        setState(() => _roadEtaMin = route.travelTimeMin.clamp(1, 120));
+      }
+    } catch (_) {}
+  }
+
+  void _showRatingSheet(Map<String, dynamic> collector) {
+    final bookingId = _booking['id'] as String?;
+    if (bookingId == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _RatingSheet(
+        bookingId: bookingId,
+        collectorName: collector['fullName'] as String? ?? 'your collector',
+        prov: context.read<HouseholdProvider>(),
+      ),
+    );
+  }
+
   Future<void> _toggleFavorite(HouseholdProvider prov, Map<String, dynamic> collector) async {
     HapticFeedback.lightImpact();
     final added = !prov.isFavorite(collector['id'] as String? ?? '');
@@ -246,6 +294,12 @@ class _TrackingScreenState extends State<TrackingScreen> {
   }
 
   void _confirmCancel(BuildContext ctx, HouseholdProvider prov) {
+    // Mirror the backend policy so the user sees the fee before confirming.
+    const committed = ['ACCEPTED', 'ON_THE_WAY', 'EN_ROUTE', 'ARRIVED', 'COLLECTING'];
+    final created = DateTime.tryParse(_booking['createdAt'] as String? ?? '');
+    final outsideGrace = created != null && DateTime.now().difference(created).inSeconds > 120;
+    final feeApplies = committed.contains(_status) && outsideGrace;
+
     showModalBottomSheet<void>(
       context: ctx,
       isScrollControlled: true,
@@ -259,6 +313,24 @@ class _TrackingScreenState extends State<TrackingScreen> {
           Text('Cancel this pickup?', style: HouseholdType.title),
           const SizedBox(height: 8),
           Text('You are limited to 3 cancellations per day.', style: HouseholdType.body.copyWith(color: HouseholdColors.gray)),
+          if (feeApplies) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: HouseholdColors.warning.withAlpha(28),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HouseholdColors.warning.withAlpha(110)),
+              ),
+              child: Row(children: [
+                Icon(PhosphorIcons.warning(PhosphorIconsStyle.fill), color: HouseholdColors.warning, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(
+                  'A GHS 5 cancellation fee applies — your collector is already on the way. It will be charged from your wallet.',
+                  style: HouseholdType.caption.copyWith(color: HouseholdColors.charcoal))),
+              ]),
+            ),
+          ],
           const SizedBox(height: 24),
           HButton(
             label: 'Yes, cancel pickup',
@@ -757,6 +829,77 @@ class _Avatar extends StatelessWidget {
         border: Border.all(color: HouseholdColors.primary.withAlpha(60)),
       ),
       child: Center(child: Text(initials, style: HouseholdType.section.copyWith(color: HouseholdColors.primary))),
+    );
+  }
+}
+
+// ── Auto rating sheet (shown when the pickup completes) ───────────────────────
+class _RatingSheet extends StatefulWidget {
+  const _RatingSheet({required this.bookingId, required this.collectorName, required this.prov});
+  final String bookingId;
+  final String collectorName;
+  final HouseholdProvider prov;
+
+  @override
+  State<_RatingSheet> createState() => _RatingSheetState();
+}
+
+class _RatingSheetState extends State<_RatingSheet> {
+  int _rating = 0;
+  final _comment = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() { _comment.dispose(); super.dispose(); }
+
+  Future<void> _submit() async {
+    if (_rating == 0 || _submitting) return;
+    setState(() => _submitting = true);
+    final ok = await widget.prov.submitReview(widget.bookingId, _rating, _comment.text.trim());
+    if (!mounted) return;
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok ? 'Thanks for your feedback! 🙏' : 'Could not submit rating')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.viewInsetsOf(context).bottom + 24),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)))),
+        const SizedBox(height: 18),
+        Text('Rate ${widget.collectorName}', style: HouseholdType.title),
+        const SizedBox(height: 4),
+        Text('How was your pickup?', style: HouseholdType.body.copyWith(color: HouseholdColors.gray)),
+        const SizedBox(height: 18),
+        Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) {
+          final filled = i < _rating;
+          return IconButton(
+            onPressed: () { HapticFeedback.lightImpact(); setState(() => _rating = i + 1); },
+            icon: Icon(PhosphorIcons.star(filled ? PhosphorIconsStyle.fill : PhosphorIconsStyle.regular),
+                size: 38, color: filled ? HouseholdColors.warning : const Color(0xFFD1D5DB)),
+          );
+        }))),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _comment,
+          maxLines: 2,
+          style: HouseholdType.body,
+          decoration: InputDecoration(
+            hintText: 'Add a comment (optional)',
+            filled: true,
+            fillColor: const Color(0xFFF5F1EA),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+          ),
+        ),
+        const SizedBox(height: 20),
+        HButton(label: _submitting ? 'Submitting…' : 'Submit rating', icon: 'star',
+            onPressed: _rating == 0 || _submitting ? null : _submit),
+        const SizedBox(height: 8),
+        Center(child: TextButton(onPressed: () => Navigator.pop(context),
+            child: Text('Maybe later', style: HouseholdType.caption.copyWith(color: HouseholdColors.gray)))),
+      ]),
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../../core/design_system/household_design_system.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/components/binlink_avatar.dart';
 import '../screens/favorites_screen.dart';
+import '../screens/referral_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -41,6 +42,11 @@ class ProfileTab extends StatelessWidget {
             icon: 'star',
             label: 'Favorite collectors',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FavoritesScreen())),
+          ),
+          _ProfileAction(
+            icon: 'rewards',
+            label: 'Invite & earn',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReferralScreen())),
           ),
           const _ProfileAction(icon: 'calendar', label: 'Subscriptions', route: '/subscriptions'),
           const _ProfileAction(icon: 'notifications', label: 'Notifications', route: '/notifications'),

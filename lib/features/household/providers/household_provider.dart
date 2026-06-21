@@ -232,6 +232,7 @@ class HouseholdProvider extends ChangeNotifier {
     DateTime? scheduledDate,
     String? frequency,
     String? preferredCollectorId,
+    String? promoCode,
   }) async {
     _setLoading(true);
     try {
@@ -249,6 +250,7 @@ class HouseholdProvider extends ChangeNotifier {
         if (scheduledDate != null) 'scheduledDate': scheduledDate.toIso8601String(),
         if (frequency != null) 'frequency': frequency,
         if (preferredCollectorId != null) 'preferredCollectorId': preferredCollectorId,
+        if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
       });
       final booking = Map<String, dynamic>.from(res.data['data'] as Map);
       _bookings.insert(0, booking);
@@ -335,6 +337,64 @@ class HouseholdProvider extends ChangeNotifier {
         _favorites.insert(0, collector);
       }
       notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── Referral program ────────────────────────────────────────────────────────
+  Map<String, dynamic>? _referral;
+  Map<String, dynamic>? get referral => _referral;
+
+  Future<void> loadReferral() async {
+    try {
+      final res = await ApiClient.get('/api/profile/referral');
+      _referral = Map<String, dynamic>.from(res.data['data'] as Map);
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Applies a referral code. Returns null on success or an error message.
+  Future<String?> applyReferralCode(String code) async {
+    try {
+      await ApiClient.post('/api/profile/referral/apply', {'code': code});
+      await loadReferral();
+      await loadWalletSummary();
+      return null;
+    } on DioException catch (e) {
+      return (e.response?.data is Map ? e.response?.data['error'] as String? : null) ?? 'Could not apply code';
+    } catch (_) {
+      return 'Something went wrong. Please try again.';
+    }
+  }
+
+  // ── Promo codes ─────────────────────────────────────────────────────────────
+  /// Validates a promo code against an amount. Returns {discount, total} on
+  /// success, or throws/returns null with an error string.
+  Future<Map<String, dynamic>?> validatePromo(String code, double amount) async {
+    try {
+      final res = await ApiClient.post('/api/promos/validate', {'code': code, 'amount': amount});
+      promoError = null;
+      return Map<String, dynamic>.from(res.data['data'] as Map);
+    } on DioException catch (e) {
+      promoError = (e.response?.data is Map ? e.response?.data['error'] as String? : null) ?? 'Invalid code';
+      return null;
+    } catch (_) {
+      promoError = 'Could not validate code';
+      return null;
+    }
+  }
+  String? promoError;
+
+  // ── Ratings ─────────────────────────────────────────────────────────────────
+  Future<bool> submitReview(String bookingId, int rating, String? comment) async {
+    try {
+      await ApiClient.post('/api/bookings/$bookingId/review', {
+        'rating': rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      });
+      await loadBookings();
       return true;
     } catch (_) {
       return false;

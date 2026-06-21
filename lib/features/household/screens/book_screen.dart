@@ -64,6 +64,10 @@ class _BookScreenState extends State<BookScreen> {
 
   // Step 5
   String _payment = 'CASH';
+  final _promoCtrl = TextEditingController();
+  double _promoDiscount = 0;
+  String? _promoCode;
+  bool _promoChecking = false;
 
   @override
   void initState() {
@@ -83,6 +87,7 @@ class _BookScreenState extends State<BookScreen> {
     _pageCtrl.dispose();
     _addrCtrl.dispose();
     _notesCtrl.dispose();
+    _promoCtrl.dispose();
     super.dispose();
   }
 
@@ -112,7 +117,34 @@ class _BookScreenState extends State<BookScreen> {
 
   double get _base => _kPrices[_binSize] ?? 40.0;
   double get _bagsTotal => _extraBags * _kBagPrice;
-  double get _total => _base + _bagsTotal + _kServiceFee;
+  double get _grossTotal => _base + _bagsTotal + _kServiceFee;
+  double get _total => (_grossTotal - _promoDiscount).clamp(0, double.infinity).toDouble();
+
+  Future<void> _applyPromo() async {
+    final code = _promoCtrl.text.trim();
+    if (code.isEmpty || _promoChecking) return;
+    setState(() => _promoChecking = true);
+    final result = await context.read<HouseholdProvider>().validatePromo(code, _grossTotal);
+    if (!mounted) return;
+    setState(() {
+      _promoChecking = false;
+      if (result != null) {
+        _promoDiscount = ((result['discount'] as num?) ?? 0).toDouble();
+        _promoCode = code.toUpperCase();
+      } else {
+        _promoDiscount = 0;
+        _promoCode = null;
+      }
+    });
+    final err = context.read<HouseholdProvider>().promoError;
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: HouseholdColors.ecoGreen,
+        content: Text('Promo applied — GHS ${_promoDiscount.toStringAsFixed(2)} off')));
+    }
+  }
 
   bool get _canNext {
     switch (_step) {
@@ -167,6 +199,7 @@ class _BookScreenState extends State<BookScreen> {
       scheduledDate: _isImmediate ? null : _scheduledDate,
       frequency: _frequency != 'ONE_TIME' ? _frequency : null,
       preferredCollectorId: widget.preferredCollectorId,
+      promoCode: _promoCode,
     );
     if (!mounted) return;
     setState(() => _loading = false);
@@ -266,6 +299,10 @@ class _BookScreenState extends State<BookScreen> {
                   payment: _payment,
                   onPayment: (v) => setState(() => _payment = v),
                   error: _error,
+                  promoCtrl: _promoCtrl,
+                  promoDiscount: _promoDiscount,
+                  promoChecking: _promoChecking,
+                  onApplyPromo: _applyPromo,
                 ),
               ],
             ),
@@ -898,6 +935,10 @@ class _Step5 extends StatelessWidget {
     required this.total,
     required this.payment,
     required this.onPayment,
+    required this.promoCtrl,
+    required this.promoDiscount,
+    required this.promoChecking,
+    required this.onApplyPromo,
     this.error,
   });
   final String category;
@@ -913,6 +954,10 @@ class _Step5 extends StatelessWidget {
   final double total;
   final String payment;
   final ValueChanged<String> onPayment;
+  final TextEditingController promoCtrl;
+  final double promoDiscount;
+  final bool promoChecking;
+  final VoidCallback onApplyPromo;
   final String? error;
 
   static String _catLabel(String c) {
@@ -953,6 +998,8 @@ class _Step5 extends StatelessWidget {
             _PriceRow(label: 'Collection fee', amount: base),
             if (extraBags > 0) _PriceRow(label: 'Extra bags ($extraBags)', amount: bagsTotal),
             _PriceRow(label: 'Service fee', amount: serviceFee),
+            if (promoDiscount > 0)
+              _PriceRow(label: 'Promo discount', amount: -promoDiscount),
             const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1, color: Color(0xFFEEEAE2))),
             Row(children: [
               Expanded(child: Text('Total', style: HouseholdType.section)),
@@ -960,6 +1007,35 @@ class _Step5 extends StatelessWidget {
             ]),
           ]),
         ),
+        const SizedBox(height: 14),
+        // Promo code
+        Row(children: [
+          Expanded(child: TextField(
+            controller: promoCtrl,
+            textCapitalization: TextCapitalization.characters,
+            style: HouseholdType.body,
+            decoration: InputDecoration(
+              hintText: 'Promo code',
+              prefixIcon: const Icon(Icons.local_offer_outlined, size: 18),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEEEAE2))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEEEAE2))),
+            ),
+          )),
+          const SizedBox(width: 10),
+          SizedBox(
+            height: 48,
+            child: FilledButton(
+              onPressed: promoChecking ? null : onApplyPromo,
+              style: FilledButton.styleFrom(backgroundColor: HouseholdColors.charcoal),
+              child: promoChecking
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Apply'),
+            ),
+          ),
+        ]),
         const SizedBox(height: 18),
         Text('Payment method', style: HouseholdType.section),
         const SizedBox(height: 12),

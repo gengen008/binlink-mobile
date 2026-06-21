@@ -9,6 +9,7 @@ import '../../../core/design_system/collector_design_system.dart';
 import '../../../shared/components/binlink_map.dart';
 import '../../../shared/screens/chat_screen.dart';
 import '../providers/collector_provider.dart';
+import 'navigation_screen.dart';
 
 class ActivePickupScreen extends StatefulWidget {
   const ActivePickupScreen({super.key, this.booking = const {}});
@@ -37,6 +38,35 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
         peerName: household?['fullName'] as String? ?? 'Customer',
       ),
     ));
+  }
+
+  Future<void> _confirmNoShow(CollectorProvider provider) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        backgroundColor: CollectorColors.charcoal,
+        title: Text('Report no-show?', style: CollectorType.title),
+        content: Text('Confirm the customer was not available. They will be charged a no-show fee and you\'ll be compensated.',
+            style: CollectorType.caption),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: CollectorColors.warning),
+            onPressed: () => Navigator.pop(d, true),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final bookingId = widget.booking['id'] as String?;
+    if (bookingId == null) return;
+    final ok = await provider.reportNoShow(bookingId);
+    if (!mounted) return;
+    messenger.showSnackBar(SnackBar(content: Text(ok ? 'No-show reported. You\'ve been compensated.' : 'Could not report no-show.')));
+    if (ok) navigator.maybePop();
   }
 
   @override
@@ -73,6 +103,18 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
               Text(_status.replaceAll('_', ' '), style: CollectorType.title),
               Text(widget.booking['pickupAddress'] as String? ?? 'Active pickup route', maxLines: 1, overflow: TextOverflow.ellipsis, style: CollectorType.caption),
             ])),
+            IconButton(
+              onPressed: () {
+                final plat = (widget.booking['pickupLat'] as num?)?.toDouble();
+                final plng = (widget.booking['pickupLng'] as num?)?.toDouble();
+                if (plat == null || plng == null) return;
+                Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
+                  destination: ll.LatLng(plat, plng),
+                  label: widget.booking['pickupAddress'] as String? ?? 'Pickup location',
+                )));
+              },
+              icon: Icon(PhosphorIcons.navigationArrow(), color: CollectorColors.white),
+            ),
             IconButton(
               onPressed: _openChat,
               icon: Icon(PhosphorIcons.chatCircleDots(), color: CollectorColors.white),
@@ -119,6 +161,14 @@ class _ActivePickupScreenState extends State<ActivePickupScreen> {
                   navigator.maybePop();
                 }
               }),
+              if (_status == 'ARRIVED' || _status == 'COLLECTING') ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => _confirmNoShow(provider),
+                  child: Text('Customer didn\'t show up?',
+                      style: CollectorType.caption.copyWith(color: CollectorColors.warning, fontWeight: FontWeight.w700)),
+                ),
+              ],
               const SizedBox(height: 10),
               Row(children: [
                 Expanded(child: CButton(label: _uploadedPhotos.contains('BEFORE') ? 'BEFORE SAVED' : 'BEFORE PHOTO', icon: 'before_photo', secondary: true, loading: _photoLoading, onPressed: () => _capturePhoto(provider, 'BEFORE'))),

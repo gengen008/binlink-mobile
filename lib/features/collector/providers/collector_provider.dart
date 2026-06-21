@@ -470,6 +470,18 @@ class CollectorProvider extends ChangeNotifier {
     }
   }
 
+  // ── No-show reporting ───────────────────────────────────────────────────────
+  Future<bool> reportNoShow(String bookingId) async {
+    try {
+      await ApiClient.patch('/api/bookings/$bookingId/no-show', {});
+      _activePickups.removeWhere((p) => p['id'] == bookingId);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── KYC / verification ──────────────────────────────────────────────────────
   Map<String, dynamic>? _kyc;
   String _accountStatus = 'PENDING';

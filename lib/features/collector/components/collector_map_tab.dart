@@ -5,14 +5,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:provider/provider.dart';
 
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../core/design_system/collector_design_system.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/components/binlink_map.dart';
 import '../../../shared/components/searching_radar_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/collector_provider.dart';
+import '../screens/navigation_screen.dart';
 import '../screens/verification_screen.dart';
 
 class CollectorMapTab extends StatelessWidget {
@@ -63,7 +62,16 @@ class CollectorMapTab extends StatelessWidget {
             child: _DumpsiteBanner(
               loadPercent: provider.loadPercent,
               dumpsite: provider.nearestDumpsite,
-              onNavigate: () => _navigateToDumpsite(provider.nearestDumpsite),
+              onNavigate: () {
+                final d = provider.nearestDumpsite;
+                final dlat = (d?['lat'] as num?)?.toDouble();
+                final dlng = (d?['lng'] as num?)?.toDouble();
+                if (dlat == null || dlng == null) return;
+                Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
+                  destination: ll.LatLng(dlat, dlng),
+                  label: d?['name'] as String? ?? 'Nearest dumpsite',
+                )));
+              },
               onOffloaded: () => _confirmOffload(context, provider),
             ),
           ),
@@ -265,21 +273,6 @@ class _CountdownRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CountdownRingPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.color != color;
-}
-
-// ── Truck-full dumpsite routing ───────────────────────────────────────────────
-Future<void> _navigateToDumpsite(Map<String, dynamic>? dumpsite) async {
-  if (dumpsite == null) return;
-  final lat = (dumpsite['lat'] as num?)?.toDouble();
-  final lng = (dumpsite['lng'] as num?)?.toDouble();
-  if (lat == null || lng == null) return;
-  final uri = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
-  final fallback = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri);
-  } else {
-    await launchUrl(fallback, mode: LaunchMode.externalApplication);
-  }
 }
 
 Future<void> _confirmOffload(BuildContext context, CollectorProvider provider) async {
